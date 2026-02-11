@@ -1,0 +1,8 @@
+{
+    "name": "plan-refinement-plugin",
+    "description": "toolset for task planning",
+    "version": "1.0.0",
+    "author": {
+        "name": "anderson.monroy@halopowered.com"
+    }
+}
