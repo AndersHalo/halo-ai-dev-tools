@@ -8,7 +8,7 @@
         {
             "name": "plan-refinement-plugin",
             "description": "toolset for task planning",
-            "source": "./plugins/dev-plugin"
+            "source": "./plugins/plan-refinement"
         }
     ]
 }
