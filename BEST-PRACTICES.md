@@ -10,7 +10,7 @@
 
 ---
 
-# Agentic Coding
+# Agent Coding
 
 ## Project Rules
 
