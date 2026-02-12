@@ -1,14 +1,19 @@
 {
-    "name": "halo-ai-dev-tools",
-    "owner": {
-        "name": "DevTools Team",
-        "email": "anderson.monroy@halopowered.com"
+  "name": "halo-ai-dev-tools",
+  "owner": {
+    "name": "DevTools Team",
+    "email": "anderson.monroy@halopowered.com"
+  },
+  "plugins": [
+    {
+      "name": "plan-refinement-plugin",
+      "description": "toolset for task planning",
+      "source": "./plugins/plan-refinement"
     },
-    "plugins": [
-        {
-            "name": "plan-refinement-plugin",
-            "description": "toolset for task planning",
-            "source": "./plugins/plan-refinement"
-        }
-    ]
+    {
+      "name": "jira-tools",
+      "description": "Interact with Jira using Atlassian CLI: create, list, view, comment, and update tickets. Supports configurable default project.",
+      "source": "./plugins/jira-tools"
+    }
+  ]
 }

@@ -120,17 +120,17 @@ Plan missing Additional Context or dev refs (MCP, design, codebase) and tasks ne
 
 ## Agent Execution Rules (in every written plan)
 
-Place after Context, before Implementation Plan. **Order is mandatory. No implementation before 1 and 2.**
+Place after Context, before Implementation Plan. **Order is mandatory for every implementation task. Never skip 1 or 2.**
 
-**Per task:**
+**Per implementation task (mandatory):**
 
-1. **Dev context first.** Fetch (MCP, Figma, codebase). Then only.
-2. **TDD — no exceptions.** Add/extend tests → run `flutter test` (or scoped path) → implement until pass → then mark complete. Applies to every task (UI, refactors, all). Skipping = invalid.
-3. **Plan metadata.** `status: implementing`; append to `stepsCompleted`; on done → `status: completed`.
+1. **Dev context first - always.** Fetch required context (MCP, Figma, codebase) before implementation.
+2. **TDD - mandatory, no exceptions.** Add/extend tests → run `flutter test` (or scoped path) → implement until pass → then mark complete. Applies to every task (UI, refactors, bug fixes, all). Skipping is invalid.
+3. **Plan metadata - mandatory.** `status: implementing`; append to `stepsCompleted`; on done → `status: completed`.
 
 **In every written plan,** include this block in Agent Execution Rules:
 
-> **Per task: 1) Dev context. 2) TDD:** tests → run `flutter test` → implement until green → mark complete. **No skip. No exceptions.**
+> **Mandatory for every implementation task: 1) Dev context first. 2) TDD:** tests → run `flutter test` → implement until green → mark complete. **Never skip. Not optional.**
 
 ---
 

@@ -1,0 +1,9 @@
+{
+  "name": "jira-tools",
+  "version": "1.1.0",
+  "description": "Interact with Jira using Atlassian CLI: create, list, view, comment, and update tickets. Supports configurable default project.",
+  "author": {
+    "name": "Your Name"
+  },
+  "keywords": ["jira", "atlassian", "tickets", "project-management"]
+}
