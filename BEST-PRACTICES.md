@@ -18,7 +18,7 @@ Depending on the agent you need to define the following elements:
 
 ### Claude
 
-- Use **skills** for executable commands that AI and other team members can follow. If they look more like rules, send them to `claude.md` files.
+- Use **skills** for executable commands that AI and other team members can execute. If they look more like rules, send them to `claude.md` files.
 
 - **Claude.md file**
   1. It is always loaded in Claude context, so it is essential to define:
