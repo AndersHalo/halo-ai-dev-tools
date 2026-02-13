@@ -14,7 +14,22 @@ ASSIGNEE="${2:?Error: Provide assignee (email or accountId)}"
 
 echo "Assigning ticket $TICKET_KEY to $ASSIGNEE..."
 
-acli jira workitem assign --key "$TICKET_KEY" --assignee "$ASSIGNEE"
+# If assignee looks like an Account ID with colons, use JSON method
+if [[ "$ASSIGNEE" =~ ^[0-9]+:.+ ]]; then
+  echo "Using JSON method for Account ID format..."
+  acli jira workitem edit --from-json <(cat <<EOF
+{
+  "update": {
+    "assignee": [{"set": {"accountId": "$ASSIGNEE"}}]
+  },
+  "issueIdOrKey": "$TICKET_KEY"
+}
+EOF
+)
+else
+  # For emails or @me, use the standard assign command
+  acli jira workitem assign --key "$TICKET_KEY" --assignee "$ASSIGNEE"
+fi
 
 echo "✅ Ticket assigned successfully!"
 echo ""

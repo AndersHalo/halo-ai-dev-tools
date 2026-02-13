@@ -91,7 +91,7 @@ Do not read, guess, or infer from context. Wait for the user's answer before pro
 | **External resources**    | Bullets. UI? Ask Figma/refs; none → inferred. No UI → "N/A".                                                                                                                                                     |
 | **Implementation Plan**   | Tasks `- [ ]`. Each: Title, File, Action, Notes. AC Given/When/Then.                                                                                                                                             |
 | **Additional Context**    | Optional. If absent, ask. If yes: bullets (deps, testing, notes).                                                                                                                                                |
-| **Agent Execution Rules** | Per task, mandatory order: (1) Dev context first. (2) **TDD — no exceptions:** add/extend tests → run `flutter test` (or scope) → implement until green → then mark complete. (3) Plan metadata. Skip = invalid. |
+| **Agent Execution Rules** | Per task, mandatory order: (1) Dev context first. (2) **TDD — no exceptions:** add/extend tests → run (or scope) → implement until green → then mark complete. (3) Plan metadata. Skip = invalid. |
 | **Summary**               | End: what it delivers + work (scope, tasks, outcome).                                                                                                                                                            |
 | **Gaps**                  | Run Gap analysis. List in Gaps; agnostic. User fill/confirm before write.                                                                                                                                        |
 
@@ -125,12 +125,12 @@ Place after Context, before Implementation Plan. **Order is mandatory for every 
 **Per implementation task (mandatory):**
 
 1. **Dev context first - always.** Fetch required context (MCP, Figma, codebase) before implementation.
-2. **TDD - mandatory, no exceptions.** Add/extend tests → run `flutter test` (or scoped path) → implement until pass → then mark complete. Applies to every task (UI, refactors, bug fixes, all). Skipping is invalid.
+2. **TDD - mandatory, no exceptions.** Add/extend tests → run (or scoped path) → implement until pass → then mark complete. Applies to every task (UI, refactors, bug fixes, all). Skipping is invalid.
 3. **Plan metadata - mandatory.** `status: implementing`; append to `stepsCompleted`; on done → `status: completed`.
 
 **In every written plan,** include this block in Agent Execution Rules:
 
-> **Mandatory for every implementation task: 1) Dev context first. 2) TDD:** tests → run `flutter test` → implement until green → mark complete. **Never skip. Not optional.**
+> **Mandatory for every implementation task: 1) Dev context first. 2) TDD:** tests → run → implement until green → mark complete. **Never skip. Not optional.**
 
 ---
 
