@@ -2,7 +2,6 @@
 name: jira-comment
 description: Add a comment to a Jira ticket. Requires ticket key and comment text.
 argument-hint: [ticket-key] [comment text]
-disable-model-invocation: true
 allowed-tools: Bash(${CLAUDE_PLUGIN_ROOT}/scripts/*)
 ---
 
@@ -17,6 +16,7 @@ allowed-tools: Bash(${CLAUDE_PLUGIN_ROOT}/scripts/*)
 ## Confirm before posting
 
 Show exactly what will be posted:
+
 > **Adding comment to PROJ-123:**
 > "The comment text"
 >

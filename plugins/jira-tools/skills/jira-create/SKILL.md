@@ -2,7 +2,6 @@
 name: jira-create
 description: Create a Jira ticket (Task, Bug, Story, Epic). Uses default project from .jira-config.json, overrideable with --project flag.
 argument-hint: [summary]
-disable-model-invocation: true
 allowed-tools: Bash(${CLAUDE_PLUGIN_ROOT}/scripts/*)
 ---
 
@@ -13,6 +12,7 @@ Create a work item using the configured defaults from `.jira-config.json`.
 ## How defaults work
 
 The script reads `.jira-config.json` for:
+
 - **default_project** → used if `--project` is not passed
 - **default_type** → used if `--type` is not passed
 - **default_assignee** → used if `--assignee` is not passed

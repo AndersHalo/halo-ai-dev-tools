@@ -7,4 +7,4 @@ fi
 TICKET_KEY="${1:?Error: Provide a ticket key (e.g., PROJ-123)}"
 shift
 COMMENT="${*:?Error: Provide comment text}"
-acli jira workitem comment-create "$TICKET_KEY" --description "$COMMENT"
+acli jira workitem comment-create --key "$TICKET_KEY" --description "$COMMENT"

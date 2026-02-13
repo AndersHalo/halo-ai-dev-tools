@@ -2,7 +2,6 @@
 name: jira-config
 description: Initialize or view Jira configuration for this project. Sets default project, type, and assignee.
 argument-hint: [project-key] [base-url]
-disable-model-invocation: true
 allowed-tools: Bash(${CLAUDE_PLUGIN_ROOT}/scripts/*)
 ---
 
@@ -29,6 +28,7 @@ Example: `/jira-tools:jira-config PROJ https://mycompany.atlassian.net`
    - **Jira base URL** (optional) — e.g., `https://mycompany.atlassian.net`
 
 Then run:
+
 ```bash
 ${CLAUDE_PLUGIN_ROOT}/scripts/init-config.sh "<project>" "<base_url>"
 ```
@@ -47,4 +47,5 @@ ${CLAUDE_PLUGIN_ROOT}/scripts/init-config.sh "<project>" "<base_url>"
 The user can edit this file manually to change `default_type` or `default_assignee`.
 
 ## Tip
+
 Suggest adding `.jira-config.json` to `.gitignore` if it contains sensitive info.

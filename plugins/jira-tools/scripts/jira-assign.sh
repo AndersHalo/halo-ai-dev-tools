@@ -14,14 +14,14 @@ ASSIGNEE="${2:?Error: Provide assignee (email or accountId)}"
 
 echo "Assigning ticket $TICKET_KEY to $ASSIGNEE..."
 
-acli jira workitem assign "$TICKET_KEY" --assignee "$ASSIGNEE"
+acli jira workitem assign --key "$TICKET_KEY" --assignee "$ASSIGNEE"
 
 echo "✅ Ticket assigned successfully!"
 echo ""
 
 # Show the updated assignee info
 echo "=== UPDATED ASSIGNEE INFO ==="
-acli jira workitem view "$TICKET_KEY" --json | jq -r '{
+acli jira workitem view --key "$TICKET_KEY" --json | jq -r '{
   assignee: (.fields.assignee.displayName // "Unassigned"),
   accountId: (.fields.assignee.accountId // "N/A")
 }'
