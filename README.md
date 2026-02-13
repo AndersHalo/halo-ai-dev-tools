@@ -18,7 +18,56 @@ Install plugins:
 
 ```
 /plugin install plan-refinement-plugin@halo-ai-dev-tools
+/plugin install jira-tools@halo-ai-dev-tools
 ```
+
+## Using the Plugins
+
+### Jira Tools Plugin
+
+**⚠️ Important: Configure before first use**
+
+Before using any Jira skills, you must configure your Jira settings:
+
+```
+/jira-config
+```
+
+**Example configuration:**
+
+- Default Project Key: `STD`
+- Jira Base URL: `https://halo-powered.atlassian.net/`
+
+```
+/jira-config STD https://halo-powered.atlassian.net
+```
+
+After configuration, you can use these skills:
+
+- `/jira-list` - List or search Jira tickets
+- `/jira-view <ticket-key>` - View ticket details (e.g., `/jira-view STD-7`)
+- `/jira-create` - Create a new ticket
+- `/jira-comment <ticket-key>` - Add a comment to a ticket
+- `/jira-update <ticket-key>` - Update ticket fields (status, assignee, summary, etc.)
+- `/jira-assign <ticket-key> <assignee>` - Assign a ticket to a user
+
+**Examples:**
+
+```
+/jira-list status="In Progress"
+/jira-view STD-7
+/jira-assign STD-7 user@example.com
+```
+
+### Plan Refinement Plugin
+
+Use this plugin to refine implementation plans:
+
+```
+/plan-refinement
+```
+
+This skill helps create detailed, well-structured plans for AI execution.
 
 ## Adding plugin functionality
 
