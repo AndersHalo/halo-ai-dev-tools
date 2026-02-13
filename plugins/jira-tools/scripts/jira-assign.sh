@@ -26,7 +26,7 @@ EOF
 )
 else
   # For emails or @me, use the standard assign command
-  acli jira workitem assign --key "$TICKET_KEY" --assignee "$ASSIGNEE"
+  acli jira workitem assign "$TICKET_KEY" --assignee "$ASSIGNEE"
 fi
 
 echo "✅ Ticket assigned successfully!"
@@ -34,7 +34,7 @@ echo ""
 
 # Show the updated assignee info
 echo "=== UPDATED ASSIGNEE INFO ==="
-acli jira workitem view --key "$TICKET_KEY" --json | jq -r '{
+acli jira workitem view "$TICKET_KEY" --json | jq -r '{
   assignee: (.fields.assignee.displayName // "Unassigned"),
   accountId: (.fields.assignee.accountId // "N/A")
 }'
