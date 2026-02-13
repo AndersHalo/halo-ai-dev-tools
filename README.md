@@ -25,6 +25,18 @@ Install plugins:
 
 ### Jira Tools Plugin
 
+**Prerequisites**
+
+Before using the Jira Tools plugin, you must:
+
+1. **Install Jira CLI** - Install the Atlassian Jira CLI tool on your system
+2. **Authenticate** - Run the authentication command:
+   ```bash
+   jira auth login
+   ```
+
+   Follow the prompts to authenticate with your Atlassian account. See the [official documentation](https://developer.atlassian.com/cloud/acli/reference/commands/jira-auth-login/) for detailed instructions.
+
 **⚠️ Important: Configure before first use**
 
 Before using any Jira skills, you must configure your Jira settings:
