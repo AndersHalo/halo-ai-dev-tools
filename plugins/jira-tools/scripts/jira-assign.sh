@@ -26,7 +26,7 @@ EOF
 )
 else
   # For emails or @me, use the standard assign command
-  acli jira workitem assign "$TICKET_KEY" --assignee "$ASSIGNEE"
+  acli jira workitem assign --key "$TICKET_KEY" --assignee "$ASSIGNEE"
 fi
 
 echo "✅ Ticket assigned successfully!"
