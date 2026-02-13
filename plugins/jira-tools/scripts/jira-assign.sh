@@ -19,10 +19,8 @@ if [[ "$ASSIGNEE" =~ ^[0-9]+:.+ ]]; then
   echo "Using JSON method for Account ID format..."
   acli jira workitem edit --from-json <(cat <<EOF
 {
-  "update": {
-    "assignee": [{"set": {"accountId": "$ASSIGNEE"}}]
-  },
-  "issueIdOrKey": "$TICKET_KEY"
+  "assignee": "$ASSIGNEE",
+  "issues": ["$TICKET_KEY"]
 }
 EOF
 )
