@@ -23,7 +23,7 @@ if [[ "$ASSIGNEE" =~ ^[0-9]+:.+ ]]; then
   "issues": ["$TICKET_KEY"]
 }
 EOF
-)
+) --yes
 else
   # For emails or @me, use the standard assign command
   acli jira workitem assign --key "$TICKET_KEY" --assignee "$ASSIGNEE"
