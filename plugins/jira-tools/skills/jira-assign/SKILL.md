@@ -7,6 +7,16 @@ allowed-tools: Bash(${CLAUDE_PLUGIN_ROOT}/scripts/*)
 
 # Assign Jira Ticket
 
+## Read Configuration First
+
+Before executing, read the configuration:
+
+```bash
+cat ${CLAUDE_PLUGIN_ROOT}/.jira-config.json
+```
+
+Parse and extract: `jira_base_url`
+
 ## Get Parameters
 
 1. **Ticket Key** from `$ARGUMENTS` (e.g., PROJ-123)

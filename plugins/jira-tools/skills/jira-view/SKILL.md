@@ -7,6 +7,16 @@ allowed-tools: Bash(${CLAUDE_PLUGIN_ROOT}/scripts/*)
 
 # View Jira Ticket Details
 
+## Read Configuration First
+
+Before displaying results, read the configuration:
+
+```bash
+cat ${CLAUDE_PLUGIN_ROOT}/.jira-config.json
+```
+
+Parse and extract: `jira_base_url`
+
 ## Execute
 
 ```bash

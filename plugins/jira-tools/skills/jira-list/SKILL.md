@@ -7,9 +7,21 @@ allowed-tools: Bash(${CLAUDE_PLUGIN_ROOT}/scripts/*)
 
 # List / Search Jira Tickets
 
+## Read Configuration First
+
+Before building the query, read the configuration:
+
+```bash
+cat ${CLAUDE_PLUGIN_ROOT}/.jira-config.json
+```
+
+Parse and extract: `default_project`, `jira_base_url`
+
 ## How defaults work
 
 If no JQL is provided and a `default_project` is configured, searches within that project automatically.
+
+If `default_project` is empty, search across all accessible projects or ask the user which project to search.
 
 ## Determine the query
 

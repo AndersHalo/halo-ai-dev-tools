@@ -1,6 +1,6 @@
 {
-  "default_project": "",
+  "default_project": "STD",
   "default_type": "Task",
   "default_assignee": "@me",
-  "jira_base_url": ""
+  "jira_base_url": "https://halo-powered.atlassian.net"
 }
