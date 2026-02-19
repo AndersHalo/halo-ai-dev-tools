@@ -18,59 +18,10 @@ Install plugins:
 
 ```
 /plugin install plan-refinement-plugin@halo-ai-dev-tools
-/plugin install jira-tools@halo-ai-dev-tools
 /plugin install jira-mcp-setup@halo-ai-dev-tools
 ```
 
 ## Using the Plugins
-
-### Jira Tools Plugin
-
-**Prerequisites**
-
-Before using the Jira Tools plugin, you must:
-
-1. **Install Jira CLI** - Install the Atlassian Jira CLI tool on your system
-2. **Authenticate** - Run the authentication command:
-   ```bash
-   jira auth login
-   ```
-
-   Follow the prompts to authenticate with your Atlassian account. See the [official documentation](https://developer.atlassian.com/cloud/acli/reference/commands/jira-auth-login/) for detailed instructions.
-
-**⚠️ Important: Configure before first use**
-
-Before using any Jira skills, you must configure your Jira settings:
-
-```
-/jira-config
-```
-
-**Example configuration:**
-
-- Default Project Key: `STD`
-- Jira Base URL: `https://halo-powered.atlassian.net/`
-
-```
-/jira-config STD https://halo-powered.atlassian.net
-```
-
-After configuration, you can use these skills:
-
-- `/jira-list` - List or search Jira tickets
-- `/jira-view <ticket-key>` - View ticket details (e.g., `/jira-view STD-7`)
-- `/jira-create` - Create a new ticket
-- `/jira-comment <ticket-key>` - Add a comment to a ticket
-- `/jira-update <ticket-key>` - Update ticket fields (status, assignee, summary, etc.)
-- `/jira-assign <ticket-key> <assignee>` - Assign a ticket to a user
-
-**Examples:**
-
-```
-/jira-list status="In Progress"
-/jira-view STD-7
-/jira-assign STD-7 user@example.com
-```
 
 ### Jira MCP Setup Plugin
 
@@ -99,7 +50,8 @@ The skill will:
 1. Verify dependencies are installed
 2. Ask for Jira URL, email, and API token (if not provided)
 3. Create or update `.mcp.json` in the project root
-4. After restarting Claude Code, the Jira MCP server will be available
+4. Ask if you want to add `.mcp.json` to `.gitignore` (recommended — the file contains your API token)
+5. After restarting Claude Code, the Jira MCP server will be available
 
 ### Plan Refinement Plugin
 
