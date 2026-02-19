@@ -19,6 +19,7 @@ Install plugins:
 ```
 /plugin install plan-refinement-plugin@halo-ai-dev-tools
 /plugin install jira-tools@halo-ai-dev-tools
+/plugin install jira-mcp-setup@halo-ai-dev-tools
 ```
 
 ## Using the Plugins
@@ -70,6 +71,35 @@ After configuration, you can use these skills:
 /jira-view STD-7
 /jira-assign STD-7 user@example.com
 ```
+
+### Jira MCP Setup Plugin
+
+This plugin installs and configures the `mcp-atlassian` MCP server, giving Claude Code direct access to Jira via the Model Context Protocol.
+
+**Prerequisites**
+
+- Python 3
+- [uv](https://docs.astral.sh/uv/) (`curl -LsSf https://astral.sh/uv/install.sh | sh`)
+- `jq` (`brew install jq`)
+- A Jira API token — generate one at https://id.atlassian.com/manage-profile/security/api-tokens
+
+**Setup**
+
+```
+/jira-mcp-setup
+```
+
+Or pass all values directly:
+
+```
+/jira-mcp-setup https://mycompany.atlassian.net user@example.com YOUR_API_TOKEN
+```
+
+The skill will:
+1. Verify dependencies are installed
+2. Ask for Jira URL, email, and API token (if not provided)
+3. Create or update `.mcp.json` in the project root
+4. After restarting Claude Code, the Jira MCP server will be available
 
 ### Plan Refinement Plugin
 

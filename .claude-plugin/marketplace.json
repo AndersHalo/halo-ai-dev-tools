@@ -14,6 +14,11 @@
       "name": "jira-tools",
       "description": "Interact with Jira using Atlassian CLI: create, list, view, comment, and update tickets. Supports configurable default project.",
       "source": "./plugins/jira-tools"
+    },
+    {
+      "name": "jira-mcp-setup",
+      "description": "Install and configure the Jira MCP server (mcp-atlassian) for Claude Code. Adds Jira integration via Model Context Protocol.",
+      "source": "./plugins/jira-mcp-setup"
     }
   ]
 }

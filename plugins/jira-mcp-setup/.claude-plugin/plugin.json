@@ -1,0 +1,9 @@
+{
+  "name": "jira-mcp-setup",
+  "version": "1.0.0",
+  "description": "Install and configure the Jira MCP server (mcp-atlassian) for Claude Code. Adds Jira integration via Model Context Protocol.",
+  "author": {
+    "name": "anderson.monroy@halopowered.com"
+  },
+  "keywords": ["jira", "mcp", "atlassian", "setup", "configuration"]
+}
