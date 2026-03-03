@@ -300,95 +300,117 @@ PRDs often contain **narrative descriptions of each page or screen** beyond the 
 
 ### Phase 5B — Intra-Page Data Consistency
 
-Validate that the mock is internally consistent with its own displayed data — independent of the PRD. The core problem this phase solves: HTML mocks contain summary metrics, counters, labels, and visual indicators that make **numeric or factual claims** about data that is also visible elsewhere on the same page. When those claims don't match the actual visible content, developers build to contradictory specs.
+Validate that the wireframe is internally consistent with its own displayed data — independent of the PRD. Any UI element that makes a **claim** (a number, a label, a state, a relationship) verifiable against other visible content on the same page must be checked. When claims don't match what is actually shown, developers build to contradictory specs.
 
-**This phase is always executed.** It does not depend on the PRD content.
+**This phase is always executed.** It does not depend on the PRD content. It applies to any type of wireframe regardless of domain: dashboards, e-commerce, games, social platforms, content management, forms, landing pages, admin panels, etc.
 
 #### Procedure (systematic — execute for every page)
 
-For each HTML mock page, execute these steps in order:
+For each wireframe page, execute these steps in order:
 
-**Step 1 — Inventory all "claim" elements.** Scan the page and list every element that makes a numeric, quantitative, or factual assertion about content. These include:
+**Step 1 — Inventory all "claim" elements.** Scan the page and list every element that makes a verifiable assertion about content visible on the same page. A "claim" is anything a user or developer could check by looking at surrounding content.
 
-| Claim Type | Where to Look | Example |
-|------------|---------------|---------|
-| Counters / badges | Tab badges, sidebar badges, card headers, pill counts | `"Active (12)"`, `"3 notifications"` |
-| Summary totals | Summary cards, KPI widgets, footer totals, stat boxes | `"Total: $45,230"`, `"Revenue: $120K"` |
-| Percentages / ratios | Progress bars with labels, donut chart legends, stat cards | `"78% complete"`, `"3 of 5 done"` |
-| Row/item counts | Table captions, pagination text, list headers, section titles | `"Showing 1-10 of 47"`, `"4 Team Members"` |
-| Status indicators | Status badges, progress states, toggle states, active markers | `"Completed"` badge, sidebar active highlight |
-| Temporal claims | "Last updated" timestamps, "Recent" labels, date range filters | `"Last updated: March 1"`, `"Recent Activity"` |
+| Claim Category | What to Look For |
+|----------------|-----------------|
+| **Numeric counts** | Any text that states a quantity: badges, counters, headers, labels, list titles, tab counts, pagination, inventory counts, notification dots, queue sizes |
+| **Totals / aggregates** | Any text that sums, averages, or aggregates values from a visible list, table, grid, or set of elements |
+| **Percentages / ratios** | Any text or visual (progress bar, pie chart, health bar, completion ring, XP bar) that expresses a proportion derivable from visible data |
+| **States / status** | Any indicator (badge, color, icon, toggle, active class, highlight, enabled/disabled styling) that asserts the state of something whose actual state is also visible |
+| **Navigation / location** | Any element that claims "where you are": breadcrumbs, sidebar active items, tab selection, step indicators, page titles, level/stage indicators |
+| **References / relationships** | Any element that references another element on the same page by name, ID, count, or content: legend labels vs. chart series, column headers vs. cell data, button labels vs. target content |
+| **Temporal claims** | Any text asserting when something happened or how recent/old it is, checkable against visible dates or timestamps elsewhere on the page |
+
+Domain-specific claim examples:
+
+| Domain | Example Claims |
+|--------|---------------|
+| **Dashboard / Admin** | KPI card "Revenue: $120K", tab badge "Active (12)", summary total, filter result count |
+| **E-commerce** | Cart badge "3 items", subtotal price, "47 results found", stock availability "In Stock (5 left)" |
+| **Game UI** | Health bar at 50% with "90/100 HP" text, "Round 3 of 10", inventory count "12/20 slots", XP bar vs. level label |
+| **Social / Feed** | "24 comments" header with visible comments, "5 mutual friends", follower count vs. visible list, "3 new messages" badge |
+| **Forms / Wizards** | Step indicator "Step 2 of 4" with visible steps, "3 errors found" with visible error messages, required field count |
+| **Content / CMS** | "12 articles" section header, category count badges, "Published" status vs. draft watermark, tag counts |
+| **Project Management** | Sprint burndown chart vs. task list, "5 open tasks" label, progress percentage vs. completed/total checklist items |
 
 Record each claim element in a working table:
 
-| # | Element (CSS path or description) | Claim Value | Claim Type |
-|---|-----------------------------------|-------------|------------|
+| # | Element (location on page) | Claim Value | Claim Category |
+|---|---------------------------|-------------|----------------|
 
-**Step 2 — Identify the corresponding data source.** For each claim element, locate the actual visible data on the same page that the claim refers to. This is the "source of truth" for validation:
+**Step 2 — Identify the corresponding verifiable source.** For each claim, locate the actual visible content on the same page that can confirm or contradict it:
 
-- Counter `"Active (12)"` → count the actual rows in the adjacent table with "Active" status
-- Summary `"Total: $45,230"` → sum the visible dollar values in the table column
-- Percentage `"78% complete"` → count completed vs. total items in the list
-- Pagination `"Page 2 of 5"` → verify pagination controls exist and data volume justifies 5 pages
-- Status badge `"Completed"` → check if progress bar, checklist, or content shows completion
+- A counter says `"N items"` → count the actual visible items it refers to
+- A total says `"$X"` → find the individual values and sum them
+- A visual bar/ring shows ~Y% → find the part/whole counts and compute the real ratio
+- A status indicator says `"State X"` → check if associated content reflects that state
+- A navigation element highlights `"Section A"` → check if page content matches Section A
+- A legend lists `"Series A, B, C"` → check if the chart/table actually has those series
+- A label says `"N days ago"` → check if a visible timestamp confirms the date math
 
-If no corresponding data source is visible on the page, note it as "no verifiable source" (not a finding — the mock may intentionally show a summary without detail).
+If no corresponding source is visible on the page, note it as **"no verifiable source"** — this is not a finding. The wireframe may intentionally show a summary without underlying detail.
 
-**Step 3 — Perform arithmetic / factual validation.** For each claim+source pair:
+**Step 3 — Perform validation.** For each claim + source pair:
 
-1. **Count validation:** Manually count the visible items (table rows, list items, cards, avatars, etc.) and compare against the claimed count.
-2. **Sum validation:** Add up the visible numeric values (prices, amounts, quantities) and compare against the claimed total.
-3. **Percentage validation:** Compute `(numerator / denominator) × 100` from visible data and compare against the claimed percentage.
-4. **State validation:** Check if the visual state indicator (color, icon, badge text, active class) matches the content it describes.
-5. **Temporal validation:** Check if date/time claims are consistent with the dates visible in the data.
+| Check | Procedure |
+|-------|-----------|
+| **Count** | Manually count the visible items and compare against the claimed number |
+| **Sum** | Add up the visible individual values and compare against the claimed total |
+| **Percentage** | Compute `(part / whole) × 100` from visible data and compare against the claimed ratio or visual fill level |
+| **State** | Verify the visual indicator matches the actual state shown in associated content |
+| **Location** | Verify all "where am I" signals agree with each other and with the page content |
+| **Reference** | Verify that the referenced element exists and matches what is claimed about it |
+| **Temporal** | Verify date math is consistent between the claim and visible timestamps |
 
-**Step 4 — Cross-element correlation within the same page.** Check for elements that reference the same underlying data but show different values:
+**Step 4 — Cross-element correlation.** After individual checks, look for pairs or groups of elements on the same page that reference the **same underlying data** but show different values:
 
-- A chart and its adjacent data table showing different values for the same metric
-- A summary card percentage that doesn't match the ratio derivable from two other visible numbers
-- A filter showing a date range that doesn't encompass the dates visible in filtered content
-- Breadcrumb path vs. sidebar active state vs. page title — all should agree on "where am I"
-- Tab label text vs. the content panel that tab reveals
+- A chart/visual and an adjacent table or legend showing different values for the same metric
+- Two labels in different sections of the same page showing different counts for the same thing
+- A filter/control showing a selected state that doesn't match the displayed content
+- Multiple navigation indicators that disagree on current location
+- A breakdown (segments, slices, categories) that doesn't sum to the displayed total
+- A detail view that contradicts the summary view it was expanded from
 
-**Step 5 — Record findings.** For every mismatch found, create a finding with:
+**Step 5 — Record findings.** For every mismatch, create a finding with all fields:
 
-| Field | Description |
-|-------|-------------|
-| **Element** | The specific UI element making the claim (e.g., `"Tab badge in header"`) |
-| **Claims** | The exact value or state the element displays (e.g., `"Active (12)"`) |
-| **Actual** | What the arithmetic/factual check reveals (e.g., `"5 rows with Active status"`) |
-| **Validation** | Show the work — the count, sum, or logic used (e.g., `"Counted rows: A, B, C, D, E = 5"`) |
-| **Type** | One of: `Count mismatch`, `Sum mismatch`, `Percentage mismatch`, `State conflict`, `Temporal conflict`, `Cross-element conflict` |
+| Field | Required Content |
+|-------|-----------------|
+| **Element** | What UI element makes the claim — location and type |
+| **Claims** | Exact value or state displayed |
+| **Actual** | What validation reveals |
+| **Validation** | Show the work — the count, sum, or logic used |
+| **Type** | Mismatch type from the table below |
 
 #### Mismatch Types
 
-| Type | Description | Example |
-|------|-------------|---------|
-| **Count mismatch** | A counter/badge/label claims N items but a different number is visible | Badge says "12 active" but table has 5 active rows |
-| **Sum mismatch** | A total/subtotal doesn't match the sum of visible line items | Summary card "$45,230" but table rows sum to $38,750 |
-| **Percentage mismatch** | A percentage label doesn't match the ratio of visible numerator/denominator | "78% complete" but 3 of 5 items done = 60% |
-| **State conflict** | A status indicator contradicts the content it describes | Badge "Completed" but progress bar at 60% |
-| **Temporal conflict** | Time-related claims don't match visible dates/timestamps | "Last updated: March 1" but newest entry is March 3 |
-| **Cross-element conflict** | Two elements on the same page reference the same data but show different values | Chart shows Q1=$50K but adjacent table shows Q1=$42K |
+| Type | Description |
+|------|-------------|
+| **Count mismatch** | A claimed quantity doesn't match the actual count of visible items |
+| **Sum mismatch** | A claimed total doesn't match the sum of visible individual values |
+| **Percentage mismatch** | A claimed ratio doesn't match the computed ratio from visible data (includes visual bars/rings) |
+| **State conflict** | A visual state indicator contradicts the content it describes |
+| **Location conflict** | Navigation/location indicators disagree with each other or with the page content |
+| **Reference conflict** | An element references another element by name/value/count but the reference doesn't match |
+| **Temporal conflict** | A time-based claim is inconsistent with visible timestamps or dates |
+| **Cross-element conflict** | Two or more elements on the same page show different values for the same data |
 
 #### Finding Classification
 
-Internal coherence issues use a dedicated category:
+Intra-page data consistency issues use a dedicated category:
 - **Prefix:** `I` (Intra-page data consistency)
 - **Color:** Teal (`#14b8a6`) — distinct from all other categories
 - **Severity:**
-  - **BLOCKER** — Arithmetic mismatch that a developer would code as a data source, producing broken behavior (e.g., summary total used as a reference value doesn't match underlying data)
-  - **MAJOR** — Visible contradiction that would cause development questions or stakeholder confusion (e.g., counter badge shows wrong number)
-  - **MINOR** — Minor inconsistency unlikely to affect implementation logic (e.g., "Last updated" off by one day)
+  - **BLOCKER** — A mismatch that a developer would hardcode, producing objectively broken behavior (e.g., a total that doesn't match its line items creates two contradictory data sources)
+  - **MAJOR** — A visible contradiction that causes confusion or development rework (e.g., a counter shows the wrong number, a health bar visual contradicts its text label)
+  - **MINOR** — A minor inconsistency unlikely to affect implementation logic (e.g., a relative time label off by one unit)
 
 #### Output Table
 
 | # | Severity | Page | Element | Claims | Actual | Validation | Type |
 |---|----------|------|---------|--------|--------|------------|------|
-| I1 | MAJOR | Dashboard | Tab badge | "Active (12)" | 5 rows with Active status | Counted Active-status `<tr>` in table: 5 | Count mismatch |
-| I2 | MAJOR | Finance | Summary card | "Total: $45,230" | Table rows sum to $38,750 | Summed Amount column: $12K + $8.5K + $9.25K + $9K = $38,750 | Sum mismatch |
-| I3 | BLOCKER | Projects | KPI widget | "78% complete" | 3 of 5 projects marked done | 3/5 = 60%, not 78% | Percentage mismatch |
-| I4 | MAJOR | Settings | Sidebar highlight | Active on "Profile" | Page content is Settings | Sidebar `<li class="active">` is "Profile" but `<h1>` is "Settings" | State conflict |
+| I1 | MAJOR | Product List | Results header | "47 products found" | 12 product cards visible | Counted product cards on page: 12 | Count mismatch |
+| I2 | MAJOR | Cart | Cart total | "Subtotal: $127.50" | Item prices sum to $98.00 | $29.00 + $45.00 + $24.00 = $98.00 | Sum mismatch |
+| I3 | BLOCKER | Game HUD | Health bar | Bar at ~50% fill | HP text reads "90/100" | 90/100 = 90%, bar should be nearly full | Percentage mismatch |
+| I4 | MAJOR | Settings | Sidebar nav | Active on "Profile" | Page heading is "Settings" | Sidebar active item ≠ page title | Location conflict |
 
 ### Phase 6 — Requirement Traceability Matrix
 
@@ -571,6 +593,8 @@ Create `docs/audit/prd/{analysis_name}/analysis.md` with the following structure
 | Sum mismatch | N | — |
 | Percentage mismatch | N | — |
 | State conflict | N | — |
+| Location conflict | N | — |
+| Reference conflict | N | — |
 | Temporal conflict | N | — |
 | Cross-element conflict | N | — |
 | **Total** | **N** | — |
