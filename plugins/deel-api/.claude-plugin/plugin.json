@@ -1,0 +1,9 @@
+{
+  "name": "deel-api",
+  "version": "1.0.0",
+  "description": "Deel REST API integration reference. Use when building features that sync data from Deel, working on the Deel integration module, or troubleshooting Deel API calls (people, organizations, teams, departments, time-off, lookups).",
+  "author": {
+    "name": "anderson.monroy@halopowered.com"
+  },
+  "keywords": ["deel", "api", "hris", "people", "time-off", "organizations"]
+}

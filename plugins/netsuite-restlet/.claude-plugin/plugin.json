@@ -1,0 +1,9 @@
+{
+  "name": "netsuite-restlet",
+  "version": "1.0.0",
+  "description": "NetSuite RESTlet integration reference. Use when building features that sync data from NetSuite, working on the NetSuite integration module, or troubleshooting NetSuite RESTlet calls (employees, projects, timesheets, OAuth 1.0 TBA).",
+  "author": {
+    "name": "anderson.monroy@halopowered.com"
+  },
+  "keywords": ["netsuite", "restlet", "oauth", "employees", "projects", "timesheets"]
+}
