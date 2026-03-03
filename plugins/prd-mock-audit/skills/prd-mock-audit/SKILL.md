@@ -298,67 +298,97 @@ PRDs often contain **narrative descriptions of each page or screen** beyond the 
 
 5. **Note:** This phase may produce findings that overlap with Phase 3 (bi-directional comparison). If a finding was already captured as an FR-level gap in Phase 3, do not duplicate it. Only add findings for elements described in page prose that were **not already covered** by FR-level analysis.
 
-### Phase 5B — Internal Mock Coherence
+### Phase 5B — Intra-Page Data Consistency
 
-Validate that the mock is internally consistent with its own displayed data, labels, and visual claims — independent of the PRD. This catches situations where the mock contradicts itself, which would confuse developers and stakeholders regardless of PRD compliance.
+Validate that the mock is internally consistent with its own displayed data — independent of the PRD. The core problem this phase solves: HTML mocks contain summary metrics, counters, labels, and visual indicators that make **numeric or factual claims** about data that is also visible elsewhere on the same page. When those claims don't match the actual visible content, developers build to contradictory specs.
 
 **This phase is always executed.** It does not depend on the PRD content.
 
-#### What to Check
+#### Procedure (systematic — execute for every page)
 
-1. **Count/Label Mismatches** — Numeric labels, badges, counters, or summary text that disagree with the actual visible content:
+For each HTML mock page, execute these steps in order:
 
-   | Element | Claims | Actual | Page | Finding |
-   |---------|--------|--------|------|---------|
-   | Tab badge "Active (12)" | 12 items | 5 rows in table | Dashboard | I1 |
-   | Card header "4 Team Members" | 4 members | 2 avatars shown | Team Page | I2 |
-   | Sidebar badge "3" | 3 notifications | 1 notification item | All pages | I3 |
-   | Summary "Total: $45,230" | $45,230 | Table rows sum to $38,750 | Finance | I4 |
+**Step 1 — Inventory all "claim" elements.** Scan the page and list every element that makes a numeric, quantitative, or factual assertion about content. These include:
 
-2. **Navigation/Link Coherence** — Internal references that don't match:
-   - Breadcrumb trail doesn't match actual page hierarchy
-   - Tab labels don't match tab content panels
-   - Sidebar active state doesn't match the current page
-   - Pagination says "Page 2 of 5" but there's no page navigation or only 1 page of data
-   - "View All" link text but the target content is already fully displayed
+| Claim Type | Where to Look | Example |
+|------------|---------------|---------|
+| Counters / badges | Tab badges, sidebar badges, card headers, pill counts | `"Active (12)"`, `"3 notifications"` |
+| Summary totals | Summary cards, KPI widgets, footer totals, stat boxes | `"Total: $45,230"`, `"Revenue: $120K"` |
+| Percentages / ratios | Progress bars with labels, donut chart legends, stat cards | `"78% complete"`, `"3 of 5 done"` |
+| Row/item counts | Table captions, pagination text, list headers, section titles | `"Showing 1-10 of 47"`, `"4 Team Members"` |
+| Status indicators | Status badges, progress states, toggle states, active markers | `"Completed"` badge, sidebar active highlight |
+| Temporal claims | "Last updated" timestamps, "Recent" labels, date range filters | `"Last updated: March 1"`, `"Recent Activity"` |
 
-3. **State/Status Coherence** — Visual indicators that conflict with content:
-   - A status badge shows "Completed" but progress bar shows 60%
-   - A toggle is styled as "on" but the associated content shows the "off" state
-   - An "empty state" illustration is shown alongside a populated data table
-   - A "Loading..." spinner coexists with already-loaded content
-   - A disabled button label says "Submit" but required form fields are already filled
+Record each claim element in a working table:
 
-4. **Data Coherence** — Displayed data that contradicts itself across the same page:
-   - A chart and its adjacent data table show different values for the same metric
-   - A summary card shows a percentage that doesn't match the underlying numbers
-   - Date ranges in filters don't match the dates shown in content
-   - A "Last updated: March 1" timestamp but data entries show March 3 dates
+| # | Element (CSS path or description) | Claim Value | Claim Type |
+|---|-----------------------------------|-------------|------------|
 
-5. **Text/Content Coherence** — Labels, headings, or descriptions that conflict:
-   - A page title says "User Settings" but the breadcrumb says "Preferences"
-   - A column header says "Email" but the data shows phone numbers
-   - A section is labeled "Recent Activity" but shows items from months ago
-   - A button says "Delete" but the confirmation modal says "Archive"
+**Step 2 — Identify the corresponding data source.** For each claim element, locate the actual visible data on the same page that the claim refers to. This is the "source of truth" for validation:
+
+- Counter `"Active (12)"` → count the actual rows in the adjacent table with "Active" status
+- Summary `"Total: $45,230"` → sum the visible dollar values in the table column
+- Percentage `"78% complete"` → count completed vs. total items in the list
+- Pagination `"Page 2 of 5"` → verify pagination controls exist and data volume justifies 5 pages
+- Status badge `"Completed"` → check if progress bar, checklist, or content shows completion
+
+If no corresponding data source is visible on the page, note it as "no verifiable source" (not a finding — the mock may intentionally show a summary without detail).
+
+**Step 3 — Perform arithmetic / factual validation.** For each claim+source pair:
+
+1. **Count validation:** Manually count the visible items (table rows, list items, cards, avatars, etc.) and compare against the claimed count.
+2. **Sum validation:** Add up the visible numeric values (prices, amounts, quantities) and compare against the claimed total.
+3. **Percentage validation:** Compute `(numerator / denominator) × 100` from visible data and compare against the claimed percentage.
+4. **State validation:** Check if the visual state indicator (color, icon, badge text, active class) matches the content it describes.
+5. **Temporal validation:** Check if date/time claims are consistent with the dates visible in the data.
+
+**Step 4 — Cross-element correlation within the same page.** Check for elements that reference the same underlying data but show different values:
+
+- A chart and its adjacent data table showing different values for the same metric
+- A summary card percentage that doesn't match the ratio derivable from two other visible numbers
+- A filter showing a date range that doesn't encompass the dates visible in filtered content
+- Breadcrumb path vs. sidebar active state vs. page title — all should agree on "where am I"
+- Tab label text vs. the content panel that tab reveals
+
+**Step 5 — Record findings.** For every mismatch found, create a finding with:
+
+| Field | Description |
+|-------|-------------|
+| **Element** | The specific UI element making the claim (e.g., `"Tab badge in header"`) |
+| **Claims** | The exact value or state the element displays (e.g., `"Active (12)"`) |
+| **Actual** | What the arithmetic/factual check reveals (e.g., `"5 rows with Active status"`) |
+| **Validation** | Show the work — the count, sum, or logic used (e.g., `"Counted rows: A, B, C, D, E = 5"`) |
+| **Type** | One of: `Count mismatch`, `Sum mismatch`, `Percentage mismatch`, `State conflict`, `Temporal conflict`, `Cross-element conflict` |
+
+#### Mismatch Types
+
+| Type | Description | Example |
+|------|-------------|---------|
+| **Count mismatch** | A counter/badge/label claims N items but a different number is visible | Badge says "12 active" but table has 5 active rows |
+| **Sum mismatch** | A total/subtotal doesn't match the sum of visible line items | Summary card "$45,230" but table rows sum to $38,750 |
+| **Percentage mismatch** | A percentage label doesn't match the ratio of visible numerator/denominator | "78% complete" but 3 of 5 items done = 60% |
+| **State conflict** | A status indicator contradicts the content it describes | Badge "Completed" but progress bar at 60% |
+| **Temporal conflict** | Time-related claims don't match visible dates/timestamps | "Last updated: March 1" but newest entry is March 3 |
+| **Cross-element conflict** | Two elements on the same page reference the same data but show different values | Chart shows Q1=$50K but adjacent table shows Q1=$42K |
 
 #### Finding Classification
 
 Internal coherence issues use a dedicated category:
-- **Prefix:** `I` (Internal Coherence)
+- **Prefix:** `I` (Intra-page data consistency)
 - **Color:** Teal (`#14b8a6`) — distinct from all other categories
 - **Severity:**
-  - **BLOCKER** — A developer building to the mock would produce broken or contradictory behavior (e.g., counter shows wrong number that gets coded as a data source)
-  - **MAJOR** — Confusing enough to cause development questions or rework (e.g., conflicting navigation states)
-  - **MINOR** — Cosmetic inconsistency unlikely to affect implementation (e.g., slightly mismatched date formatting)
+  - **BLOCKER** — Arithmetic mismatch that a developer would code as a data source, producing broken behavior (e.g., summary total used as a reference value doesn't match underlying data)
+  - **MAJOR** — Visible contradiction that would cause development questions or stakeholder confusion (e.g., counter badge shows wrong number)
+  - **MINOR** — Minor inconsistency unlikely to affect implementation logic (e.g., "Last updated" off by one day)
 
 #### Output Table
 
-| # | Severity | Page | Element | Claims | Actual | Type |
-|---|----------|------|---------|--------|--------|------|
-| I1 | MAJOR | Dashboard | Tab badge | "Active (12)" | 5 rows visible | Count mismatch |
-| I2 | MINOR | Team | Card header | "4 Team Members" | 2 avatars | Count mismatch |
-| I3 | MAJOR | Finance | Summary card | "Total: $45,230" | Rows sum to $38,750 | Data mismatch |
-| I4 | BLOCKER | Settings | Sidebar active | Highlights "Profile" | Shows Settings page | Navigation mismatch |
+| # | Severity | Page | Element | Claims | Actual | Validation | Type |
+|---|----------|------|---------|--------|--------|------------|------|
+| I1 | MAJOR | Dashboard | Tab badge | "Active (12)" | 5 rows with Active status | Counted Active-status `<tr>` in table: 5 | Count mismatch |
+| I2 | MAJOR | Finance | Summary card | "Total: $45,230" | Table rows sum to $38,750 | Summed Amount column: $12K + $8.5K + $9.25K + $9K = $38,750 | Sum mismatch |
+| I3 | BLOCKER | Projects | KPI widget | "78% complete" | 3 of 5 projects marked done | 3/5 = 60%, not 78% | Percentage mismatch |
+| I4 | MAJOR | Settings | Sidebar highlight | Active on "Profile" | Page content is Settings | Sidebar `<li class="active">` is "Profile" but `<h1>` is "Settings" | State conflict |
 
 ### Phase 6 — Requirement Traceability Matrix
 
@@ -400,7 +430,7 @@ Create `docs/audit/prd/{analysis_name}/analysis.md` with the following structure
 | Estimated WCAG Level | A / AA / AAA (or "N/A") |
 | Component Inconsistencies | N |
 | Page Description Gaps | N (or "N/A — no page descriptions in PRD") |
-| Internal Coherence Issues | N |
+| Intra-Page Data Mismatches | N |
 
 ### Risk Assessment
 - **BLOCKERS:** N items require mock revision before development can begin
@@ -532,22 +562,26 @@ Create `docs/audit/prd/{analysis_name}/analysis.md` with the following structure
 
 ---
 
-## Part 5B: Internal Mock Coherence
+## Part 5B: Intra-Page Data Consistency
 
-### 5B.1 Coherence Summary
-| Type | Count | Max Severity |
-|------|-------|--------------|
-| Count/Label Mismatches | N | — |
-| Navigation Mismatches | N | — |
-| State/Status Conflicts | N | — |
-| Data Conflicts | N | — |
-| Text/Content Conflicts | N | — |
+### 5B.1 Consistency Summary
+| Mismatch Type | Count | Max Severity |
+|---------------|-------|--------------|
+| Count mismatch | N | — |
+| Sum mismatch | N | — |
+| Percentage mismatch | N | — |
+| State conflict | N | — |
+| Temporal conflict | N | — |
+| Cross-element conflict | N | — |
 | **Total** | **N** | — |
 
-### 5B.2 Per-Page Coherence Findings
+### 5B.2 Per-Page Consistency Findings
 #### Page N: [Page Name] (`filename.html`)
-| # | Severity | Element | Claims | Actual | Type |
-|---|----------|---------|--------|--------|------|
+
+**Claim Inventory:** N claim elements identified, N with verifiable data source.
+
+| # | Severity | Element | Claims | Actual | Validation | Type |
+|---|----------|---------|--------|--------|------------|------|
 
 ---
 
@@ -585,7 +619,7 @@ Eight color-coded highlight categories, all with **badges positioned at top-righ
 - **Orange dashed outline** (`3px dashed #f97316`) — Scope Creep
 - **Gray dashed outline** (`3px dashed #9ca3af`) — Placeholders
 - **Purple dashed outline** (`3px dashed #8b5cf6`) — Component Inconsistencies
-- **Teal dashed outline** (`3px dashed #14b8a6`) — Internal Coherence issues
+- **Teal dashed outline** (`3px dashed #14b8a6`) — Intra-Page Data Consistency issues
 
 Every badge must include `data-ann-id`, `data-ann-title`, and `data-ann-severity` attributes to power the hover tooltip.
 
@@ -609,7 +643,7 @@ A fixed slide-out panel (400px, dark theme) on the right side with full interact
   5. Scope Creep (Orange)
   6. Placeholders (Gray)
   7. Component Inconsistencies (Purple)
-  8. Internal Coherence (Teal)
+  8. Data Consistency (Teal)
 
 Each section header has a **visibility toggle** button. Toggling a category off hides both the panel section and all inline highlights of that category on the page.
 
@@ -778,7 +812,7 @@ If the user asks for build readiness / implementation status:
 | Scope Creep | S | Global across all pages | S1, S2, ..., SN |
 | Placeholder | P | Global across all pages | P1, P2, ..., PN |
 | Consistency | X | Global across all pages | X1, X2, ..., XN |
-| Internal Coherence | I | Global across all pages | I1, I2, ..., IN |
+| Data Consistency | I | Global across all pages | I1, I2, ..., IN |
 | Build Requirement | B | Per page, restart numbering | B1, B2, ... per page |
 
 ## Color Scheme
@@ -792,7 +826,7 @@ If the user asks for build readiness / implementation status:
 | Scope Creep | `#f97316` | `#f97316` | `rgba(249,115,22,0.15)` | `.dot-o` |
 | Placeholder | `#9ca3af` | `#9ca3af` | `rgba(156,163,175,0.15)` | `.dot-gr` |
 | Component Issue | `#8b5cf6` | `#8b5cf6` | `rgba(139,92,246,0.15)` | `.dot-p` |
-| Internal Coherence | `#14b8a6` | `#14b8a6` | `rgba(20,184,166,0.15)` | `.dot-t` |
+| Data Consistency | `#14b8a6` | `#14b8a6` | `rgba(20,184,166,0.15)` | `.dot-t` |
 
 ## Parallelization
 

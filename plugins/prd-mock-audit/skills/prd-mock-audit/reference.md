@@ -562,7 +562,7 @@ Add this entire block to the `<style>` of each annotated HTML file. These styles
 }
 .consistency-badge:hover { transform: scale(1.15); }
 
-/* Internal Coherence (Teal) */
+/* Data Consistency (Teal) */
 .coherence-highlight {
   position: relative;
   outline: 3px dashed #14b8a6 !important;
@@ -716,11 +716,11 @@ Add the appropriate highlight class + a badge span to the target element. Every 
   Submit
 </button>
 
-<!-- Internal Coherence (Teal) -->
+<!-- Data Consistency (Teal) — claims vs. actual in title -->
 <div class="stat-card coherence-highlight" id="i1">
   <span class="coherence-badge"
         data-ann-id="I1"
-        data-ann-title="Tab badge shows 12 but table has 5 rows"
+        data-ann-title="Claims: 'Active (12)' — Actual: 5 rows with Active status [Count mismatch]"
         data-ann-severity="MAJOR">I1</span>
   <!-- original content unchanged -->
 </div>
@@ -807,7 +807,7 @@ Place before `</body>`:
     <span class="ann-legend-item"><span class="ann-legend-dot orange"></span> Scope Creep</span>
     <span class="ann-legend-item"><span class="ann-legend-dot gray"></span> Placeholder</span>
     <span class="ann-legend-item"><span class="ann-legend-dot purple"></span> Consistency</span>
-    <span class="ann-legend-item"><span class="ann-legend-dot teal"></span> Coherence</span>
+    <span class="ann-legend-item"><span class="ann-legend-dot teal"></span> Data Consistency</span>
   </div>
 
   <!-- Scrollable Findings -->
@@ -976,10 +976,10 @@ Place before `</body>`:
       </div>
     </div>
 
-    <!-- INTERNAL COHERENCE (Teal) -->
+    <!-- DATA CONSISTENCY (Teal) -->
     <div class="ann-section" id="annSectionCoherence">
       <div class="ann-section-head" onclick="annToggleSection('annSectionCoherence')">
-        <span class="ann-section-label">Coherence <span class="ann-section-count teal">{COUNT}</span></span>
+        <span class="ann-section-label">Data Consistency <span class="ann-section-count teal">{COUNT}</span></span>
         <span class="ann-section-controls">
           <button class="ann-filter-toggle" onclick="event.stopPropagation(); annToggleCategory('coherence')" title="Show/hide on page">&#9678;</button>
           <span class="ann-section-chevron">&#9660;</span>
@@ -993,7 +993,7 @@ Place before `</body>`:
               <span class="ann-item-title">{TITLE}</span>
               <span class="ann-severity major">{SEVERITY}</span>
             </div>
-            <div class="ann-item-desc">{DESCRIPTION}</div>
+            <div class="ann-item-desc"><strong>Claims:</strong> {CLAIMS} · <strong>Actual:</strong> {ACTUAL} · <strong>Type:</strong> {MISMATCH_TYPE}</div>
           </div>
         </div>
       </div>
@@ -1303,7 +1303,7 @@ You need to create an annotated copy of [FILE_PATH].
    - [S1] on [element description] — orange scope creep — severity: [BLOCKER/MAJOR/MINOR] — title: "[title]"
    - [P1] on [element description] — gray placeholder — severity: [BLOCKER/MAJOR/MINOR] — title: "[title]"
    - [X1] on [element description] — purple consistency issue — severity: [BLOCKER/MAJOR/MINOR] — title: "[title]"
-   - [I1] on [element description] — teal coherence issue — severity: [BLOCKER/MAJOR/MINOR] — title: "[title]"
+   - [I1] on [element description] — teal data consistency issue — severity: [BLOCKER/MAJOR/MINOR] — title: "[title]" — claims: "[claim value]" — actual: "[actual value]" — type: "[mismatch type]"
    Each badge span must include: data-ann-id, data-ann-title, data-ann-severity
 5. Add the toggle button after <body> (only include dots for categories with findings)
 6. Add the tooltip element after the toggle button
@@ -1319,7 +1319,7 @@ You need to create an annotated copy of [FILE_PATH].
      - Scope Creep (orange): [list items with severity]
      - Placeholders (gray): [list items with severity]
      - Consistency (purple): [list items with severity]
-     - Coherence (teal): [list items with severity]
+     - Data Consistency (teal): [list items with severity]
    - Keyboard hints footer
 8. Add the JavaScript block (from reference.md) before </body>
 9. Update sidebar nav links to point to annotated versions
@@ -1340,7 +1340,7 @@ Before delivering results, verify:
 - [ ] All scope creep items (S) have element + description + risk assessment
 - [ ] All placeholders (P) have element + description + action needed
 - [ ] All consistency issues (X) have component + pages affected + discrepancy type
-- [ ] All coherence issues (I) have element + claims vs. actual + mismatch type
+- [ ] All data consistency issues (I) have element + claims value + actual value + validation work + mismatch type
 
 **IDs and counts:**
 - [ ] Finding IDs are sequential across pages (C1-CN, G1-GN, A1-AN, D1-DN, S1-SN, P1-PN, X1-XN, I1-IN)
@@ -1824,4 +1824,4 @@ And `PAGE_LIST` as a simple string array:
 
 ---
 
-**Last updated:** 2026-03-03 (v5 — added Internal Coherence (I/Teal) annotation category for Phase 5B mock self-validation)
+**Last updated:** 2026-03-03 (v6 — Phase 5B rewritten as Intra-Page Data Consistency with systematic arithmetic cross-element validation procedure)
