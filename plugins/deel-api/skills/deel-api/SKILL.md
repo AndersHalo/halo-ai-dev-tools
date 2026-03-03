@@ -1,6 +1,6 @@
 ---
 name: deel-api
-description: Deel REST API integration reference. Use when building features that sync data from Deel, working on the Deel integration module, or troubleshooting Deel API calls (people, organizations, teams, departments, time-off, lookups).
+description: Deel REST API integration reference. Use when building features that sync data from Deel, working on the Deel integration module, or troubleshooting Deel API calls (people, organizations, teams, departments, time-off, contracts, lookups).
 ---
 
 # Deel API Integration Skill
@@ -9,15 +9,16 @@ Use this guide when building an app that integrates with the Deel REST API, in a
 
 ## Quick Reference
 
-| Property       | Value                                                             |
-| -------------- | ----------------------------------------------------------------- |
-| Base URL       | `https://api.letsdeel.com/rest/v2`                                |
-| Auth           | `Authorization: Bearer <DEEL_API_KEY>` header                     |
-| Content Type   | `application/json`                                                |
-| Protocol       | HTTPS only (HTTP will fail)                                       |
-| Pagination     | Cursor-based: pass `?limit=N&after_cursor=CURSOR`                 |
-| Response shape | `{ "data": [...], "page": { "cursor": "...", "total_rows": N } }` |
-| Rate limits    | ~100 requests/minute observed (applies to sandbox too)            |
+| Property              | Value                                                             |
+| --------------------- | ----------------------------------------------------------------- |
+| Base URL (Production) | `https://api.letsdeel.com/rest/v2`                                |
+| Base URL (Sandbox)    | `https://api-sandbox.demo.deel.com/rest/v2`                       |
+| Auth                  | `Authorization: Bearer <DEEL_API_KEY>` header                     |
+| Content Type          | `application/json`                                                |
+| Protocol              | HTTPS only (HTTP will fail)                                       |
+| Pagination            | Cursor-based: pass `?limit=N&after_cursor=CURSOR`                 |
+| Response shape        | `{ "data": [...], "page": { "cursor": "...", "total_rows": N } }` |
+| Rate limits           | ~100 requests/minute observed (applies to sandbox too)            |
 
 ## Token Details
 
@@ -38,7 +39,7 @@ Token types:
 
 **Important:** Always check `hide_employment_data` in your token. When `true`, you must read employment fields from `person.employments[0]` (the active employment), not from the person root object.
 
-## Endpoint Summary (17 total verified)
+## Endpoint Summary (20 total verified)
 
 | Scope                | Endpoints                                                                                                             |
 | -------------------- | --------------------------------------------------------------------------------------------------------------------- |
@@ -46,19 +47,26 @@ Token types:
 | `organizations:read` | `/organizations`, `/hris/organization_structures`, `/legal-entities`, `/managers`                                     |
 | `groups:read`        | `/teams`, `/departments`                                                                                              |
 | `time-off:read`      | `/time_offs`, `/time_offs/profile/:id`, `/time_offs/profile/:id/entitlements`                                         |
+| `contracts:read`     | `/contracts`, `/contracts/:id`, `/contract-templates`                                                                 |
 | _(none)_             | `/lookups/countries`, `/lookups/currencies`, `/lookups/job-titles`, `/lookups/seniorities`, `/lookups/time-off-types` |
 
 ## Top Gotchas
 
 1. **Decode the JWT first** — `scope` tells you which endpoints return 200 vs 403
-2. **`hide_employment_data` changes response shape** — fields like `job_title`, `department` move into `employments[0]`
-3. **Pagination is cursor-based** — use `after_cursor` from `page.cursor`, not page numbers
-4. **Time-off uses `hris_organization_user_id`** — not the person UUID or worker_id
-5. **`/time_offs` list does NOT support `limit`** — passing it returns 400
-6. **Emails are an array** — use `person.emails.find(e => e.type === 'work')?.value`
-7. **Route order matters (Express)** — put `/custom-fields` before `/:id`
-8. **Deel mixes underscores and hyphens** — `/time_offs` vs `/lookups/time-off-types`
+2. **Sandbox vs Production use different base URLs** — sandbox tokens must hit `api-sandbox.demo.deel.com`, not `api.letsdeel.com`. A sandbox token against production returns 401
+3. **`hide_employment_data` changes response shape** — fields like `job_title`, `department` move into `employments[0]`
+4. **Pagination is cursor-based** — use `after_cursor` from `page.cursor`, not page numbers
+5. **Time-off uses `hris_organization_user_id`** — not the person UUID or worker_id
+6. **`/time_offs` list does NOT support `limit`** — passing it returns 400
+7. **Contract `:id` is a short alphanumeric string** (e.g. `5dkw6zv`), not a UUID
+8. **Emails are an array** — use `person.emails.find(e => e.type === 'work')?.value`
+9. **Route order matters (Express)** — put `/custom-fields` before `/:id`
+10. **Deel mixes underscores and hyphens** — `/time_offs` vs `/lookups/time-off-types`
 
 ## Additional resources
 
 - For complete endpoint details, response payloads, enum values, implementation patterns, and stack-specific quick starts, see [reference.md](reference.md)
+
+---
+
+**Last updated:** 2026-03-02 by Franklin Lee

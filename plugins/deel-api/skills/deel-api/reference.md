@@ -1,6 +1,6 @@
 # Deel API — Full Reference
 
-## All Verified API Endpoints (17 total)
+## All Verified API Endpoints (20 total)
 
 Every endpoint below has been tested live and confirmed working.
 
@@ -50,15 +50,23 @@ Every endpoint below has been tested live and confirmed working.
 | `GET /lookups/seniorities`    | Seniority levels            | 83    |
 | `GET /lookups/time-off-types` | Time-off type definitions   | 4     |
 
+### `contracts:read` scope — 3 endpoints
+
+| Deel API Endpoint         | Description                                                         | Params                  |
+| ------------------------- | ------------------------------------------------------------------- | ----------------------- |
+| `GET /contracts`          | List all contracts in the org                                       | `limit`, `after_cursor` |
+| `GET /contracts/:id`      | Get a single contract by ID (short alphanumeric ID, e.g. `5dkw6zv`) | —                       |
+| `GET /contract-templates` | List contract templates                                             | —                       |
+
+**Note:** The contract `:id` is a short alphanumeric string (e.g. `5dkw6zv`), not a UUID. Sub-resource endpoints like `/contracts/:id/compensation` and `/contracts/:id/invoices` return 404 — they may require specific contract types (e.g. contractor, not hris_direct_employee).
+
 ### Endpoints that require additional scopes (403 with current token)
 
 | Deel API Endpoint             | Required Scope    |
 | ----------------------------- | ----------------- |
-| `GET /contracts`              | `contracts:read`  |
 | `GET /workers/:id/documents`  | documents scope   |
 | `GET /webhooks/events/types`  | webhooks scope    |
 | `GET /adjustments/categories` | adjustments scope |
-| `GET /contract-templates`     | contracts scope   |
 
 ---
 
@@ -274,6 +282,7 @@ project/
     │   ├── people.js       # /api/people routes
     │   ├── organization.js # /api/organization routes (includes teams, departments)
     │   ├── timeoff.js      # /api/time-off routes
+    │   ├── contracts.js    # /api/contracts routes
     │   └── lookups.js      # /api/lookups routes
     └── middleware/
         └── errorHandler.js # Centralized error handler
@@ -384,7 +393,7 @@ def get(path, params=None):
     return resp.json()
 ```
 
-**app.py** (all 17 endpoints):
+**app.py** (all 20 endpoints):
 
 ```python
 import os
@@ -456,6 +465,20 @@ def person_entitlements(hris_id):
     params = {k: request.args[k] for k in ("policy_type_name", "tracking_period_date") if k in request.args}
     return jsonify(deel_client.get(f"/time_offs/profile/{hris_id}/entitlements", params))
 
+# Contracts (contracts:read)
+@app.route("/api/contracts")
+def list_contracts():
+    params = {k: request.args[k] for k in ("limit", "after_cursor") if k in request.args}
+    return jsonify(deel_client.get("/contracts", params))
+
+@app.route("/api/contracts/templates")
+def contract_templates():
+    return jsonify(deel_client.get("/contract-templates"))
+
+@app.route("/api/contracts/<contract_id>")
+def get_contract(contract_id):
+    return jsonify(deel_client.get(f"/contracts/{contract_id}"))
+
 # Lookups (no scope required)
 @app.route("/api/lookups/countries")
 def countries():
@@ -494,7 +517,7 @@ if __name__ == "__main__":
 
 ### Go / net/http
 
-**main.go** (all 17 endpoints):
+**main.go** (all 20 endpoints):
 
 ```go
 package main
@@ -598,6 +621,10 @@ func main() {
 	// Time-off
 	http.HandleFunc("/api/time-off", proxyHandler("/time_offs"))
 
+	// Contracts
+	http.HandleFunc("/api/contracts", proxyHandler("/contracts"))
+	http.HandleFunc("/api/contracts/templates", proxyHandler("/contract-templates"))
+
 	// Lookups
 	http.HandleFunc("/api/lookups/countries", proxyHandler("/lookups/countries"))
 	http.HandleFunc("/api/lookups/currencies", proxyHandler("/lookups/currencies"))
@@ -618,7 +645,7 @@ func main() {
 
 1. **Decode the JWT first.** The `scope` field tells you exactly which endpoints will work. Building routes for scopes you don't have results in 403 errors. Also check `hide_employment_data` — it changes the response shape (see gotcha #12).
 
-2. **Sandbox vs Production keys are different.** Never mix them. Sandbox is at the same base URL but uses a separate API key generated from the Sandbox tab in Developer Center.
+2. **Sandbox vs Production use different base URLs.** Sandbox tokens must hit `https://api-sandbox.demo.deel.com/rest/v2`, not the production `api.letsdeel.com` URL. A sandbox token against the production URL returns 401. Never mix them.
 
 3. **Rate limits apply in sandbox too.** Observed ~100 requests/minute. When paginating through all records (e.g. `getAllPeople()`), you're unlikely to hit this unless you also have concurrent requests.
 
@@ -647,6 +674,8 @@ func main() {
 15. **`direct_manager` uses `display_name`, not `full_name`.** The manager object has `first_name`, `last_name`, and `display_name` (preferred name). There is no `full_name` on the manager object — construct it yourself or use `display_name`.
 
 16. **`total_rows` from pagination may exceed what you get.** `page.total_rows` counts ALL records (including terminated). If you filter to `hiring_status === 'active'` after fetching, you'll get fewer records than `total_rows` suggests.
+
+17. **Contract `:id` is a short alphanumeric string** (e.g. `5dkw6zv`), not a UUID. Sub-resource endpoints like `/contracts/:id/compensation` and `/contracts/:id/invoices` return 404 — they may require specific contract types (e.g. contractor, not hris_direct_employee).
 
 ---
 
@@ -678,6 +707,11 @@ curl http://localhost:3000/api/time-off
 curl http://localhost:3000/api/time-off/profile/HRIS_PROFILE_ID_HERE
 curl http://localhost:3000/api/time-off/profile/HRIS_PROFILE_ID_HERE/entitlements
 
+# --- contracts:read ---
+curl "http://localhost:3000/api/contracts?limit=3"
+curl http://localhost:3000/api/contracts/CONTRACT_ID_HERE
+curl http://localhost:3000/api/contracts/templates
+
 # --- lookups (no scope required) ---
 curl http://localhost:3000/api/lookups/countries
 curl http://localhost:3000/api/lookups/currencies
@@ -687,3 +721,7 @@ curl http://localhost:3000/api/lookups/time-off-types
 ```
 
 All Deel endpoints should return JSON with a `data` field. If you get a 401, the token is invalid or expired. If you get a 403, the token lacks the required scope.
+
+---
+
+**Last updated:** 2026-03-02 by Franklin Lee

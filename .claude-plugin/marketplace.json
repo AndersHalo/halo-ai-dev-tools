@@ -19,6 +19,16 @@
       "name": "jira-mcp-setup",
       "description": "Install and configure the Jira MCP server (mcp-atlassian) for Claude Code. Adds Jira integration via Model Context Protocol.",
       "source": "./plugins/jira-mcp-setup"
+    },
+    {
+      "name": "netsuite-restlet",
+      "description": "NetSuite RESTlet integration reference. Use when building features that sync data from NetSuite (employees, projects, timesheets, OAuth 1.0 TBA).",
+      "source": "./plugins/netsuite-restlet"
+    },
+    {
+      "name": "deel-api",
+      "description": "Deel REST API integration reference. Use when building features that sync data from Deel (people, organizations, teams, departments, time-off, contracts, lookups).",
+      "source": "./plugins/deel-api"
     }
   ]
 }
