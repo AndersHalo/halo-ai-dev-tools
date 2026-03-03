@@ -412,6 +412,198 @@ Intra-page data consistency issues use a dedicated category:
 | I3 | BLOCKER | Game HUD | Health bar | Bar at ~50% fill | HP text reads "90/100" | 90/100 = 90%, bar should be nearly full | Percentage mismatch |
 | I4 | MAJOR | Settings | Sidebar nav | Active on "Profile" | Page heading is "Settings" | Sidebar active item ≠ page title | Location conflict |
 
+### Phase 5C — Mock Structural & Flow Validation
+
+Analyze each mock against itself for structural, logical, and flow-level issues — independent of the PRD. Phase 5B catches numeric/data mismatches; this phase catches **broken flows, missing states, dead-end navigation, and logic contradictions** that would cause implementation failures regardless of what the PRD says.
+
+**This phase is always executed.** It does not depend on the PRD content.
+
+#### Procedure
+
+For each mock page (and across the mock set as a whole), check:
+
+**1. Navigation & Flow Integrity**
+
+Verify that every navigational element leads somewhere valid within the mock set:
+
+| Check | What to Look For |
+|-------|-----------------|
+| Dead-end links | A link, button, or menu item references a page or section that doesn't exist in the mock set |
+| Orphan pages | A mock page that no other page links to — it exists but is unreachable through navigation |
+| Circular-only flows | A user flow that can enter a section but has no way to exit or go back |
+| Broken breadcrumbs | Breadcrumb trail references pages not in the mock set, or the hierarchy doesn't match actual page structure |
+| Missing "back" paths | A detail/edit/modal page with no way to return to the list/parent view |
+
+**2. Interaction Completeness**
+
+Verify that every interactive element has its complete lifecycle represented:
+
+| Element | Expected States | Common Gaps |
+|---------|----------------|-------------|
+| Form with submit button | Empty → filled → validating → success/error | Missing validation messages, no success/error state |
+| Delete/destructive action | Trigger → confirmation → result | Missing confirmation dialog, no feedback after action |
+| Toggle/switch | On state → off state (and vice versa) | Only one state shown, no transition feedback |
+| Search/filter | Default → active filter → filtered results → empty results | Missing empty state, no "clear filters" path |
+| Pagination | First page → middle page → last page | Only one page shown, no edge cases |
+| Modal/dialog | Trigger → open → close/complete | No close mechanism, no overlay click behavior |
+| Loading states | Idle → loading → loaded → error | No loading indicator, no error recovery path |
+
+**3. Orphan & Disconnected Elements**
+
+Identify UI elements that appear to serve no purpose or have no connection to the page's functionality:
+
+- A button with no apparent action or destination
+- A section/panel that contains no content and has no empty-state explanation
+- A form field that doesn't relate to any visible form or data flow
+- An icon or badge with no context, label, or tooltip explaining its meaning
+- A tab or accordion with no content behind it
+
+**4. Logic & Affordance Contradictions**
+
+Identify elements where visual design and structural intent conflict:
+
+| Pattern | Example |
+|---------|---------|
+| Disabled look, interactive role | A button styled as disabled (grayed out) but positioned as the primary action with no path to enable it |
+| Interactive look, static role | Text or element styled like a clickable link (underlined, colored) but serving as static display |
+| Multiple primary actions | Two or more "primary" styled buttons competing for the same action context |
+| Contradicting CTAs | "Save" and "Submit" buttons in the same form with unclear distinction |
+| Conflicting empty states | A section shows an empty-state message ("No items yet") alongside a populated list |
+
+**5. Cross-Page Flow Validation**
+
+Check flows that span multiple mock pages for completeness:
+
+- A "Create New" flow: does the creation page exist? Does it return to the list after success?
+- An "Edit" flow: does the edit page/modal exist? Is it pre-populated? Does it show save feedback?
+- A "Delete" flow: is there a confirmation? What happens to the list after deletion?
+- A "Detail" flow: does clicking a list item lead to a detail view? Can you go back?
+- User flows mentioned in navigation but not present in the mock set
+
+#### Finding Classification
+
+- **Prefix:** `M` (Mock structural issue)
+- **Color:** Rose (`#f43f5e`) — distinct from all other categories
+- **Severity:**
+  - **BLOCKER** — A flow is fundamentally broken: a critical action leads nowhere, a required page is missing from the mock set, or an element creates an unrecoverable dead end
+  - **MAJOR** — An interaction is incomplete or confusing: missing states, orphan elements, or affordance contradictions that would require developer guesswork
+  - **MINOR** — A minor structural inconsistency unlikely to block implementation (e.g., a redundant button, a cosmetic empty state issue)
+
+#### Sub-Types
+
+| Sub-Type | Description |
+|----------|-------------|
+| Dead-end | Navigation leads to a non-existent destination |
+| Missing state | An interactive element lacks required lifecycle states |
+| Orphan element | A UI element with no apparent purpose or connection |
+| Affordance conflict | Visual design suggests a behavior the structure contradicts |
+| Incomplete flow | A multi-step flow is missing pages, steps, or feedback |
+| Unreachable page | A mock page exists but no navigation path leads to it |
+
+#### Output Table
+
+| # | Severity | Page(s) | Element | Issue | Expected | Sub-Type |
+|---|----------|---------|---------|-------|----------|----------|
+| M1 | BLOCKER | User List | "Edit" button per row | Clicking edit — no edit page/modal exists in mock set | Edit page or inline edit modal | Dead-end |
+| M2 | MAJOR | Checkout | Payment form | Form has submit button but no success, error, or loading state shown | Success confirmation + error handling | Missing state |
+| M3 | MINOR | Dashboard | Gear icon (top-right) | Icon present with no tooltip, label, or settings page in mock set | Settings destination or removal | Orphan element |
+| M4 | MAJOR | Product Detail | "Add to Cart" button | Styled as disabled (grayed) but no condition or path to enable it shown | Enable condition or active state variant | Affordance conflict |
+
+---
+
+### Phase 5D — PRD Internal Consistency
+
+Analyze the PRD against itself for internal contradictions, ambiguities, and gaps. A PRD that contradicts itself makes the bidirectional comparison (Phase 3) unreliable — if the PRD says two conflicting things about the same feature, any mock implementation is simultaneously "correct" and "wrong." This phase catches those issues before they pollute the audit.
+
+**This phase is always executed.** It runs after requirement extraction (Phase 2) and before the bidirectional comparison (Phase 3) uses the requirements.
+
+#### What to Check
+
+**1. Contradictory Requirements**
+
+Two or more FRs that directly conflict with each other:
+
+| Example | FR A | FR B | Conflict |
+|---------|------|------|----------|
+| Login behavior | "FR1.2: Users must authenticate with email + password" | "FR4.1: All authentication is via SSO only" | Which auth method? |
+| Data visibility | "FR3.1: Admins can see all user data" | "FR7.3: User data is only visible to the owning user" | Exception not defined |
+| Navigation | "FR2.1: Dashboard is the landing page" | "FR5.4: Users land on their project list after login" | Which landing page? |
+
+**2. Ambiguous / Vague Requirements**
+
+FRs with language open to multiple valid interpretations:
+
+- Unquantified terms: "fast response time", "large number of items", "recent activity"
+- Undefined scope: "the system should handle errors gracefully" (which errors? what's graceful?)
+- Implicit behavior: "users can manage their profile" (what does "manage" include — edit, delete, export?)
+- Conditional without condition: "the button should be disabled when appropriate" (when?)
+
+**3. Undefined References**
+
+FRs that mention entities, roles, statuses, pages, or terms that are never defined in the PRD:
+
+| Reference | Used In | Defined? |
+|-----------|---------|----------|
+| "Premium users" | FR3.2, FR5.1 | No — no user tier system defined |
+| "Approval workflow" | FR8.3 | No — no workflow states defined |
+| "Archive" status | FR2.5 | No — status values only define Active/Inactive |
+| "Notification preferences" page | FR6.1 | No — no page specification exists |
+
+**4. Overlapping / Duplicate Requirements**
+
+Two FRs that describe the same behavior in different terms, potentially with subtle differences:
+
+- FR2.3 "Users can filter the project list by status" vs. FR4.1 "The project table supports status-based filtering" — same feature, different wording, potentially different scope
+- FR1.5 "Admin dashboard shows team metrics" vs. FR7.2 "Managers can view team performance data" — are these the same page?
+
+**5. Inconsistent Terminology**
+
+The same concept referred to by different names across the PRD:
+
+| Concept | Name in FR1.x | Name in FR3.x | Name in FR7.x |
+|---------|---------------|---------------|---------------|
+| Main data view | "Dashboard" | "Overview" | "Home page" |
+| End user | "User" | "Member" | "Participant" |
+| Action on item | "Delete" | "Remove" | "Archive" |
+
+**6. Missing Prerequisites**
+
+FRs that depend on capabilities, data, or infrastructure not specified elsewhere:
+
+- "FR5.2: Show real-time notifications" — but no notification system, delivery mechanism, or data source is defined
+- "FR3.4: Export data as CSV" — but no export permissions, rate limits, or data scope defined
+- "FR8.1: Integrate with Slack for alerts" — but no integration architecture or credentials flow defined
+
+**7. Scope Gaps**
+
+Obvious functional areas the PRD should cover based on its own context but doesn't:
+
+- PRD defines user roles (admin, member) but never specifies role management (create, assign, revoke)
+- PRD defines a data table but never mentions pagination, sorting, or filtering
+- PRD defines form inputs but never mentions validation rules or error messages
+- PRD references "settings" in navigation but has no settings requirements
+
+#### Finding Classification
+
+- **Prefix:** `R` (Requirement issue)
+- **Color:** Indigo (`#6366f1`)
+- **This is a report-only category.** R findings appear in analysis.md Part 5D only — they are NOT annotated on the HTML mocks because they describe PRD issues, not mock elements. If a PRD contradiction directly affects a mock element, the corresponding mock issue is captured separately in Phase 3 (as C or G) with a cross-reference to the R finding.
+- **Severity:**
+  - **BLOCKER** — A direct contradiction between requirements that makes it impossible to implement both correctly. The mock audit results for affected FRs are unreliable until the PRD is clarified.
+  - **MAJOR** — An ambiguity, undefined reference, or scope gap significant enough to cause developer guesswork or rework.
+  - **MINOR** — Terminology inconsistency or minor overlap unlikely to cause implementation errors.
+
+#### Output Table
+
+| # | Severity | Type | FRs Affected | Description | Impact on Audit |
+|---|----------|------|-------------|-------------|-----------------|
+| R1 | BLOCKER | Contradiction | FR1.2, FR4.1 | Auth method: email+password vs. SSO-only | Mock audit findings for auth are unreliable |
+| R2 | MAJOR | Undefined ref | FR3.2, FR5.1 | "Premium users" referenced but no tier system defined | Cannot verify tier-based UI elements |
+| R3 | MAJOR | Ambiguity | FR8.3 | "Approval workflow" — no states, transitions, or roles defined | Mock may show any workflow and be "compliant" |
+| R4 | MINOR | Terminology | FR1.x, FR3.x, FR7.x | Same page called "Dashboard", "Overview", and "Home" | Minor confusion, doesn't block implementation |
+
+---
+
 ### Phase 6 — Requirement Traceability Matrix
 
 1. List every FR and its sub-requirements from the PRD
@@ -453,6 +645,8 @@ Create `docs/audit/prd/{analysis_name}/analysis.md` with the following structure
 | Component Inconsistencies | N |
 | Page Description Gaps | N (or "N/A — no page descriptions in PRD") |
 | Intra-Page Data Mismatches | N |
+| Mock Structural Issues | N |
+| PRD Internal Issues | N |
 
 ### Risk Assessment
 - **BLOCKERS:** N items require mock revision before development can begin
@@ -609,6 +803,50 @@ Create `docs/audit/prd/{analysis_name}/analysis.md` with the following structure
 
 ---
 
+## Part 5C: Mock Structural & Flow Validation
+
+### 5C.1 Structural Summary
+| Issue Type | Count | Max Severity |
+|------------|-------|--------------|
+| Dead-end navigation | N | — |
+| Missing interaction states | N | — |
+| Orphan elements | N | — |
+| Affordance conflicts | N | — |
+| Incomplete flows | N | — |
+| Unreachable pages | N | — |
+| **Total** | **N** | — |
+
+### 5C.2 Per-Page Structural Findings
+#### Page N: [Page Name] (`filename.html`)
+| # | Severity | Element | Issue | Expected | Sub-Type |
+|---|----------|---------|-------|----------|----------|
+
+### 5C.3 Cross-Page Flow Findings
+| # | Severity | Pages Involved | Flow | Issue | Sub-Type |
+|---|----------|----------------|------|-------|----------|
+
+---
+
+## Part 5D: PRD Internal Consistency
+
+### 5D.1 PRD Issues Summary
+| Issue Type | Count | Max Severity |
+|------------|-------|--------------|
+| Contradictory requirements | N | — |
+| Ambiguous requirements | N | — |
+| Undefined references | N | — |
+| Overlapping/duplicate FRs | N | — |
+| Inconsistent terminology | N | — |
+| Missing prerequisites | N | — |
+| Scope gaps | N | — |
+| **Total** | **N** | — |
+
+### 5D.2 PRD Findings
+| # | Severity | Type | FRs Affected | Description | Impact on Audit |
+|---|----------|------|-------------|-------------|-----------------|
+
+---
+
 ## Part 6: Cross-Cutting Issues
 [Issues that span multiple pages or affect the entire design system]
 
@@ -635,7 +873,7 @@ For each mock file, create `docs/audit/prd/{analysis_name}/annotated/[filename]-
 
 #### A. Inline Highlights (on page elements)
 
-Eight color-coded highlight categories, all with **badges positioned at top-right** for consistency:
+Nine color-coded highlight categories, all with **badges positioned at top-right** for consistency:
 - **Red dashed outline** (`3px dashed #ef4444`) — Contradictions
 - **Blue dashed outline** (`3px dashed #3b82f6`) — Gaps
 - **Yellow dashed outline** (`3px dashed #f59e0b`) — Accessibility issues
@@ -644,6 +882,9 @@ Eight color-coded highlight categories, all with **badges positioned at top-righ
 - **Gray dashed outline** (`3px dashed #9ca3af`) — Placeholders
 - **Purple dashed outline** (`3px dashed #8b5cf6`) — Component Inconsistencies
 - **Teal dashed outline** (`3px dashed #14b8a6`) — Intra-Page Data Consistency issues
+- **Rose dashed outline** (`3px dashed #f43f5e`) — Mock Structural & Flow issues
+
+**Note:** PRD Internal Consistency findings (R prefix, Indigo) are **report-only** — they appear in analysis.md Part 5D but are NOT annotated on the HTML mocks.
 
 Every badge must include `data-ann-id`, `data-ann-title`, and `data-ann-severity` attributes to power the hover tooltip.
 
@@ -668,6 +909,7 @@ A fixed slide-out panel (400px, dark theme) on the right side with full interact
   6. Placeholders (Gray)
   7. Component Inconsistencies (Purple)
   8. Data Consistency (Teal)
+  9. Mock Structural (Rose)
 
 Each section header has a **visibility toggle** button. Toggling a category off hides both the panel section and all inline highlights of that category on the page.
 
@@ -725,7 +967,7 @@ After generating all outputs, perform these validation checks before delivering 
 
 All three outputs are generated sequentially in a single pass. Because the heatmap is written last, **paraphrasing drift** can cause its descriptions to diverge from the analysis and annotated HTML. These checks catch and prevent that:
 
-1. **Finding ID completeness** — Every finding ID in analysis.md (C1–CN, G1–GN, A1–AN, D1–DN, S1–SN, P1–PN, X1–XN, I1–IN) must appear in the corresponding annotated HTML file(s), both as an inline badge and a panel entry
+1. **Finding ID completeness** — Every annotatable finding ID in analysis.md (C1–CN, G1–GN, A1–AN, D1–DN, S1–SN, P1–PN, X1–XN, I1–IN, M1–MN) must appear in the corresponding annotated HTML file(s), both as an inline badge and a panel entry. R-prefix findings (PRD issues) are report-only and do NOT appear in annotated HTML
 2. **Annotated → analysis sync** — Every finding in an annotated HTML panel must be listed in analysis.md. No orphan findings in annotated files
 3. **Heatmap → traceability matrix sync** — The heatmap `HEATMAP_DATA` JSON must have exactly the same rows (FR/sub-requirement), columns (pages), and statuses (covered/partial/missing/contradicted) as the traceability matrix in analysis.md Part 2.2
 4. **Heatmap findingId validity** — Every `findingId` value in the heatmap JSON must correspond to an actual finding ID in analysis.md
@@ -740,6 +982,13 @@ All three outputs are generated sequentially in a single pass. Because the heatm
 9. **Annotated HTML title match** — The `data-ann-title` attribute on each inline badge must match the finding title in the analysis.md report and the panel item title in the same annotated HTML
 
 **If any drift is detected:** Re-read the specific finding from analysis.md and correct the divergent output (heatmap detail, annotated HTML title/description, etc.) to match verbatim.
+
+#### F. Self-Validation Phase Checks (Phases 5C and 5D)
+1. **No overlap with Phase 3** — M findings (mock structural) must not duplicate C/G findings from Phase 3. M findings are about mock-internal issues (dead ends, missing states), not PRD compliance.
+2. **No overlap with Phase 5B** — M findings must not duplicate I findings. Phase 5B covers data/numeric mismatches; Phase 5C covers structural/flow issues. If an issue has both aspects, use the more specific category.
+3. **R-finding cross-references** — If a PRD contradiction (R finding) affects the interpretation of a Phase 3 finding (C or G), the Phase 3 finding should note: "See R{N} — PRD is internally contradictory on this requirement."
+4. **R findings are report-only** — Verify no R-prefix badges appear in annotated HTML files.
+5. **PRD issue impact noted** — Each R finding must include an "Impact on Audit" column explaining how the PRD issue affects the reliability of other audit findings.
 
 ### Phase 10 — Delta / Diff Mode (Optional)
 
@@ -837,6 +1086,8 @@ If the user asks for build readiness / implementation status:
 | Placeholder | P | Global across all pages | P1, P2, ..., PN |
 | Consistency | X | Global across all pages | X1, X2, ..., XN |
 | Data Consistency | I | Global across all pages | I1, I2, ..., IN |
+| Mock Structural | M | Global across all pages | M1, M2, ..., MN |
+| PRD Issue | R | Global (report-only, not annotated) | R1, R2, ..., RN |
 | Build Requirement | B | Per page, restart numbering | B1, B2, ... per page |
 
 ## Color Scheme
@@ -851,6 +1102,8 @@ If the user asks for build readiness / implementation status:
 | Placeholder | `#9ca3af` | `#9ca3af` | `rgba(156,163,175,0.15)` | `.dot-gr` |
 | Component Issue | `#8b5cf6` | `#8b5cf6` | `rgba(139,92,246,0.15)` | `.dot-p` |
 | Data Consistency | `#14b8a6` | `#14b8a6` | `rgba(20,184,166,0.15)` | `.dot-t` |
+| Mock Structural | `#f43f5e` | `#f43f5e` | `rgba(244,63,94,0.15)` | `.dot-rs` |
+| PRD Issue | `#6366f1` | `#6366f1` | — (report-only) | — |
 
 ## Parallelization
 
