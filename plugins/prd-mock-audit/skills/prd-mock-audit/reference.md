@@ -50,6 +50,7 @@ Add this entire block to the `<style>` of each annotated HTML file. These styles
 .ann-toggle-btn .dot-o  { width: 8px; height: 8px; border-radius: 50%; background: #f97316; }
 .ann-toggle-btn .dot-gr { width: 8px; height: 8px; border-radius: 50%; background: #9ca3af; }
 .ann-toggle-btn .dot-p  { width: 8px; height: 8px; border-radius: 50%; background: #8b5cf6; }
+.ann-toggle-btn .dot-t  { width: 8px; height: 8px; border-radius: 50%; background: #14b8a6; }
 
 /* --- Panel Container --- */
 .ann-panel {
@@ -191,6 +192,7 @@ Add this entire block to the `<style>` of each annotated HTML file. These styles
 .ann-legend-dot.orange { background: #f97316; }
 .ann-legend-dot.gray   { background: #9ca3af; }
 .ann-legend-dot.purple { background: #8b5cf6; }
+.ann-legend-dot.teal   { background: #14b8a6; }
 
 /* --- Scrollable Body --- */
 .ann-scroll {
@@ -246,6 +248,7 @@ Add this entire block to the `<style>` of each annotated HTML file. These styles
 .ann-section-count.orange { background: rgba(249,115,22,0.15); color: #fb923c; }
 .ann-section-count.gray   { background: rgba(156,163,175,0.15); color: #d1d5db; }
 .ann-section-count.purple { background: rgba(139,92,246,0.15); color: #a78bfa; }
+.ann-section-count.teal   { background: rgba(20,184,166,0.15); color: #2dd4bf; }
 .ann-filter-toggle {
   background: none;
   border: none;
@@ -307,6 +310,7 @@ Add this entire block to the `<style>` of each annotated HTML file. These styles
 .ann-item-badge.orange { background: #f97316; }
 .ann-item-badge.gray   { background: #9ca3af; }
 .ann-item-badge.purple { background: #8b5cf6; }
+.ann-item-badge.teal   { background: #14b8a6; }
 .ann-item-content { flex: 1; min-width: 0; }
 .ann-item-header {
   display: flex;
@@ -558,6 +562,33 @@ Add this entire block to the `<style>` of each annotated HTML file. These styles
 }
 .consistency-badge:hover { transform: scale(1.15); }
 
+/* Internal Coherence (Teal) */
+.coherence-highlight {
+  position: relative;
+  outline: 3px dashed #14b8a6 !important;
+  outline-offset: 4px;
+}
+.coherence-badge {
+  position: absolute;
+  top: -14px;
+  right: -14px;
+  width: 28px;
+  height: 28px;
+  background: #14b8a6;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(20,184,166,0.4);
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.coherence-badge:hover { transform: scale(1.15); }
+
 /* ============================================================
    HOVER TOOLTIP — Shows finding summary on badge hover
    ============================================================ */
@@ -684,6 +715,15 @@ Add the appropriate highlight class + a badge span to the target element. Every 
         data-ann-severity="MINOR">X1</span>
   Submit
 </button>
+
+<!-- Internal Coherence (Teal) -->
+<div class="stat-card coherence-highlight" id="i1">
+  <span class="coherence-badge"
+        data-ann-id="I1"
+        data-ann-title="Tab badge shows 12 but table has 5 rows"
+        data-ann-severity="MAJOR">I1</span>
+  <!-- original content unchanged -->
+</div>
 ```
 
 **Notes:**
@@ -707,6 +747,7 @@ Place right after `<body>`, before the sidebar/main content:
   <span class="ann-count"><span class="dot-g"></span> {DESIGN_DECISION_COUNT}</span>
   <span class="ann-count"><span class="dot-o"></span> {SCOPE_CREEP_COUNT}</span>
   <span class="ann-count"><span class="dot-p"></span> {CONSISTENCY_COUNT}</span>
+  <span class="ann-count"><span class="dot-t"></span> {COHERENCE_COUNT}</span>
 </button>
 ```
 
@@ -766,6 +807,7 @@ Place before `</body>`:
     <span class="ann-legend-item"><span class="ann-legend-dot orange"></span> Scope Creep</span>
     <span class="ann-legend-item"><span class="ann-legend-dot gray"></span> Placeholder</span>
     <span class="ann-legend-item"><span class="ann-legend-dot purple"></span> Consistency</span>
+    <span class="ann-legend-item"><span class="ann-legend-dot teal"></span> Coherence</span>
   </div>
 
   <!-- Scrollable Findings -->
@@ -934,6 +976,29 @@ Place before `</body>`:
       </div>
     </div>
 
+    <!-- INTERNAL COHERENCE (Teal) -->
+    <div class="ann-section" id="annSectionCoherence">
+      <div class="ann-section-head" onclick="annToggleSection('annSectionCoherence')">
+        <span class="ann-section-label">Coherence <span class="ann-section-count teal">{COUNT}</span></span>
+        <span class="ann-section-controls">
+          <button class="ann-filter-toggle" onclick="event.stopPropagation(); annToggleCategory('coherence')" title="Show/hide on page">&#9678;</button>
+          <span class="ann-section-chevron">&#9660;</span>
+        </span>
+      </div>
+      <div class="ann-section-body">
+        <div class="ann-item" id="ann-I1" data-target="i1" onclick="annScrollToElement('i1')">
+          <span class="ann-item-badge teal">I1</span>
+          <div class="ann-item-content">
+            <div class="ann-item-header">
+              <span class="ann-item-title">{TITLE}</span>
+              <span class="ann-severity major">{SEVERITY}</span>
+            </div>
+            <div class="ann-item-desc">{DESCRIPTION}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <!-- Keyboard Hints -->
@@ -972,7 +1037,8 @@ var ANN_CATS = {
   decision:      { hl: 'decision-highlight',    badge: 'decision-badge' },
   scopecreep:    { hl: 'scope-creep-highlight', badge: 'scope-creep-badge' },
   placeholder:   { hl: 'placeholder-highlight', badge: 'placeholder-badge' },
-  consistency:   { hl: 'consistency-highlight',  badge: 'consistency-badge' }
+  consistency:   { hl: 'consistency-highlight',  badge: 'consistency-badge' },
+  coherence:     { hl: 'coherence-highlight',    badge: 'coherence-badge' }
 };
 
 /* --- Panel open / close --- */
@@ -1059,7 +1125,8 @@ var annTooltip = null;
 var ANN_CAT_COLORS = {
   'annotation-badge': '#ef4444', 'gap-badge': '#3b82f6', 'a11y-badge': '#f59e0b',
   'decision-badge': '#10b981', 'scope-creep-badge': '#f97316',
-  'placeholder-badge': '#9ca3af', 'consistency-badge': '#8b5cf6'
+  'placeholder-badge': '#9ca3af', 'consistency-badge': '#8b5cf6',
+  'coherence-badge': '#14b8a6'
 };
 
 function annShowTooltip(e) {
@@ -1236,6 +1303,7 @@ You need to create an annotated copy of [FILE_PATH].
    - [S1] on [element description] — orange scope creep — severity: [BLOCKER/MAJOR/MINOR] — title: "[title]"
    - [P1] on [element description] — gray placeholder — severity: [BLOCKER/MAJOR/MINOR] — title: "[title]"
    - [X1] on [element description] — purple consistency issue — severity: [BLOCKER/MAJOR/MINOR] — title: "[title]"
+   - [I1] on [element description] — teal coherence issue — severity: [BLOCKER/MAJOR/MINOR] — title: "[title]"
    Each badge span must include: data-ann-id, data-ann-title, data-ann-severity
 5. Add the toggle button after <body> (only include dots for categories with findings)
 6. Add the tooltip element after the toggle button
@@ -1251,6 +1319,7 @@ You need to create an annotated copy of [FILE_PATH].
      - Scope Creep (orange): [list items with severity]
      - Placeholders (gray): [list items with severity]
      - Consistency (purple): [list items with severity]
+     - Coherence (teal): [list items with severity]
    - Keyboard hints footer
 8. Add the JavaScript block (from reference.md) before </body>
 9. Update sidebar nav links to point to annotated versions
@@ -1271,9 +1340,10 @@ Before delivering results, verify:
 - [ ] All scope creep items (S) have element + description + risk assessment
 - [ ] All placeholders (P) have element + description + action needed
 - [ ] All consistency issues (X) have component + pages affected + discrepancy type
+- [ ] All coherence issues (I) have element + claims vs. actual + mismatch type
 
 **IDs and counts:**
-- [ ] Finding IDs are sequential across pages (C1-CN, G1-GN, A1-AN, D1-DN, S1-SN, P1-PN, X1-XN)
+- [ ] Finding IDs are sequential across pages (C1-CN, G1-GN, A1-AN, D1-DN, S1-SN, P1-PN, X1-XN, I1-IN)
 - [ ] Executive Summary totals match actual findings listed
 - [ ] Toggle button shows correct counts per category
 - [ ] Panel stats bar (total, blocker, major, minor) match actual findings
@@ -1304,6 +1374,17 @@ Before delivering results, verify:
 - [ ] Coverage % calculations are arithmetically correct
 - [ ] Recommendations section is prioritized (BLOCKER first)
 - [ ] Design token sections (color, typography, layout) only present if PRD defines them
+
+**Cross-output consistency (analysis.md ↔ annotated HTML ↔ heatmap):**
+- [ ] Every finding ID in analysis.md appears in the corresponding annotated HTML (badge + panel entry)
+- [ ] Every finding in annotated HTML panels exists in analysis.md (no orphan findings)
+- [ ] Heatmap `HEATMAP_DATA` rows/columns/statuses exactly match the traceability matrix in analysis.md Part 2.2
+- [ ] Every heatmap `findingId` corresponds to an actual finding ID in analysis.md
+- [ ] Every heatmap `detail` string is copied **verbatim** from the corresponding finding in analysis.md — no paraphrasing, no synonym substitution, no hallucinated specifics
+- [ ] Every heatmap `desc` field matches the sub-requirement description in the traceability matrix word-for-word
+- [ ] Heatmap per-page coverage %s match analysis.md Part 2.1
+- [ ] Finding severities are identical across analysis.md, annotated HTML panels, and annotated HTML `data-ann-severity` attributes
+- [ ] Annotated HTML `data-ann-title` attributes match the finding title in analysis.md
 
 **Optional phases:**
 - [ ] If delta mode: resolved/new/persistent/regressed counts are correct
@@ -1508,22 +1589,14 @@ Generate this as `docs/audit/prd/{analysis_name}/coverage-heatmap.html`. Replace
 
   <div class="hm-grid-wrap">
     <table class="hm-grid" id="hmGrid">
-      <thead>
-        <tr>
-          <th>Requirement</th>
-          <!-- {PAGE_HEADERS} — one <th> per page -->
-          <th>Status</th>
-        </tr>
+      <thead id="hmHead">
+        <!-- Generated dynamically by JS from PAGES array -->
       </thead>
       <tbody id="hmBody">
-        <!-- Rows generated by script from HEATMAP_DATA -->
+        <!-- Generated dynamically by JS from HEATMAP_DATA -->
       </tbody>
-      <tfoot>
-        <tr class="hm-summary-row">
-          <th>Coverage %</th>
-          <!-- {PAGE_COVERAGE_CELLS} — one <td> per page with N% -->
-          <td></td>
-        </tr>
+      <tfoot id="hmFoot">
+        <!-- Generated dynamically by JS from computed coverage -->
       </tfoot>
     </table>
   </div>
@@ -1559,16 +1632,68 @@ Generate this as `docs/audit/prd/{analysis_name}/coverage-heatmap.html`. Replace
     },
     ...
   ]
+
+  IMPORTANT — Anti-Drift Rule:
+  Every "detail" value MUST be copied verbatim from the corresponding finding in analysis.md.
+  Every "desc" value MUST match the sub-requirement description in analysis.md Part 2.2.
+  Do NOT paraphrase, summarize, or rewrite from memory. Re-read analysis.md before populating.
 */
 var DATA = {HEATMAP_DATA};
 var PAGES = {PAGE_LIST}; // ["Dashboard", "Profile", ...]
 
 (function() {
+  var head = document.getElementById('hmHead');
   var body = document.getElementById('hmBody');
+  var foot = document.getElementById('hmFoot');
   var tooltip = document.getElementById('hmTooltip');
   var detail = document.getElementById('hmDetail');
   var activeFilter = 'all';
 
+  /* --- Build thead dynamically from PAGES --- */
+  function renderHead() {
+    var tr = document.createElement('tr');
+    var th0 = document.createElement('th');
+    th0.textContent = 'Requirement';
+    tr.appendChild(th0);
+    PAGES.forEach(function(page) {
+      var th = document.createElement('th');
+      th.textContent = page;
+      tr.appendChild(th);
+    });
+    var thStatus = document.createElement('th');
+    thStatus.textContent = 'Status';
+    tr.appendChild(thStatus);
+    head.innerHTML = '';
+    head.appendChild(tr);
+  }
+
+  /* --- Build tfoot dynamically from DATA + PAGES --- */
+  function renderFoot() {
+    var tr = document.createElement('tr');
+    tr.className = 'hm-summary-row';
+    var th = document.createElement('th');
+    th.textContent = 'Coverage %';
+    tr.appendChild(th);
+    PAGES.forEach(function(page) {
+      var total = 0, covered = 0, partial = 0;
+      DATA.forEach(function(row) {
+        var cell = (row.cells && row.cells[page]) || { status: 'na' };
+        if (cell.status === 'na') return;
+        total++;
+        if (cell.status === 'covered') covered++;
+        else if (cell.status === 'partial') partial += 0.5;
+      });
+      var td = document.createElement('td');
+      td.textContent = total > 0 ? Math.round((covered + partial) / total * 100) + '%' : '—';
+      tr.appendChild(td);
+    });
+    var tdEmpty = document.createElement('td');
+    tr.appendChild(tdEmpty);
+    foot.innerHTML = '';
+    foot.appendChild(tr);
+  }
+
+  /* --- Render tbody rows --- */
   function render(filter, search) {
     body.innerHTML = '';
     var term = (search || '').toLowerCase();
@@ -1647,6 +1772,9 @@ var PAGES = {PAGE_LIST}; // ["Dashboard", "Profile", ...]
     render(activeFilter, e.target.value);
   });
 
+  // Initial render — all three sections from the same data source
+  renderHead();
+  renderFoot();
   render('all', '');
 })();
 </script>
@@ -1656,7 +1784,24 @@ var PAGES = {PAGE_LIST}; // ["Dashboard", "Profile", ...]
 
 ### Heatmap Data Format
 
-When generating the heatmap, build the `HEATMAP_DATA` JSON array from the traceability matrix:
+When generating the heatmap, build the `HEATMAP_DATA` JSON array from the traceability matrix.
+
+**CRITICAL — Anti-Drift Rule:** The heatmap is typically the last artifact generated in a long pass. By this point, the LLM's contextual memory of earlier findings can drift, producing paraphrased or hallucinated descriptions instead of exact copies. To prevent this:
+
+1. **Re-read analysis.md** before writing heatmap data — specifically Part 2.2 (traceability matrix), Part 2.3 (contradictions), and Part 2.4 (gaps)
+2. **Copy `desc` verbatim** from the traceability matrix sub-requirement description — do not rephrase
+3. **Copy `detail` verbatim** from the corresponding finding row in analysis.md — do not rewrite from memory
+4. **Map `findingId`** directly from the Finding ID column in analysis.md
+
+**Source mapping for `detail` field:**
+
+| Heatmap status | Source section in analysis.md | findingId prefix |
+|---|---|---|
+| `contradicted` | Part 2.3 → "Finding" column of matching C{N} row | C |
+| `missing` | Part 2.4 → "Finding" column of matching G{N} row | G |
+| `partial` | Part 2.3 or 2.4 → whichever finding ID is referenced | C or G |
+| `covered` | No finding — use brief factual note (e.g., "Fully represented in mock") | (none) |
+| `na` | Not applicable — leave detail empty | (none) |
 
 ```json
 [
@@ -1679,4 +1824,4 @@ And `PAGE_LIST` as a simple string array:
 
 ---
 
-**Last updated:** 2026-03-03 (v3 — enhanced panel with bidirectional navigation, tooltips, severity pills, category filters, search, keyboard shortcuts)
+**Last updated:** 2026-03-03 (v5 — added Internal Coherence (I/Teal) annotation category for Phase 5B mock self-validation)

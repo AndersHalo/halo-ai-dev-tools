@@ -265,6 +265,101 @@ Flag these types of inconsistencies:
 - **Structure** (always checked) — Different HTML structure or missing sub-elements
 - **Style** (only if PRD defines design tokens) — Different colors, sizes, spacing, fonts for the same component type
 
+### Phase 5A — PRD Page Description Compliance
+
+PRDs often contain **narrative descriptions of each page or screen** beyond the numbered FRs. These descriptions outline the intended purpose, layout, and key elements of a page in prose form (e.g., *"The Dashboard displays a summary of active projects, a notifications panel, and a quick-access toolbar"*). This phase checks whether every element mentioned in those descriptions is actually present in the mock.
+
+**When to run:** Only if the PRD contains page/screen descriptions (sections like "Page Overview", "Screen Descriptions", "Page Specifications", or similar narrative blocks that describe what each page should contain). If the PRD only has numbered FRs with no page-level prose, skip this phase.
+
+#### Procedure
+
+1. **Extract page descriptions** — Scan the PRD for any prose descriptions of individual pages/screens. These may appear as:
+   - Dedicated "Page Description" or "Screen Overview" sections
+   - Introductory paragraphs before each page's FR list
+   - User flow descriptions that detail what the user sees on each page
+   - Wireframe annotations or mockup intent descriptions
+
+2. **Parse described elements** — For each page description, extract every concrete UI element, data point, or behavior mentioned. Be thorough — include both explicit elements ("a table of active projects") and implied ones ("users can filter by status" implies a filter control).
+
+3. **Cross-reference with mock** — For each described element, verify its presence in the corresponding HTML mock:
+
+| Page | Described Element | PRD Section | Present in Mock? | Finding |
+|------|-------------------|-------------|------------------|---------|
+| Dashboard | Summary of active projects | §3.1 intro | Yes | — |
+| Dashboard | Notifications panel | §3.1 intro | No | G{N} — Missing |
+| Dashboard | Quick-access toolbar | §3.1 intro | Partial | G{N} — Only 2 of 5 actions shown |
+| Settings | User preference toggles | §5.2 para 2 | Yes | — |
+| Settings | Export data button | §5.2 para 2 | No | G{N} — Not present |
+
+4. **Classify findings** — Findings from this phase use existing categories:
+   - **Gap (G)** — A described element is missing from the mock entirely
+   - **Contradiction (C)** — A described element is present but implemented differently than described
+   - These findings are numbered in the global G/C sequences (not restarted)
+
+5. **Note:** This phase may produce findings that overlap with Phase 3 (bi-directional comparison). If a finding was already captured as an FR-level gap in Phase 3, do not duplicate it. Only add findings for elements described in page prose that were **not already covered** by FR-level analysis.
+
+### Phase 5B — Internal Mock Coherence
+
+Validate that the mock is internally consistent with its own displayed data, labels, and visual claims — independent of the PRD. This catches situations where the mock contradicts itself, which would confuse developers and stakeholders regardless of PRD compliance.
+
+**This phase is always executed.** It does not depend on the PRD content.
+
+#### What to Check
+
+1. **Count/Label Mismatches** — Numeric labels, badges, counters, or summary text that disagree with the actual visible content:
+
+   | Element | Claims | Actual | Page | Finding |
+   |---------|--------|--------|------|---------|
+   | Tab badge "Active (12)" | 12 items | 5 rows in table | Dashboard | I1 |
+   | Card header "4 Team Members" | 4 members | 2 avatars shown | Team Page | I2 |
+   | Sidebar badge "3" | 3 notifications | 1 notification item | All pages | I3 |
+   | Summary "Total: $45,230" | $45,230 | Table rows sum to $38,750 | Finance | I4 |
+
+2. **Navigation/Link Coherence** — Internal references that don't match:
+   - Breadcrumb trail doesn't match actual page hierarchy
+   - Tab labels don't match tab content panels
+   - Sidebar active state doesn't match the current page
+   - Pagination says "Page 2 of 5" but there's no page navigation or only 1 page of data
+   - "View All" link text but the target content is already fully displayed
+
+3. **State/Status Coherence** — Visual indicators that conflict with content:
+   - A status badge shows "Completed" but progress bar shows 60%
+   - A toggle is styled as "on" but the associated content shows the "off" state
+   - An "empty state" illustration is shown alongside a populated data table
+   - A "Loading..." spinner coexists with already-loaded content
+   - A disabled button label says "Submit" but required form fields are already filled
+
+4. **Data Coherence** — Displayed data that contradicts itself across the same page:
+   - A chart and its adjacent data table show different values for the same metric
+   - A summary card shows a percentage that doesn't match the underlying numbers
+   - Date ranges in filters don't match the dates shown in content
+   - A "Last updated: March 1" timestamp but data entries show March 3 dates
+
+5. **Text/Content Coherence** — Labels, headings, or descriptions that conflict:
+   - A page title says "User Settings" but the breadcrumb says "Preferences"
+   - A column header says "Email" but the data shows phone numbers
+   - A section is labeled "Recent Activity" but shows items from months ago
+   - A button says "Delete" but the confirmation modal says "Archive"
+
+#### Finding Classification
+
+Internal coherence issues use a dedicated category:
+- **Prefix:** `I` (Internal Coherence)
+- **Color:** Teal (`#14b8a6`) — distinct from all other categories
+- **Severity:**
+  - **BLOCKER** — A developer building to the mock would produce broken or contradictory behavior (e.g., counter shows wrong number that gets coded as a data source)
+  - **MAJOR** — Confusing enough to cause development questions or rework (e.g., conflicting navigation states)
+  - **MINOR** — Cosmetic inconsistency unlikely to affect implementation (e.g., slightly mismatched date formatting)
+
+#### Output Table
+
+| # | Severity | Page | Element | Claims | Actual | Type |
+|---|----------|------|---------|--------|--------|------|
+| I1 | MAJOR | Dashboard | Tab badge | "Active (12)" | 5 rows visible | Count mismatch |
+| I2 | MINOR | Team | Card header | "4 Team Members" | 2 avatars | Count mismatch |
+| I3 | MAJOR | Finance | Summary card | "Total: $45,230" | Rows sum to $38,750 | Data mismatch |
+| I4 | BLOCKER | Settings | Sidebar active | Highlights "Profile" | Shows Settings page | Navigation mismatch |
+
 ### Phase 6 — Requirement Traceability Matrix
 
 1. List every FR and its sub-requirements from the PRD
@@ -304,6 +399,8 @@ Create `docs/audit/prd/{analysis_name}/analysis.md` with the following structure
 | Accessibility Issues | N (or "N/A — not in PRD scope") |
 | Estimated WCAG Level | A / AA / AAA (or "N/A") |
 | Component Inconsistencies | N |
+| Page Description Gaps | N (or "N/A — no page descriptions in PRD") |
+| Internal Coherence Issues | N |
 
 ### Risk Assessment
 - **BLOCKERS:** N items require mock revision before development can begin
@@ -422,6 +519,38 @@ Create `docs/audit/prd/{analysis_name}/analysis.md` with the following structure
 
 ---
 
+## Part 5A: PRD Page Description Compliance (only if PRD contains page-level prose descriptions — omit if not)
+
+### 5A.1 Description Coverage Summary
+| Page | Described Elements | Present | Missing | Partial | Coverage % |
+|------|-------------------|---------|---------|---------|------------|
+
+### 5A.2 Per-Page Description Findings
+#### Page N: [Page Name] (`filename.html`)
+| # | Described Element | PRD Section | Present? | Finding ID | Notes |
+|---|-------------------|-------------|----------|------------|-------|
+
+---
+
+## Part 5B: Internal Mock Coherence
+
+### 5B.1 Coherence Summary
+| Type | Count | Max Severity |
+|------|-------|--------------|
+| Count/Label Mismatches | N | — |
+| Navigation Mismatches | N | — |
+| State/Status Conflicts | N | — |
+| Data Conflicts | N | — |
+| Text/Content Conflicts | N | — |
+| **Total** | **N** | — |
+
+### 5B.2 Per-Page Coherence Findings
+#### Page N: [Page Name] (`filename.html`)
+| # | Severity | Element | Claims | Actual | Type |
+|---|----------|---------|--------|--------|------|
+
+---
+
 ## Part 6: Cross-Cutting Issues
 [Issues that span multiple pages or affect the entire design system]
 
@@ -448,7 +577,7 @@ For each mock file, create `docs/audit/prd/{analysis_name}/annotated/[filename]-
 
 #### A. Inline Highlights (on page elements)
 
-Seven color-coded highlight categories, all with **badges positioned at top-right** for consistency:
+Eight color-coded highlight categories, all with **badges positioned at top-right** for consistency:
 - **Red dashed outline** (`3px dashed #ef4444`) — Contradictions
 - **Blue dashed outline** (`3px dashed #3b82f6`) — Gaps
 - **Yellow dashed outline** (`3px dashed #f59e0b`) — Accessibility issues
@@ -456,6 +585,7 @@ Seven color-coded highlight categories, all with **badges positioned at top-righ
 - **Orange dashed outline** (`3px dashed #f97316`) — Scope Creep
 - **Gray dashed outline** (`3px dashed #9ca3af`) — Placeholders
 - **Purple dashed outline** (`3px dashed #8b5cf6`) — Component Inconsistencies
+- **Teal dashed outline** (`3px dashed #14b8a6`) — Internal Coherence issues
 
 Every badge must include `data-ann-id`, `data-ann-title`, and `data-ann-severity` attributes to power the hover tooltip.
 
@@ -479,6 +609,7 @@ A fixed slide-out panel (400px, dark theme) on the right side with full interact
   5. Scope Creep (Orange)
   6. Placeholders (Gray)
   7. Component Inconsistencies (Purple)
+  8. Internal Coherence (Teal)
 
 Each section header has a **visibility toggle** button. Toggling a category off hides both the panel section and all inline highlights of that category on the page.
 
@@ -532,6 +663,26 @@ After generating all outputs, perform these validation checks before delivering 
 2. **Finding deduplication** — Same issue on multiple pages is noted as cross-cutting, not double-counted
 3. **PRD-scoped sections** — Verify that design token sections (color, typography, layout) are only present if the PRD defines them; omit if not
 
+#### E. Cross-Output Consistency Checks (analysis.md ↔ annotated HTML ↔ heatmap)
+
+All three outputs are generated sequentially in a single pass. Because the heatmap is written last, **paraphrasing drift** can cause its descriptions to diverge from the analysis and annotated HTML. These checks catch and prevent that:
+
+1. **Finding ID completeness** — Every finding ID in analysis.md (C1–CN, G1–GN, A1–AN, D1–DN, S1–SN, P1–PN, X1–XN, I1–IN) must appear in the corresponding annotated HTML file(s), both as an inline badge and a panel entry
+2. **Annotated → analysis sync** — Every finding in an annotated HTML panel must be listed in analysis.md. No orphan findings in annotated files
+3. **Heatmap → traceability matrix sync** — The heatmap `HEATMAP_DATA` JSON must have exactly the same rows (FR/sub-requirement), columns (pages), and statuses (covered/partial/missing/contradicted) as the traceability matrix in analysis.md Part 2.2
+4. **Heatmap findingId validity** — Every `findingId` value in the heatmap JSON must correspond to an actual finding ID in analysis.md
+5. **Heatmap description verbatim check** — For every heatmap cell with a `findingId`, verify the `detail` text matches the corresponding finding description in analysis.md **word-for-word**. Flag any paraphrase, synonym substitution, or hallucinated detail. Common drift patterns:
+   - Specifics changed (e.g., "tabular format" → "stacked bar chart")
+   - Sub-issue shifted (e.g., "project count clickable" → "row-to-profile affordance")
+   - Vague generalization (e.g., "missing hover tooltip" → "placement and styling")
+   - Synonym substitution (e.g., "completion rate trend line" → "burn-up/burn-down chart variant")
+6. **Heatmap FR descriptions match** — The `desc` field for each heatmap row must match the sub-requirement description in the traceability matrix, not a paraphrase
+7. **Coverage % consistency** — Per-page and overall coverage percentages in the heatmap summary row must match the values in analysis.md Part 2.1
+8. **Severity consistency** — Finding severities in annotated HTML panels must match analysis.md. No severity upgrades or downgrades between outputs
+9. **Annotated HTML title match** — The `data-ann-title` attribute on each inline badge must match the finding title in the analysis.md report and the panel item title in the same annotated HTML
+
+**If any drift is detected:** Re-read the specific finding from analysis.md and correct the divergent output (heatmap detail, annotated HTML title/description, etc.) to match verbatim.
+
 ### Phase 10 — Delta / Diff Mode (Optional)
 
 If a previous audit exists, find the most recent `analysis.md` in a sibling folder under `docs/audit/prd/` and compare the current findings against it.
@@ -583,6 +734,25 @@ Generate `docs/audit/prd/{analysis_name}/coverage-heatmap.html` to visualize the
    - Toggle buttons by status
    - Search box to filter by FR number or keyword
 
+#### Anti-Drift Rule — Verbatim Descriptions
+
+**CRITICAL:** The `HEATMAP_DATA` JSON is generated late in a long output pass. By this point, contextual memory of earlier findings can drift, causing paraphrased or hallucinated descriptions instead of exact matches. To prevent this:
+
+1. **Copy, don't rewrite.** Every `detail` string in the heatmap `HEATMAP_DATA` JSON MUST be copied verbatim from the corresponding finding in `analysis.md`. Do NOT paraphrase, summarize, or rewrite descriptions from memory.
+2. **Source mapping.** For each heatmap cell with a `findingId`:
+   - If status is `contradicted` → copy the "Finding" text from the matching `C{N}` row in analysis.md Part 2.3
+   - If status is `missing` → copy the "Finding" text from the matching `G{N}` row in analysis.md Part 2.4
+   - If status is `partial` → copy the relevant finding text from whichever finding ID is referenced
+   - If status is `covered` → use a brief factual note (e.g., "Fully represented in mock"), no finding ID needed
+3. **Re-read before writing.** Before generating the heatmap data, re-read the analysis.md traceability matrix (Part 2.2) and per-page findings (Parts 2.3, 2.4) to refresh context. Do NOT write heatmap data from memory alone.
+4. **FR descriptions.** The `desc` field for each row must match the sub-requirement description from the traceability matrix in analysis.md Part 2.2 — do not rephrase.
+
+**Common drift errors to avoid:**
+- Substituting a related but different sub-issue (e.g., writing "row-to-profile affordance" when the finding says "project count clickable")
+- Hallucinating specifics not in the PRD (e.g., writing "stacked bar chart" when the PRD says "tabular format")
+- Generalizing a specific finding (e.g., writing "placement and styling" when the finding specifically says "missing hover tooltip")
+- Using a synonym that changes meaning (e.g., "burn-up/burn-down chart variant" instead of "completion rate trend line")
+
 See [reference.md](reference.md) for the complete heatmap HTML/CSS/JS template.
 
 ### Phase 12 — Build Requirements (Optional)
@@ -608,6 +778,7 @@ If the user asks for build readiness / implementation status:
 | Scope Creep | S | Global across all pages | S1, S2, ..., SN |
 | Placeholder | P | Global across all pages | P1, P2, ..., PN |
 | Consistency | X | Global across all pages | X1, X2, ..., XN |
+| Internal Coherence | I | Global across all pages | I1, I2, ..., IN |
 | Build Requirement | B | Per page, restart numbering | B1, B2, ... per page |
 
 ## Color Scheme
@@ -621,6 +792,7 @@ If the user asks for build readiness / implementation status:
 | Scope Creep | `#f97316` | `#f97316` | `rgba(249,115,22,0.15)` | `.dot-o` |
 | Placeholder | `#9ca3af` | `#9ca3af` | `rgba(156,163,175,0.15)` | `.dot-gr` |
 | Component Issue | `#8b5cf6` | `#8b5cf6` | `rgba(139,92,246,0.15)` | `.dot-p` |
+| Internal Coherence | `#14b8a6` | `#14b8a6` | `rgba(20,184,166,0.15)` | `.dot-t` |
 
 ## Parallelization
 
