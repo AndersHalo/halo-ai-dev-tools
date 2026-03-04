@@ -13,6 +13,62 @@ This document defines the structure for the main markdown reconciliation report 
 **PRD:** {filename}
 **UX Spec:** {filename}
 
+## Glossary
+
+### Finding Categories
+
+| Code | Name | Direction | Meaning |
+|------|------|-----------|---------|
+| **V** | Conflict | PRD ↔ UX | PRD and UX define contradictory behavior for the same feature |
+| **N** | Naming Drift | PRD ↔ UX | Same concept uses different names across documents |
+| **W** | UX Coverage Gap | PRD → UX | PRD requires something the UX spec does not define |
+| **Q** | UX Scope Addition | UX → PRD | UX defines something with no PRD justification |
+| **D** | PRD Internal Issue | PRD only | Contradictions, ambiguity, or gaps within the PRD itself |
+| **E** | UX Internal Issue | UX only | Contradictions, ambiguity, or undefined references within the UX |
+
+### Severity Levels
+
+| Level | Meaning |
+|-------|---------|
+| **BLOCKER** | Documents directly contradict — cannot build mock until resolved |
+| **MAJOR** | Significant gap or ambiguity — likely causes rework if not resolved |
+| **MINOR** | Terminology inconsistency or minor omission — low risk |
+
+### Inventory Codes
+
+| Code | Source | Description |
+|------|--------|-------------|
+| P1 | PRD | Functional Requirements |
+| P2 | PRD | Page/View Registry |
+| P3 | PRD | Component Mentions |
+| P4 | PRD | State Requirements |
+| P5 | PRD | Flow Definitions |
+| P6 | PRD | Business Rules |
+| P7 | PRD | Page Sections (conditional) |
+| U1 | UX | Design Tokens |
+| U2 | UX | Typography |
+| U3 | UX | Component Registry |
+| U4 | UX | Component States |
+| U5 | UX | Page/View Definitions |
+| U6 | UX | Layout Specs |
+| U7 | UX | Interaction Patterns |
+| U8 | UX | Responsive Behavior |
+| U9 | UX | Page Composition (conditional) |
+| U10 | UX | Component-Page Matrix (conditional) |
+| U11 | UX | Navigation Map (conditional) |
+
+### Reconciliation Statuses
+
+| Status | Meaning |
+|--------|---------|
+| **Aligned** | PRD requirement fully covered in UX, no conflicts |
+| **Partial** | UX covers some aspects but gaps remain |
+| **Conflict** | PRD and UX contradict on this requirement |
+| **UX Gap** | No UX definition for this requirement |
+| **N/A** | Requirement doesn't need UX definition (backend, infrastructure) |
+
+---
+
 ## Executive Summary
 
 | Metric | Value |
