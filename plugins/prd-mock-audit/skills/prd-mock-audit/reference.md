@@ -1435,11 +1435,11 @@ Generate this as `docs/audit/prd/{analysis_name}/coverage-heatmap.html`. Replace
 <title>PRD Coverage Heatmap</title>
 <style>
   :root {
-    --bg: #0f0f11;
-    --surface: #18181b;
-    --border: #27272a;
-    --text: #e4e4e7;
-    --text-muted: #a1a1aa;
+    --bg: #f8f9fa;
+    --surface: #ffffff;
+    --border: #e2e8f0;
+    --text: #1e293b;
+    --text-muted: #64748b;
     --covered: #10b981;
     --partial: #f59e0b;
     --contradicted: #ef4444;
@@ -1491,7 +1491,7 @@ Generate this as `docs/audit/prd/{analysis_name}/coverage-heatmap.html`. Replace
     transition: border-color 0.2s;
   }
   .hm-search:focus { border-color: #6366f1; }
-  .hm-search::placeholder { color: #52525b; }
+  .hm-search::placeholder { color: #94a3b8; }
 
   .hm-grid-wrap {
     overflow: auto;
@@ -1510,7 +1510,7 @@ Generate this as `docs/audit/prd/{analysis_name}/coverage-heatmap.html`. Replace
     white-space: nowrap;
   }
   .hm-grid thead th {
-    background: #1f1f23;
+    background: #f1f5f9;
     color: var(--text);
     font-weight: 700;
     position: sticky;
@@ -1523,7 +1523,7 @@ Generate this as `docs/audit/prd/{analysis_name}/coverage-heatmap.html`. Replace
     z-index: 3;
   }
   .hm-grid tbody th {
-    background: #1f1f23;
+    background: #f1f5f9;
     color: var(--text-muted);
     font-weight: 600;
     text-align: left;
@@ -1532,7 +1532,7 @@ Generate this as `docs/audit/prd/{analysis_name}/coverage-heatmap.html`. Replace
     z-index: 1;
   }
   .hm-grid .hm-summary-row td {
-    background: #1f1f23;
+    background: #f1f5f9;
     font-weight: 700;
     position: sticky;
     bottom: 0;
@@ -1552,24 +1552,24 @@ Generate this as `docs/audit/prd/{analysis_name}/coverage-heatmap.html`. Replace
   .hm-cell.partial    { background: var(--partial); }
   .hm-cell.contradicted { background: var(--contradicted); }
   .hm-cell.missing    { background: var(--missing); }
-  .hm-cell.na         { background: transparent; border: 1px dashed #3f3f46; }
+  .hm-cell.na         { background: transparent; border: 1px dashed #cbd5e1; }
 
   .hm-tooltip {
     display: none;
     position: fixed;
     z-index: 9999;
-    background: #27272a;
-    color: var(--text);
+    background: #1e293b;
+    color: #f1f5f9;
     padding: 10px 14px;
     border-radius: 8px;
     font-size: 12px;
     line-height: 1.5;
     max-width: 320px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
     pointer-events: none;
   }
   .hm-tooltip .hm-tt-id { font-weight: 700; margin-bottom: 4px; }
-  .hm-tooltip .hm-tt-desc { color: var(--text-muted); }
+  .hm-tooltip .hm-tt-desc { color: #94a3b8; }
 
   .hm-legend {
     display: flex;
@@ -1589,15 +1589,45 @@ Generate this as `docs/audit/prd/{analysis_name}/coverage-heatmap.html`. Replace
   }
 
   .hm-detail {
-    margin-top: 32px;
-    padding: 20px 24px;
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    width: 380px;
+    max-height: 280px;
+    overflow-y: auto;
+    padding: 16px 20px;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    z-index: 100;
     display: none;
   }
   .hm-detail.visible { display: block; }
-  .hm-detail-title { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+  .hm-detail-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .hm-detail-title { font-size: 14px; font-weight: 700; flex: 1; }
+  .hm-detail-close {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .hm-detail-close:hover { background: var(--bg); color: var(--text); }
   .hm-detail-body { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
 </style>
 </head>
@@ -1635,11 +1665,14 @@ Generate this as `docs/audit/prd/{analysis_name}/coverage-heatmap.html`. Replace
     <span class="hm-legend-item"><span class="hm-legend-dot" style="background:#f59e0b"></span> Partial</span>
     <span class="hm-legend-item"><span class="hm-legend-dot" style="background:#6b7280"></span> Missing</span>
     <span class="hm-legend-item"><span class="hm-legend-dot" style="background:#ef4444"></span> Contradicted</span>
-    <span class="hm-legend-item"><span class="hm-legend-dot" style="background:transparent;border:1px dashed #3f3f46"></span> N/A</span>
+    <span class="hm-legend-item"><span class="hm-legend-dot" style="background:transparent;border:1px dashed #cbd5e1"></span> N/A</span>
   </div>
 
   <div class="hm-detail" id="hmDetail">
-    <div class="hm-detail-title" id="hmDetailTitle"></div>
+    <div class="hm-detail-head">
+      <div class="hm-detail-title" id="hmDetailTitle"></div>
+      <button class="hm-detail-close" onclick="hmCloseDetail()" title="Close">&times;</button>
+    </div>
     <div class="hm-detail-body" id="hmDetailBody"></div>
   </div>
 
@@ -1778,11 +1811,20 @@ var PAGES = {PAGE_LIST}; // ["Dashboard", "Profile", ...]
     tooltip.style.top = e.clientY + 12 + 'px';
   }
   function hideTooltip() { tooltip.style.display = 'none'; }
+  var hmActiveDetailId = null;
   function showDetail(e) {
     var t = e.target;
-    if (!t.dataset.id) return;
+    if (!t.dataset.id && !t.dataset.fr) return;
+    var cellKey = (t.dataset.id || t.dataset.fr) + '-' + t.dataset.page;
+    if (hmActiveDetailId === cellKey) {
+      /* Toggle off if clicking the same cell */
+      detail.className = 'hm-detail';
+      hmActiveDetailId = null;
+      return;
+    }
+    hmActiveDetailId = cellKey;
     detail.className = 'hm-detail visible';
-    document.getElementById('hmDetailTitle').textContent = t.dataset.id + ' — ' + t.dataset.fr + ' (' + t.dataset.page + ')';
+    document.getElementById('hmDetailTitle').textContent = (t.dataset.id || t.dataset.fr) + ' — ' + t.dataset.fr + ' (' + t.dataset.page + ')';
     document.getElementById('hmDetailBody').textContent = t.dataset.detail || 'No additional detail.';
   }
 
@@ -1806,6 +1848,11 @@ var PAGES = {PAGE_LIST}; // ["Dashboard", "Profile", ...]
   renderFoot();
   render('all', '');
 })();
+
+/* --- Close detail panel (accessible from inline onclick) --- */
+function hmCloseDetail() {
+  document.getElementById('hmDetail').className = 'hm-detail';
+}
 </script>
 </body>
 </html>
@@ -1853,4 +1900,4 @@ And `PAGE_LIST` as a simple string array:
 
 ---
 
-**Last updated:** 2026-03-03 (v8 — unified Phase 5B as Mock Self-Validation (M/Teal) combining data consistency + structural/flow; added Phase 5C PRD Internal Consistency (R/Indigo, report-only))
+**Last updated:** 2026-03-04 (v9 — heatmap switched to light mode; detail panel now fixed floating card at top-right with close button)
