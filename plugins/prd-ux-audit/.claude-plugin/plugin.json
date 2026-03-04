@@ -1,0 +1,19 @@
+{
+  "name": "prd-ux-audit",
+  "version": "1.1.0",
+  "description": "Bi-directional reconciliation of PRD requirements against UX Design System specifications. Detects conflicts, terminology drift, coverage gaps, and undocumented UX additions. Generates: (1) markdown reconciliation report, (2) interactive PRD↔UX matrix HTML with side-by-side comparison, and (3) optional traceability export. Runs without HTML mocks — pure document-level analysis.",
+  "author": {
+    "name": "anderson.monroy@halopowered.com"
+  },
+  "keywords": [
+    "prd",
+    "ux",
+    "design-system",
+    "reconciliation",
+    "audit",
+    "requirements",
+    "traceability",
+    "gap-analysis",
+    "consistency"
+  ]
+}
