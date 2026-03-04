@@ -51,7 +51,6 @@ Add this entire block to the `<style>` of each annotated HTML file. These styles
 .ann-toggle-btn .dot-gr { width: 8px; height: 8px; border-radius: 50%; background: #9ca3af; }
 .ann-toggle-btn .dot-p  { width: 8px; height: 8px; border-radius: 50%; background: #8b5cf6; }
 .ann-toggle-btn .dot-t  { width: 8px; height: 8px; border-radius: 50%; background: #14b8a6; }
-.ann-toggle-btn .dot-rs { width: 8px; height: 8px; border-radius: 50%; background: #f43f5e; }
 
 /* --- Panel Container --- */
 .ann-panel {
@@ -194,7 +193,6 @@ Add this entire block to the `<style>` of each annotated HTML file. These styles
 .ann-legend-dot.gray   { background: #9ca3af; }
 .ann-legend-dot.purple { background: #8b5cf6; }
 .ann-legend-dot.teal   { background: #14b8a6; }
-.ann-legend-dot.rose   { background: #f43f5e; }
 
 /* --- Scrollable Body --- */
 .ann-scroll {
@@ -251,7 +249,6 @@ Add this entire block to the `<style>` of each annotated HTML file. These styles
 .ann-section-count.gray   { background: rgba(156,163,175,0.15); color: #d1d5db; }
 .ann-section-count.purple { background: rgba(139,92,246,0.15); color: #a78bfa; }
 .ann-section-count.teal   { background: rgba(20,184,166,0.15); color: #2dd4bf; }
-.ann-section-count.rose   { background: rgba(244,63,94,0.15); color: #fb7185; }
 .ann-filter-toggle {
   background: none;
   border: none;
@@ -314,7 +311,6 @@ Add this entire block to the `<style>` of each annotated HTML file. These styles
 .ann-item-badge.gray   { background: #9ca3af; }
 .ann-item-badge.purple { background: #8b5cf6; }
 .ann-item-badge.teal   { background: #14b8a6; }
-.ann-item-badge.rose   { background: #f43f5e; }
 .ann-item-content { flex: 1; min-width: 0; }
 .ann-item-header {
   display: flex;
@@ -566,7 +562,7 @@ Add this entire block to the `<style>` of each annotated HTML file. These styles
 }
 .consistency-badge:hover { transform: scale(1.15); }
 
-/* Data Consistency (Teal) */
+/* Mock Self-Validation (Teal) */
 .coherence-highlight {
   position: relative;
   outline: 3px dashed #14b8a6 !important;
@@ -592,33 +588,6 @@ Add this entire block to the `<style>` of each annotated HTML file. These styles
   transition: transform 0.15s;
 }
 .coherence-badge:hover { transform: scale(1.15); }
-
-/* Mock Structural (Rose) */
-.structural-highlight {
-  position: relative;
-  outline: 3px dashed #f43f5e !important;
-  outline-offset: 4px;
-}
-.structural-badge {
-  position: absolute;
-  top: -14px;
-  right: -14px;
-  width: 28px;
-  height: 28px;
-  background: #f43f5e;
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  font-weight: 700;
-  z-index: 1000;
-  box-shadow: 0 2px 8px rgba(244,63,94,0.4);
-  cursor: pointer;
-  transition: transform 0.15s;
-}
-.structural-badge:hover { transform: scale(1.15); }
 
 /* ============================================================
    HOVER TOOLTIP — Shows finding summary on badge hover
@@ -747,21 +716,21 @@ Add the appropriate highlight class + a badge span to the target element. Every 
   Submit
 </button>
 
-<!-- Data Consistency (Teal) — claims vs. actual in title -->
-<div class="stat-card coherence-highlight" id="i1">
+<!-- Mock Self-Validation (Teal) — data consistency example -->
+<div class="stat-card coherence-highlight" id="m1">
   <span class="coherence-badge"
-        data-ann-id="I1"
+        data-ann-id="M1"
         data-ann-title="Claims: 'Active (12)' — Actual: 5 rows with Active status [Count mismatch]"
-        data-ann-severity="MAJOR">I1</span>
+        data-ann-severity="MAJOR">M1</span>
   <!-- original content unchanged -->
 </div>
 
-<!-- Mock Structural (Rose) -->
-<button class="btn-edit structural-highlight" id="m1">
-  <span class="structural-badge"
-        data-ann-id="M1"
-        data-ann-title="Edit button leads to non-existent edit page"
-        data-ann-severity="BLOCKER">M1</span>
+<!-- Mock Self-Validation (Teal) — structural example -->
+<button class="btn-edit coherence-highlight" id="m5">
+  <span class="coherence-badge"
+        data-ann-id="M5"
+        data-ann-title="Edit button leads to non-existent edit page [Dead-end]"
+        data-ann-severity="BLOCKER">M5</span>
   Edit
 </button>
 ```
@@ -787,8 +756,7 @@ Place right after `<body>`, before the sidebar/main content:
   <span class="ann-count"><span class="dot-g"></span> {DESIGN_DECISION_COUNT}</span>
   <span class="ann-count"><span class="dot-o"></span> {SCOPE_CREEP_COUNT}</span>
   <span class="ann-count"><span class="dot-p"></span> {CONSISTENCY_COUNT}</span>
-  <span class="ann-count"><span class="dot-t"></span> {COHERENCE_COUNT}</span>
-  <span class="ann-count"><span class="dot-rs"></span> {STRUCTURAL_COUNT}</span>
+  <span class="ann-count"><span class="dot-t"></span> {MOCK_VALIDATION_COUNT}</span>
 </button>
 ```
 
@@ -848,8 +816,7 @@ Place before `</body>`:
     <span class="ann-legend-item"><span class="ann-legend-dot orange"></span> Scope Creep</span>
     <span class="ann-legend-item"><span class="ann-legend-dot gray"></span> Placeholder</span>
     <span class="ann-legend-item"><span class="ann-legend-dot purple"></span> Consistency</span>
-    <span class="ann-legend-item"><span class="ann-legend-dot teal"></span> Data Consistency</span>
-    <span class="ann-legend-item"><span class="ann-legend-dot rose"></span> Structural</span>
+    <span class="ann-legend-item"><span class="ann-legend-dot teal"></span> Mock Validation</span>
   </div>
 
   <!-- Scrollable Findings -->
@@ -1018,45 +985,22 @@ Place before `</body>`:
       </div>
     </div>
 
-    <!-- DATA CONSISTENCY (Teal) -->
+    <!-- MOCK SELF-VALIDATION (Teal) -->
     <div class="ann-section" id="annSectionCoherence">
       <div class="ann-section-head" onclick="annToggleSection('annSectionCoherence')">
-        <span class="ann-section-label">Data Consistency <span class="ann-section-count teal">{COUNT}</span></span>
+        <span class="ann-section-label">Mock Validation <span class="ann-section-count teal">{COUNT}</span></span>
         <span class="ann-section-controls">
           <button class="ann-filter-toggle" onclick="event.stopPropagation(); annToggleCategory('coherence')" title="Show/hide on page">&#9678;</button>
           <span class="ann-section-chevron">&#9660;</span>
         </span>
       </div>
       <div class="ann-section-body">
-        <div class="ann-item" id="ann-I1" data-target="i1" onclick="annScrollToElement('i1')">
-          <span class="ann-item-badge teal">I1</span>
+        <div class="ann-item" id="ann-M1" data-target="m1" onclick="annScrollToElement('m1')">
+          <span class="ann-item-badge teal">M1</span>
           <div class="ann-item-content">
             <div class="ann-item-header">
               <span class="ann-item-title">{TITLE}</span>
               <span class="ann-severity major">{SEVERITY}</span>
-            </div>
-            <div class="ann-item-desc">{DESCRIPTION}</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- MOCK STRUCTURAL (Rose) -->
-    <div class="ann-section" id="annSectionStructural">
-      <div class="ann-section-head" onclick="annToggleSection('annSectionStructural')">
-        <span class="ann-section-label">Structural <span class="ann-section-count rose">{COUNT}</span></span>
-        <span class="ann-section-controls">
-          <button class="ann-filter-toggle" onclick="event.stopPropagation(); annToggleCategory('structural')" title="Show/hide on page">&#9678;</button>
-          <span class="ann-section-chevron">&#9660;</span>
-        </span>
-      </div>
-      <div class="ann-section-body">
-        <div class="ann-item" id="ann-M1" data-target="m1" onclick="annScrollToElement('m1')">
-          <span class="ann-item-badge rose">M1</span>
-          <div class="ann-item-content">
-            <div class="ann-item-header">
-              <span class="ann-item-title">{TITLE}</span>
-              <span class="ann-severity blocker">{SEVERITY}</span>
             </div>
             <div class="ann-item-desc">{DESCRIPTION}</div>
           </div>
@@ -1103,8 +1047,7 @@ var ANN_CATS = {
   scopecreep:    { hl: 'scope-creep-highlight', badge: 'scope-creep-badge' },
   placeholder:   { hl: 'placeholder-highlight', badge: 'placeholder-badge' },
   consistency:   { hl: 'consistency-highlight',  badge: 'consistency-badge' },
-  coherence:     { hl: 'coherence-highlight',    badge: 'coherence-badge' },
-  structural:    { hl: 'structural-highlight',   badge: 'structural-badge' }
+  coherence:     { hl: 'coherence-highlight',    badge: 'coherence-badge' }
 };
 
 /* --- Panel open / close --- */
@@ -1192,8 +1135,7 @@ var ANN_CAT_COLORS = {
   'annotation-badge': '#ef4444', 'gap-badge': '#3b82f6', 'a11y-badge': '#f59e0b',
   'decision-badge': '#10b981', 'scope-creep-badge': '#f97316',
   'placeholder-badge': '#9ca3af', 'consistency-badge': '#8b5cf6',
-  'coherence-badge': '#14b8a6',
-  'structural-badge': '#f43f5e'
+  'coherence-badge': '#14b8a6'
 };
 
 function annShowTooltip(e) {
@@ -1370,8 +1312,7 @@ You need to create an annotated copy of [FILE_PATH].
    - [S1] on [element description] — orange scope creep — severity: [BLOCKER/MAJOR/MINOR] — title: "[title]"
    - [P1] on [element description] — gray placeholder — severity: [BLOCKER/MAJOR/MINOR] — title: "[title]"
    - [X1] on [element description] — purple consistency issue — severity: [BLOCKER/MAJOR/MINOR] — title: "[title]"
-   - [I1] on [element description] — teal data consistency issue — severity: [BLOCKER/MAJOR/MINOR] — title: "[title]" — claims: "[claim value]" — actual: "[actual value]" — type: "[mismatch type]"
-   - [M1] on [element description] — rose structural issue — severity: [BLOCKER/MAJOR/MINOR] — title: "[title]" — sub-type: "[dead-end/missing state/orphan/affordance conflict/incomplete flow/unreachable]"
+   - [M1] on [element description] — teal mock validation issue — severity: [BLOCKER/MAJOR/MINOR] — title: "[title]" (for data: claims/actual/type; for structural: issue/expected/sub-type)
    Each badge span must include: data-ann-id, data-ann-title, data-ann-severity
 5. Add the toggle button after <body> (only include dots for categories with findings)
 6. Add the tooltip element after the toggle button
@@ -1387,8 +1328,7 @@ You need to create an annotated copy of [FILE_PATH].
      - Scope Creep (orange): [list items with severity]
      - Placeholders (gray): [list items with severity]
      - Consistency (purple): [list items with severity]
-     - Data Consistency (teal): [list items with severity]
-     - Structural (rose): [list items with severity]
+     - Mock Validation (teal): [list items with severity]
    - Keyboard hints footer
 8. Add the JavaScript block (from reference.md) before </body>
 9. Update sidebar nav links to point to annotated versions
@@ -1409,13 +1349,12 @@ Before delivering results, verify:
 - [ ] All scope creep items (S) have element + description + risk assessment
 - [ ] All placeholders (P) have element + description + action needed
 - [ ] All consistency issues (X) have component + pages affected + discrepancy type
-- [ ] All data consistency issues (I) have element + claims value + actual value + validation work + mismatch type
-- [ ] All structural issues (M) have element + issue + expected behavior + sub-type
+- [ ] All mock validation issues (M) have: for data — element + claims + actual + validation + type; for structural — element + issue + expected + sub-type
 - [ ] All PRD issues (R) have type + affected FRs + description + impact on audit
 - [ ] R findings are report-only — no R-prefix badges in annotated HTML
 
 **IDs and counts:**
-- [ ] Finding IDs are sequential across pages (C1-CN, G1-GN, A1-AN, D1-DN, S1-SN, P1-PN, X1-XN, I1-IN, M1-MN, R1-RN)
+- [ ] Finding IDs are sequential across pages (C1-CN, G1-GN, A1-AN, D1-DN, S1-SN, P1-PN, X1-XN, M1-MN, R1-RN)
 - [ ] Executive Summary totals match actual findings listed
 - [ ] Toggle button shows correct counts per category
 - [ ] Panel stats bar (total, blocker, major, minor) match actual findings
@@ -1896,4 +1835,4 @@ And `PAGE_LIST` as a simple string array:
 
 ---
 
-**Last updated:** 2026-03-03 (v7 — added Phase 5C Mock Structural & Flow Validation (M/Rose) and Phase 5D PRD Internal Consistency (R/Indigo, report-only))
+**Last updated:** 2026-03-03 (v8 — unified Phase 5B as Mock Self-Validation (M/Teal) combining data consistency + structural/flow; added Phase 5C PRD Internal Consistency (R/Indigo, report-only))

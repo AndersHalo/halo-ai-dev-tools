@@ -298,13 +298,17 @@ PRDs often contain **narrative descriptions of each page or screen** beyond the 
 
 5. **Note:** This phase may produce findings that overlap with Phase 3 (bi-directional comparison). If a finding was already captured as an FR-level gap in Phase 3, do not duplicate it. Only add findings for elements described in page prose that were **not already covered** by FR-level analysis.
 
-### Phase 5B — Intra-Page Data Consistency
+### Phase 5B — Mock Self-Validation
 
-Validate that the wireframe is internally consistent with its own displayed data — independent of the PRD. Any UI element that makes a **claim** (a number, a label, a state, a relationship) verifiable against other visible content on the same page must be checked. When claims don't match what is actually shown, developers build to contradictory specs.
+Validate that the mock is internally consistent — independent of the PRD. This phase catches issues where the mock contradicts itself, has broken flows, or shows data that doesn't add up. These are problems regardless of what the PRD says. Two concern areas: **data consistency** (numeric claims vs. visible content) and **structural/flow integrity** (dead ends, missing states, logic contradictions).
 
 **This phase is always executed.** It does not depend on the PRD content. It applies to any type of wireframe regardless of domain: dashboards, e-commerce, games, social platforms, content management, forms, landing pages, admin panels, etc.
 
-#### Procedure (systematic — execute for every page)
+---
+
+#### Part A — Intra-Page Data Consistency
+
+##### Procedure (systematic — execute for every page)
 
 For each wireframe page, execute these steps in order:
 
@@ -393,32 +397,18 @@ If no corresponding source is visible on the page, note it as **"no verifiable s
 | **Temporal conflict** | A time-based claim is inconsistent with visible timestamps or dates |
 | **Cross-element conflict** | Two or more elements on the same page show different values for the same data |
 
-#### Finding Classification
-
-Intra-page data consistency issues use a dedicated category:
-- **Prefix:** `I` (Intra-page data consistency)
-- **Color:** Teal (`#14b8a6`) — distinct from all other categories
-- **Severity:**
-  - **BLOCKER** — A mismatch that a developer would hardcode, producing objectively broken behavior (e.g., a total that doesn't match its line items creates two contradictory data sources)
-  - **MAJOR** — A visible contradiction that causes confusion or development rework (e.g., a counter shows the wrong number, a health bar visual contradicts its text label)
-  - **MINOR** — A minor inconsistency unlikely to affect implementation logic (e.g., a relative time label off by one unit)
-
-#### Output Table
+##### Data Consistency Output Table
 
 | # | Severity | Page | Element | Claims | Actual | Validation | Type |
 |---|----------|------|---------|--------|--------|------------|------|
-| I1 | MAJOR | Product List | Results header | "47 products found" | 12 product cards visible | Counted product cards on page: 12 | Count mismatch |
-| I2 | MAJOR | Cart | Cart total | "Subtotal: $127.50" | Item prices sum to $98.00 | $29.00 + $45.00 + $24.00 = $98.00 | Sum mismatch |
-| I3 | BLOCKER | Game HUD | Health bar | Bar at ~50% fill | HP text reads "90/100" | 90/100 = 90%, bar should be nearly full | Percentage mismatch |
-| I4 | MAJOR | Settings | Sidebar nav | Active on "Profile" | Page heading is "Settings" | Sidebar active item ≠ page title | Location conflict |
+| M1 | MAJOR | Product List | Results header | "47 products found" | 12 product cards visible | Counted product cards on page: 12 | Count mismatch |
+| M2 | MAJOR | Cart | Cart total | "Subtotal: $127.50" | Item prices sum to $98.00 | $29.00 + $45.00 + $24.00 = $98.00 | Sum mismatch |
+| M3 | BLOCKER | Game HUD | Health bar | Bar at ~50% fill | HP text reads "90/100" | 90/100 = 90%, bar should be nearly full | Percentage mismatch |
+| M4 | MAJOR | Settings | Sidebar nav | Active on "Profile" | Page heading is "Settings" | Sidebar active item ≠ page title | Location conflict |
 
-### Phase 5C — Mock Structural & Flow Validation
+---
 
-Analyze each mock against itself for structural, logical, and flow-level issues — independent of the PRD. Phase 5B catches numeric/data mismatches; this phase catches **broken flows, missing states, dead-end navigation, and logic contradictions** that would cause implementation failures regardless of what the PRD says.
-
-**This phase is always executed.** It does not depend on the PRD content.
-
-#### Procedure
+#### Part B — Structural & Flow Validation
 
 For each mock page (and across the mock set as a whole), check:
 
@@ -480,16 +470,7 @@ Check flows that span multiple mock pages for completeness:
 - A "Detail" flow: does clicking a list item lead to a detail view? Can you go back?
 - User flows mentioned in navigation but not present in the mock set
 
-#### Finding Classification
-
-- **Prefix:** `M` (Mock structural issue)
-- **Color:** Rose (`#f43f5e`) — distinct from all other categories
-- **Severity:**
-  - **BLOCKER** — A flow is fundamentally broken: a critical action leads nowhere, a required page is missing from the mock set, or an element creates an unrecoverable dead end
-  - **MAJOR** — An interaction is incomplete or confusing: missing states, orphan elements, or affordance contradictions that would require developer guesswork
-  - **MINOR** — A minor structural inconsistency unlikely to block implementation (e.g., a redundant button, a cosmetic empty state issue)
-
-#### Sub-Types
+##### Structural Sub-Types
 
 | Sub-Type | Description |
 |----------|-------------|
@@ -500,18 +481,31 @@ Check flows that span multiple mock pages for completeness:
 | Incomplete flow | A multi-step flow is missing pages, steps, or feedback |
 | Unreachable page | A mock page exists but no navigation path leads to it |
 
-#### Output Table
+##### Structural Output Table
 
 | # | Severity | Page(s) | Element | Issue | Expected | Sub-Type |
 |---|----------|---------|---------|-------|----------|----------|
-| M1 | BLOCKER | User List | "Edit" button per row | Clicking edit — no edit page/modal exists in mock set | Edit page or inline edit modal | Dead-end |
-| M2 | MAJOR | Checkout | Payment form | Form has submit button but no success, error, or loading state shown | Success confirmation + error handling | Missing state |
-| M3 | MINOR | Dashboard | Gear icon (top-right) | Icon present with no tooltip, label, or settings page in mock set | Settings destination or removal | Orphan element |
-| M4 | MAJOR | Product Detail | "Add to Cart" button | Styled as disabled (grayed) but no condition or path to enable it shown | Enable condition or active state variant | Affordance conflict |
+| M5 | BLOCKER | User List | "Edit" button per row | Clicking edit — no edit page/modal exists in mock set | Edit page or inline edit modal | Dead-end |
+| M6 | MAJOR | Checkout | Payment form | Form has submit button but no success, error, or loading state shown | Success confirmation + error handling | Missing state |
+| M7 | MINOR | Dashboard | Gear icon (top-right) | Icon present with no tooltip, label, or settings page in mock set | Settings destination or removal | Orphan element |
+| M8 | MAJOR | Product Detail | "Add to Cart" button | Styled as disabled (grayed) but no condition or path to enable it shown | Enable condition or active state variant | Affordance conflict |
 
 ---
 
-### Phase 5D — PRD Internal Consistency
+#### Finding Classification (unified for Parts A and B)
+
+All mock self-validation issues use a single category:
+- **Prefix:** `M` (Mock self-validation)
+- **Color:** Teal (`#14b8a6`) — distinct from all other categories
+- **Single ID sequence:** M1, M2, ..., MN across both data consistency and structural findings
+- **Severity:**
+  - **BLOCKER** — A mismatch or broken flow that a developer would hardcode or implement incorrectly, producing objectively broken behavior
+  - **MAJOR** — A visible contradiction or incomplete interaction that causes confusion or development rework
+  - **MINOR** — A minor inconsistency unlikely to affect implementation logic
+
+---
+
+### Phase 5C — PRD Internal Consistency
 
 Analyze the PRD against itself for internal contradictions, ambiguities, and gaps. A PRD that contradicts itself makes the bidirectional comparison (Phase 3) unreliable — if the PRD says two conflicting things about the same feature, any mock implementation is simultaneously "correct" and "wrong." This phase catches those issues before they pollute the audit.
 
@@ -644,8 +638,7 @@ Create `docs/audit/prd/{analysis_name}/analysis.md` with the following structure
 | Estimated WCAG Level | A / AA / AAA (or "N/A") |
 | Component Inconsistencies | N |
 | Page Description Gaps | N (or "N/A — no page descriptions in PRD") |
-| Intra-Page Data Mismatches | N |
-| Mock Structural Issues | N |
+| Mock Self-Validation Issues | N |
 | PRD Internal Issues | N |
 
 ### Risk Assessment
@@ -778,22 +771,28 @@ Create `docs/audit/prd/{analysis_name}/analysis.md` with the following structure
 
 ---
 
-## Part 5B: Intra-Page Data Consistency
+## Part 5B: Mock Self-Validation
 
-### 5B.1 Consistency Summary
-| Mismatch Type | Count | Max Severity |
-|---------------|-------|--------------|
-| Count mismatch | N | — |
-| Sum mismatch | N | — |
-| Percentage mismatch | N | — |
-| State conflict | N | — |
-| Location conflict | N | — |
-| Reference conflict | N | — |
-| Temporal conflict | N | — |
-| Cross-element conflict | N | — |
-| **Total** | **N** | — |
+### 5B.1 Summary
+| Category | Issue Type | Count | Max Severity |
+|----------|------------|-------|--------------|
+| Data | Count mismatch | N | — |
+| Data | Sum mismatch | N | — |
+| Data | Percentage mismatch | N | — |
+| Data | State conflict | N | — |
+| Data | Location conflict | N | — |
+| Data | Reference conflict | N | — |
+| Data | Temporal conflict | N | — |
+| Data | Cross-element conflict | N | — |
+| Structural | Dead-end navigation | N | — |
+| Structural | Missing interaction states | N | — |
+| Structural | Orphan elements | N | — |
+| Structural | Affordance conflicts | N | — |
+| Structural | Incomplete flows | N | — |
+| Structural | Unreachable pages | N | — |
+| **Total** | | **N** | — |
 
-### 5B.2 Per-Page Consistency Findings
+### 5B.2 Per-Page Data Consistency Findings
 #### Page N: [Page Name] (`filename.html`)
 
 **Claim Inventory:** N claim elements identified, N with verifiable data source.
@@ -801,35 +800,20 @@ Create `docs/audit/prd/{analysis_name}/analysis.md` with the following structure
 | # | Severity | Element | Claims | Actual | Validation | Type |
 |---|----------|---------|--------|--------|------------|------|
 
----
-
-## Part 5C: Mock Structural & Flow Validation
-
-### 5C.1 Structural Summary
-| Issue Type | Count | Max Severity |
-|------------|-------|--------------|
-| Dead-end navigation | N | — |
-| Missing interaction states | N | — |
-| Orphan elements | N | — |
-| Affordance conflicts | N | — |
-| Incomplete flows | N | — |
-| Unreachable pages | N | — |
-| **Total** | **N** | — |
-
-### 5C.2 Per-Page Structural Findings
+### 5B.3 Per-Page Structural Findings
 #### Page N: [Page Name] (`filename.html`)
 | # | Severity | Element | Issue | Expected | Sub-Type |
 |---|----------|---------|-------|----------|----------|
 
-### 5C.3 Cross-Page Flow Findings
+### 5B.4 Cross-Page Flow Findings
 | # | Severity | Pages Involved | Flow | Issue | Sub-Type |
 |---|----------|----------------|------|-------|----------|
 
 ---
 
-## Part 5D: PRD Internal Consistency
+## Part 5C: PRD Internal Consistency
 
-### 5D.1 PRD Issues Summary
+### 5C.1 PRD Issues Summary
 | Issue Type | Count | Max Severity |
 |------------|-------|--------------|
 | Contradictory requirements | N | — |
@@ -841,7 +825,7 @@ Create `docs/audit/prd/{analysis_name}/analysis.md` with the following structure
 | Scope gaps | N | — |
 | **Total** | **N** | — |
 
-### 5D.2 PRD Findings
+### 5C.2 PRD Findings
 | # | Severity | Type | FRs Affected | Description | Impact on Audit |
 |---|----------|------|-------------|-------------|-----------------|
 
@@ -873,7 +857,7 @@ For each mock file, create `docs/audit/prd/{analysis_name}/annotated/[filename]-
 
 #### A. Inline Highlights (on page elements)
 
-Nine color-coded highlight categories, all with **badges positioned at top-right** for consistency:
+Eight color-coded highlight categories, all with **badges positioned at top-right** for consistency:
 - **Red dashed outline** (`3px dashed #ef4444`) — Contradictions
 - **Blue dashed outline** (`3px dashed #3b82f6`) — Gaps
 - **Yellow dashed outline** (`3px dashed #f59e0b`) — Accessibility issues
@@ -881,10 +865,9 @@ Nine color-coded highlight categories, all with **badges positioned at top-right
 - **Orange dashed outline** (`3px dashed #f97316`) — Scope Creep
 - **Gray dashed outline** (`3px dashed #9ca3af`) — Placeholders
 - **Purple dashed outline** (`3px dashed #8b5cf6`) — Component Inconsistencies
-- **Teal dashed outline** (`3px dashed #14b8a6`) — Intra-Page Data Consistency issues
-- **Rose dashed outline** (`3px dashed #f43f5e`) — Mock Structural & Flow issues
+- **Teal dashed outline** (`3px dashed #14b8a6`) — Mock Self-Validation (data consistency + structural/flow)
 
-**Note:** PRD Internal Consistency findings (R prefix, Indigo) are **report-only** — they appear in analysis.md Part 5D but are NOT annotated on the HTML mocks.
+**Note:** PRD Internal Consistency findings (R prefix, Indigo) are **report-only** — they appear in analysis.md Part 5C but are NOT annotated on the HTML mocks.
 
 Every badge must include `data-ann-id`, `data-ann-title`, and `data-ann-severity` attributes to power the hover tooltip.
 
@@ -908,8 +891,7 @@ A fixed slide-out panel (400px, dark theme) on the right side with full interact
   5. Scope Creep (Orange)
   6. Placeholders (Gray)
   7. Component Inconsistencies (Purple)
-  8. Data Consistency (Teal)
-  9. Mock Structural (Rose)
+  8. Mock Self-Validation (Teal)
 
 Each section header has a **visibility toggle** button. Toggling a category off hides both the panel section and all inline highlights of that category on the page.
 
@@ -967,7 +949,7 @@ After generating all outputs, perform these validation checks before delivering 
 
 All three outputs are generated sequentially in a single pass. Because the heatmap is written last, **paraphrasing drift** can cause its descriptions to diverge from the analysis and annotated HTML. These checks catch and prevent that:
 
-1. **Finding ID completeness** — Every annotatable finding ID in analysis.md (C1–CN, G1–GN, A1–AN, D1–DN, S1–SN, P1–PN, X1–XN, I1–IN, M1–MN) must appear in the corresponding annotated HTML file(s), both as an inline badge and a panel entry. R-prefix findings (PRD issues) are report-only and do NOT appear in annotated HTML
+1. **Finding ID completeness** — Every annotatable finding ID in analysis.md (C1–CN, G1–GN, A1–AN, D1–DN, S1–SN, P1–PN, X1–XN, M1–MN) must appear in the corresponding annotated HTML file(s), both as an inline badge and a panel entry. R-prefix findings (PRD issues) are report-only and do NOT appear in annotated HTML
 2. **Annotated → analysis sync** — Every finding in an annotated HTML panel must be listed in analysis.md. No orphan findings in annotated files
 3. **Heatmap → traceability matrix sync** — The heatmap `HEATMAP_DATA` JSON must have exactly the same rows (FR/sub-requirement), columns (pages), and statuses (covered/partial/missing/contradicted) as the traceability matrix in analysis.md Part 2.2
 4. **Heatmap findingId validity** — Every `findingId` value in the heatmap JSON must correspond to an actual finding ID in analysis.md
@@ -983,9 +965,9 @@ All three outputs are generated sequentially in a single pass. Because the heatm
 
 **If any drift is detected:** Re-read the specific finding from analysis.md and correct the divergent output (heatmap detail, annotated HTML title/description, etc.) to match verbatim.
 
-#### F. Self-Validation Phase Checks (Phases 5C and 5D)
-1. **No overlap with Phase 3** — M findings (mock structural) must not duplicate C/G findings from Phase 3. M findings are about mock-internal issues (dead ends, missing states), not PRD compliance.
-2. **No overlap with Phase 5B** — M findings must not duplicate I findings. Phase 5B covers data/numeric mismatches; Phase 5C covers structural/flow issues. If an issue has both aspects, use the more specific category.
+#### F. Self-Validation Phase Checks (Phases 5B and 5C)
+1. **No overlap with Phase 3** — M findings (mock self-validation) must not duplicate C/G findings from Phase 3. M findings are about mock-internal issues (data mismatches, dead ends, missing states), not PRD compliance.
+2. **M findings unified** — Data consistency findings and structural findings share a single M1–MN sequence. No I-prefix findings should exist.
 3. **R-finding cross-references** — If a PRD contradiction (R finding) affects the interpretation of a Phase 3 finding (C or G), the Phase 3 finding should note: "See R{N} — PRD is internally contradictory on this requirement."
 4. **R findings are report-only** — Verify no R-prefix badges appear in annotated HTML files.
 5. **PRD issue impact noted** — Each R finding must include an "Impact on Audit" column explaining how the PRD issue affects the reliability of other audit findings.
@@ -1085,8 +1067,7 @@ If the user asks for build readiness / implementation status:
 | Scope Creep | S | Global across all pages | S1, S2, ..., SN |
 | Placeholder | P | Global across all pages | P1, P2, ..., PN |
 | Consistency | X | Global across all pages | X1, X2, ..., XN |
-| Data Consistency | I | Global across all pages | I1, I2, ..., IN |
-| Mock Structural | M | Global across all pages | M1, M2, ..., MN |
+| Mock Self-Validation | M | Global across all pages | M1, M2, ..., MN |
 | PRD Issue | R | Global (report-only, not annotated) | R1, R2, ..., RN |
 | Build Requirement | B | Per page, restart numbering | B1, B2, ... per page |
 
@@ -1101,8 +1082,7 @@ If the user asks for build readiness / implementation status:
 | Scope Creep | `#f97316` | `#f97316` | `rgba(249,115,22,0.15)` | `.dot-o` |
 | Placeholder | `#9ca3af` | `#9ca3af` | `rgba(156,163,175,0.15)` | `.dot-gr` |
 | Component Issue | `#8b5cf6` | `#8b5cf6` | `rgba(139,92,246,0.15)` | `.dot-p` |
-| Data Consistency | `#14b8a6` | `#14b8a6` | `rgba(20,184,166,0.15)` | `.dot-t` |
-| Mock Structural | `#f43f5e` | `#f43f5e` | `rgba(244,63,94,0.15)` | `.dot-rs` |
+| Mock Self-Validation | `#14b8a6` | `#14b8a6` | `rgba(20,184,166,0.15)` | `.dot-t` |
 | PRD Issue | `#6366f1` | `#6366f1` | — (report-only) | — |
 
 ## Parallelization
