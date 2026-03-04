@@ -46,6 +46,7 @@ This document defines the structure for the main markdown reconciliation report 
 ### 1.4 State Requirements (P4)
 ### 1.5 Flow Definitions (P5)
 ### 1.6 Business Rules (P6)
+### 1.7 Page Sections (P7) ← conditional, only if PRD describes page structure
 
 ## Part 2: UX Spec Inventory
 ### 2.1 Design Tokens Summary (U1)
@@ -56,6 +57,9 @@ This document defines the structure for the main markdown reconciliation report 
 ### 2.6 Layout Specs (U6)
 ### 2.7 Interaction Patterns (U7)
 ### 2.8 Responsive Behavior (U8)
+### 2.9 Page Composition (U9) ← conditional, only if UX defines per-page structure
+### 2.10 Component-Page Matrix (U10) ← conditional, only if UX maps components to pages
+### 2.11 Navigation Map (U11) ← conditional, only if UX defines page-to-page flows
 
 ## Part 3: Requirement Reconciliation Matrix
 

@@ -142,9 +142,20 @@ Parse the PRD into structured inventories:
 | Applies to | Component/page |
 | Requirement | FR ID |
 
+**P7. Page Sections** (if PRD describes page-level structure)
+
+| Field | Description |
+|-------|-------------|
+| Page | Page/view name |
+| Section | Named area, region, or panel (e.g., "header", "sidebar", "filter bar") |
+| Contents | What PRD says belongs in this section |
+| Requirements | FR IDs governing this section |
+
+> Only extract if the PRD describes sections, areas, or regions within pages. Skip if the PRD only lists features without page structure.
+
 ### Phase 2 — UX Spec Extraction
 
-Parse the UX document into structured inventories:
+Parse the UX document into structured inventories. **Only extract inventories that the document defines** — skip any inventory the UX does not address.
 
 **U1. Design Tokens** — CSS variables, colors, spacing, shadows, radii
 
@@ -169,24 +180,75 @@ Parse the UX document into structured inventories:
 
 **U8. Responsive Behavior** — Breakpoints, what changes at each
 
+**U9. Page Composition** (if UX defines per-page structure)
+
+| Field | Description |
+|-------|-------------|
+| Page | Page/view name |
+| Sections | Named areas/regions within the page |
+| Component placement | Which components appear in each section |
+| Hierarchy | Parent-child nesting of layout and components (if described) |
+
+> Extract from layout trees, wireframe descriptions, page structure sections, or any format the UX uses to describe what goes where on each page. Skip if UX only lists components without page placement.
+
+**U10. Component-Page Matrix** (if UX maps components to pages)
+
+| Field | Description |
+|-------|-------------|
+| Component | Component name |
+| Pages used | List of pages where this component appears |
+| Variants per page | Which variant is used on each page (if specified) |
+
+> Extract from component inventory tables, page-specific sections, or cross-reference lists. Skip if UX does not map components to pages.
+
+**U11. Navigation Map** (if UX defines page-to-page flows)
+
+| Field | Description |
+|-------|-------------|
+| Source page | Starting page/view |
+| Target page | Destination page/view |
+| Trigger | What initiates the navigation (click, link, action) |
+| Conditions | Guards or prerequisites (if specified) |
+
+> Extract from navigation diagrams, flow descriptions, or sitemap sections. Skip if UX does not define inter-page navigation.
+
 ### Phase 3 — Bi-directional Comparison
 
 #### Direction A: PRD → UX (does UX cover what PRD requires?)
 
-For each PRD requirement (P1), check:
+**A1. Requirement-level checks** — For each PRD requirement (P1):
 
 | Check | Finding if failed |
 |-------|-------------------|
 | Is the feature/page defined in UX (U5)? | **W** — UX Coverage Gap |
 | Are required components designed in UX (U3)? | **W** — UX Coverage Gap |
 | Are required states designed (U4)? | **W** — UX Coverage Gap |
-| Do flow steps match UX page definitions? | **W** — UX Coverage Gap |
 | Does UX define the same behavior PRD requires? | **V** — Conflict (if contradictory) |
 | Do component/page names match? | **N** — Naming Drift |
 
+**A2. Flow checks** (if P5 and U11 both exist) — For each PRD flow (P5):
+
+| Check | Finding if failed |
+|-------|-------------------|
+| Does UX navigation map cover all flow steps? | **W** — UX Coverage Gap |
+| Do flow step sequences match? | **V** — Conflict (if different order/steps) |
+
+**A3. Page section checks** (if P7 and U9 both exist) — For each PRD page section (P7):
+
+| Check | Finding if failed |
+|-------|-------------------|
+| Is this section present in UX page composition? | **W** — UX Coverage Gap |
+| Do section contents match PRD expectations? | **V** — Conflict (if different contents) |
+
+**A4. Component variant checks** (if P3 mentions variants and U3 defines them):
+
+| Check | Finding if failed |
+|-------|-------------------|
+| Does UX define all variants PRD references? | **W** — UX Coverage Gap |
+
 #### Direction B: UX → PRD (does UX add things beyond PRD?)
 
-For each UX component (U3) and page (U5), check:
+**B1. Component/page checks** — For each UX component (U3) and page (U5):
 
 | Check | Finding if failed |
 |-------|-------------------|
@@ -194,6 +256,19 @@ For each UX component (U3) and page (U5), check:
 | Does this page map to a PRD page/view? | **Q** — UX Scope Addition |
 | Are there UX states with no PRD justification? | **Q** — UX Scope Addition |
 | Are there interaction patterns not in PRD? | **Q** — UX Scope Addition |
+
+**B2. Page composition checks** (if U9 exists) — For each UX page section:
+
+| Check | Finding if failed |
+|-------|-------------------|
+| Does this section have PRD backing (P7 or P1)? | **Q** — UX Scope Addition |
+| Are there components placed on pages without PRD justification? | **Q** — UX Scope Addition |
+
+**B3. Navigation checks** (if U11 exists) — For each UX navigation route:
+
+| Check | Finding if failed |
+|-------|-------------------|
+| Does this navigation flow map to a PRD flow (P5)? | **Q** — UX Scope Addition |
 
 #### Conflict Detection (V findings)
 
@@ -207,6 +282,8 @@ Compare matched pairs where both documents define the same feature:
 | State handling | PRD: "show error inline" vs UX: "error toast notification" |
 | Flow | PRD: "5-step wizard" vs UX: "3 pages" |
 | Data | PRD: "show email + phone" vs UX: "show email only" |
+| Page structure | PRD: "sidebar with filters" vs UX: "top filter bar" |
+| Navigation | PRD: "wizard with back/next" vs UX: "tab-based navigation" |
 
 ### Phase 4 — Internal Consistency
 
@@ -228,7 +305,10 @@ Compare matched pairs where both documents define the same feature:
 | Contradictory specs | Card says `border-radius: 12px` in one place, `8px` in another |
 | Missing states | Button component defines hover but not disabled |
 | Incomplete responsive | Desktop defined, tablet/mobile not specified |
-| Orphan components | Component defined but not placed on any page |
+| Orphan components | Component defined but not placed on any page (U3 vs U10) |
+| Page composition gaps | Page lists a section but no components assigned to it (U9) |
+| Navigation dead-ends | Page in navigation map has no outbound routes (U11) |
+| Component-page mismatch | Component-page matrix lists a component on a page not in U5 |
 
 ### Phase 5 — Reconciliation Scoring
 
@@ -277,14 +357,16 @@ Interactive HTML page with:
 
 ### Phase 8 — Validation & Self-Check
 
-1. Every finding ID in reconciliation.md appears in prd-ux-matrix.html
+1. Every finding ID in reconciliation.md appears in prd-ux-matrix.html (except D/E — report-only)
 2. Finding descriptions are verbatim identical across outputs
 3. Severity consistent across outputs
 4. Counts in executive summary match actual findings
 5. Every V finding references specific text from both PRD and UX
 6. Every W finding cites the PRD requirement that has no UX coverage
 7. Every Q finding cites the UX element with no PRD backing
-8. No orphan findings (every finding maps to a requirement or component)
+8. No orphan findings (every finding maps to a requirement, component, or page section)
+9. Conditional inventories (P7, U9, U10, U11) only appear in report if source data existed
+10. Phase 3 sub-checks (A2–A4, B2–B3) only ran when both sides had data
 
 ### Phase 9 — Delta Mode (optional)
 
@@ -308,6 +390,8 @@ If a previous reconciliation folder is provided:
 4. **Severity consistency** — A finding's severity must be the same in all outputs.
 5. **Bidirectional** — Always check both PRD→UX and UX→PRD directions.
 6. **Non-destructive** — Never modify the input PRD or UX files.
+7. **Adaptive extraction** — Not all documents define the same things. Extract only what exists. Skip inventories (P7, U9–U11) and comparison sub-checks (A2–A4, B2–B3) when source data is absent. Never fabricate structure the document doesn't describe.
+8. **Format-agnostic** — Documents may use tables, prose, ASCII trees, bullet lists, or any format. Parse whatever structure the document provides.
 
 ---
 
