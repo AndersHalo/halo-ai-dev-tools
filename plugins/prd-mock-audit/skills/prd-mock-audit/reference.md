@@ -267,8 +267,10 @@ Add this entire block to the `<style>` of each annotated HTML file. These styles
   transition: transform 0.25s ease;
 }
 .ann-section.collapsed .ann-section-chevron { transform: rotate(-90deg); }
-.ann-section.collapsed .ann-section-body { display: none; }
-.ann-section.cat-hidden .ann-section-body { display: none; }
+.ann-section.collapsed .ann-section-body,
+.ann-section.collapsed .ann-section-desc { display: none; }
+.ann-section.cat-hidden .ann-section-body,
+.ann-section.cat-hidden .ann-section-desc { display: none; }
 .ann-section.cat-hidden .ann-section-head { opacity: 0.4; }
 
 .ann-section-body { padding: 4px 24px 16px; }
