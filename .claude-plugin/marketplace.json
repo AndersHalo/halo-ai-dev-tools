@@ -32,7 +32,7 @@
     },
     {
       "name": "prd-mock-audit",
-      "description": "Audit UX HTML mocks against a PRD. Bi-directional gap analysis, component consistency checks, and functional UI inventory. UX details and accessibility only audited if PRD defines them. Generates structured markdown report, annotated HTML with 7-category highlights, and interactive coverage heatmap. Supports delta mode and build readiness.",
+      "description": "Audit UX HTML mocks against a PRD. Bi-directional gap analysis (PRD→Mock + Mock→PRD), mock self-validation, PRD internal consistency, component consistency checks, and functional UI inventory. Generates structured markdown report, annotated HTML with 8-category highlights, and interactive coverage heatmap. Supports delta mode and build readiness.",
       "source": "./plugins/prd-mock-audit"
     }
   ]
