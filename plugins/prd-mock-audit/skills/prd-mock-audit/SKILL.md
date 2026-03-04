@@ -895,7 +895,7 @@ A fixed slide-out panel (400px, dark theme) on the right side with full interact
 
 Each section header has a **visibility toggle** button. Toggling a category off hides both the panel section and all inline highlights of that category on the page.
 
-**Section descriptions** — Immediately below each section header (between `ann-section-head` and `ann-section-body`), include a `<div class="ann-section-desc">` with a brief explanation of the category. Format: `<strong>{PREFIX}</strong> — {description}`. See reference.md for the exact text per category. These descriptions help users understand what each annotation prefix means without leaving the panel.
+**Section descriptions** — Inside each `ann-section-head` (after the `ann-section-head-row` div), include a `<div class="ann-section-desc">` with a brief explanation of the category. Format: `<strong>{PREFIX}</strong> — {description}`. The description lives inside the header so it stays visible even when the section body is collapsed. See reference.md for the exact HTML structure per category.
 
 **Each finding item includes:**
 - Colored badge with finding ID
@@ -936,7 +936,7 @@ After generating all outputs, perform these validation checks before delivering 
 8. **Data attributes** — Every inline badge has `data-ann-id`, `data-ann-title`, `data-ann-severity` attributes
 9. **Severity pills** — Every panel item has a severity pill matching its finding severity
 10. **Bidirectional IDs** — Panel item `id="ann-{ID}"` and `data-target` match the page element's `id`
-11. **Section descriptions** — Every panel section with findings has an `ann-section-desc` div below its header explaining the category prefix and meaning
+11. **Section descriptions** — Every panel section with findings has an `ann-section-desc` div inside `ann-section-head` (visible even when collapsed) explaining the category prefix and meaning
 
 #### C. Accessibility Audit Checks (only if Phase 4 was executed)
 1. **Contrast calculations** — Spot-check contrast ratio math for accuracy

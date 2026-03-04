@@ -208,15 +208,17 @@ Add this entire block to the `<style>` of each annotated HTML file. These styles
 /* --- Collapsible Sections --- */
 .ann-section { border-bottom: 1px solid #27272a; }
 .ann-section-head {
-  padding: 14px 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  padding: 14px 24px 10px;
   cursor: pointer;
   user-select: none;
   transition: background 0.15s;
 }
 .ann-section-head:hover { background: #1f1f23; }
+.ann-section-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
 .ann-section-label {
   display: flex;
   align-items: center;
@@ -267,20 +269,16 @@ Add this entire block to the `<style>` of each annotated HTML file. These styles
   transition: transform 0.25s ease;
 }
 .ann-section.collapsed .ann-section-chevron { transform: rotate(-90deg); }
-.ann-section.collapsed .ann-section-body,
-.ann-section.collapsed .ann-section-desc { display: none; }
-.ann-section.cat-hidden .ann-section-body,
-.ann-section.cat-hidden .ann-section-desc { display: none; }
+.ann-section.collapsed .ann-section-body { display: none; }
+.ann-section.cat-hidden .ann-section-body { display: none; }
 .ann-section.cat-hidden .ann-section-head { opacity: 0.4; }
 
 .ann-section-body { padding: 4px 24px 16px; }
 .ann-section-desc {
-  padding: 4px 24px 8px;
   font-size: 11px;
   color: #9ca3af;
   line-height: 1.4;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-  margin-bottom: 4px;
+  margin-top: 4px;
 }
 
 /* --- Finding Items --- */
@@ -835,13 +833,15 @@ Place before `</body>`:
     <!-- CONTRADICTIONS (Red) -->
     <div class="ann-section" id="annSectionContradiction">
       <div class="ann-section-head" onclick="annToggleSection('annSectionContradiction')">
-        <span class="ann-section-label">Contradictions <span class="ann-section-count red">{COUNT}</span></span>
-        <span class="ann-section-controls">
-          <button class="ann-filter-toggle" onclick="event.stopPropagation(); annToggleCategory('contradiction')" title="Show/hide on page">&#9678;</button>
-          <span class="ann-section-chevron">&#9660;</span>
-        </span>
+        <div class="ann-section-head-row">
+          <span class="ann-section-label">Contradictions <span class="ann-section-count red">{COUNT}</span></span>
+          <span class="ann-section-controls">
+            <button class="ann-filter-toggle" onclick="event.stopPropagation(); annToggleCategory('contradiction')" title="Show/hide on page">&#9678;</button>
+            <span class="ann-section-chevron">&#9660;</span>
+          </span>
+        </div>
+        <div class="ann-section-desc"><strong>C</strong> — Mock shows something the PRD forbids or defines differently.</div>
       </div>
-      <div class="ann-section-desc"><strong>C</strong> — Mock shows something the PRD forbids or defines differently.</div>
       <div class="ann-section-body">
         <!-- Repeat .ann-item for each finding -->
         <div class="ann-item" id="ann-C1" data-target="c1" onclick="annScrollToElement('c1')">
@@ -860,13 +860,15 @@ Place before `</body>`:
     <!-- GAPS (Blue) -->
     <div class="ann-section" id="annSectionGap">
       <div class="ann-section-head" onclick="annToggleSection('annSectionGap')">
-        <span class="ann-section-label">Gaps <span class="ann-section-count blue">{COUNT}</span></span>
-        <span class="ann-section-controls">
-          <button class="ann-filter-toggle" onclick="event.stopPropagation(); annToggleCategory('gap')" title="Show/hide on page">&#9678;</button>
-          <span class="ann-section-chevron">&#9660;</span>
-        </span>
+        <div class="ann-section-head-row">
+          <span class="ann-section-label">Gaps <span class="ann-section-count blue">{COUNT}</span></span>
+          <span class="ann-section-controls">
+            <button class="ann-filter-toggle" onclick="event.stopPropagation(); annToggleCategory('gap')" title="Show/hide on page">&#9678;</button>
+            <span class="ann-section-chevron">&#9660;</span>
+          </span>
+        </div>
+        <div class="ann-section-desc"><strong>G</strong> — PRD requires something the mock omits entirely.</div>
       </div>
-      <div class="ann-section-desc"><strong>G</strong> — PRD requires something the mock omits entirely.</div>
       <div class="ann-section-body">
         <!-- Repeat .ann-item for each finding. For gaps with no highlight target, omit data-target and onclick -->
         <div class="ann-item" id="ann-G1" data-target="g1" onclick="annScrollToElement('g1')">
@@ -885,13 +887,15 @@ Place before `</body>`:
     <!-- ACCESSIBILITY (Yellow) -->
     <div class="ann-section" id="annSectionA11y">
       <div class="ann-section-head" onclick="annToggleSection('annSectionA11y')">
-        <span class="ann-section-label">Accessibility <span class="ann-section-count yellow">{COUNT}</span></span>
-        <span class="ann-section-controls">
-          <button class="ann-filter-toggle" onclick="event.stopPropagation(); annToggleCategory('a11y')" title="Show/hide on page">&#9678;</button>
-          <span class="ann-section-chevron">&#9660;</span>
-        </span>
+        <div class="ann-section-head-row">
+          <span class="ann-section-label">Accessibility <span class="ann-section-count yellow">{COUNT}</span></span>
+          <span class="ann-section-controls">
+            <button class="ann-filter-toggle" onclick="event.stopPropagation(); annToggleCategory('a11y')" title="Show/hide on page">&#9678;</button>
+            <span class="ann-section-chevron">&#9660;</span>
+          </span>
+        </div>
+        <div class="ann-section-desc"><strong>A</strong> — WCAG or accessibility issue defined in the PRD.</div>
       </div>
-      <div class="ann-section-desc"><strong>A</strong> — WCAG or accessibility issue defined in the PRD.</div>
       <div class="ann-section-body">
         <div class="ann-item" id="ann-A1" data-target="a1" onclick="annScrollToElement('a1')">
           <span class="ann-item-badge yellow">A1</span>
@@ -909,13 +913,15 @@ Place before `</body>`:
     <!-- DESIGN DECISIONS (Green) -->
     <div class="ann-section" id="annSectionDecision">
       <div class="ann-section-head" onclick="annToggleSection('annSectionDecision')">
-        <span class="ann-section-label">Design Decisions <span class="ann-section-count green">{COUNT}</span></span>
-        <span class="ann-section-controls">
-          <button class="ann-filter-toggle" onclick="event.stopPropagation(); annToggleCategory('decision')" title="Show/hide on page">&#9678;</button>
-          <span class="ann-section-chevron">&#9660;</span>
-        </span>
+        <div class="ann-section-head-row">
+          <span class="ann-section-label">Design Decisions <span class="ann-section-count green">{COUNT}</span></span>
+          <span class="ann-section-controls">
+            <button class="ann-filter-toggle" onclick="event.stopPropagation(); annToggleCategory('decision')" title="Show/hide on page">&#9678;</button>
+            <span class="ann-section-chevron">&#9660;</span>
+          </span>
+        </div>
+        <div class="ann-section-desc"><strong>D</strong> — UX enhancement in the mock not mentioned in the PRD.</div>
       </div>
-      <div class="ann-section-desc"><strong>D</strong> — UX enhancement in the mock not mentioned in the PRD.</div>
       <div class="ann-section-body">
         <div class="ann-item" id="ann-D1" data-target="d1" onclick="annScrollToElement('d1')">
           <span class="ann-item-badge green">D1</span>
@@ -933,13 +939,15 @@ Place before `</body>`:
     <!-- SCOPE CREEP (Orange) -->
     <div class="ann-section" id="annSectionScopecreep">
       <div class="ann-section-head" onclick="annToggleSection('annSectionScopecreep')">
-        <span class="ann-section-label">Scope Creep <span class="ann-section-count orange">{COUNT}</span></span>
-        <span class="ann-section-controls">
-          <button class="ann-filter-toggle" onclick="event.stopPropagation(); annToggleCategory('scopecreep')" title="Show/hide on page">&#9678;</button>
-          <span class="ann-section-chevron">&#9660;</span>
-        </span>
+        <div class="ann-section-head-row">
+          <span class="ann-section-label">Scope Creep <span class="ann-section-count orange">{COUNT}</span></span>
+          <span class="ann-section-controls">
+            <button class="ann-filter-toggle" onclick="event.stopPropagation(); annToggleCategory('scopecreep')" title="Show/hide on page">&#9678;</button>
+            <span class="ann-section-chevron">&#9660;</span>
+          </span>
+        </div>
+        <div class="ann-section-desc"><strong>S</strong> — Feature or element that goes beyond PRD scope.</div>
       </div>
-      <div class="ann-section-desc"><strong>S</strong> — Feature or element that goes beyond PRD scope.</div>
       <div class="ann-section-body">
         <div class="ann-item" id="ann-S1" data-target="s1" onclick="annScrollToElement('s1')">
           <span class="ann-item-badge orange">S1</span>
@@ -957,13 +965,15 @@ Place before `</body>`:
     <!-- PLACEHOLDERS (Gray) -->
     <div class="ann-section" id="annSectionPlaceholder">
       <div class="ann-section-head" onclick="annToggleSection('annSectionPlaceholder')">
-        <span class="ann-section-label">Placeholders <span class="ann-section-count gray">{COUNT}</span></span>
-        <span class="ann-section-controls">
-          <button class="ann-filter-toggle" onclick="event.stopPropagation(); annToggleCategory('placeholder')" title="Show/hide on page">&#9678;</button>
-          <span class="ann-section-chevron">&#9660;</span>
-        </span>
+        <div class="ann-section-head-row">
+          <span class="ann-section-label">Placeholders <span class="ann-section-count gray">{COUNT}</span></span>
+          <span class="ann-section-controls">
+            <button class="ann-filter-toggle" onclick="event.stopPropagation(); annToggleCategory('placeholder')" title="Show/hide on page">&#9678;</button>
+            <span class="ann-section-chevron">&#9660;</span>
+          </span>
+        </div>
+        <div class="ann-section-desc"><strong>P</strong> — Temporary content that needs replacement (lorem ipsum, stock images, hardcoded data).</div>
       </div>
-      <div class="ann-section-desc"><strong>P</strong> — Temporary content that needs replacement (lorem ipsum, stock images, hardcoded data).</div>
       <div class="ann-section-body">
         <div class="ann-item" id="ann-P1" data-target="p1" onclick="annScrollToElement('p1')">
           <span class="ann-item-badge gray">P1</span>
@@ -981,13 +991,15 @@ Place before `</body>`:
     <!-- COMPONENT INCONSISTENCIES (Purple) -->
     <div class="ann-section" id="annSectionConsistency">
       <div class="ann-section-head" onclick="annToggleSection('annSectionConsistency')">
-        <span class="ann-section-label">Consistency <span class="ann-section-count purple">{COUNT}</span></span>
-        <span class="ann-section-controls">
-          <button class="ann-filter-toggle" onclick="event.stopPropagation(); annToggleCategory('consistency')" title="Show/hide on page">&#9678;</button>
-          <span class="ann-section-chevron">&#9660;</span>
-        </span>
+        <div class="ann-section-head-row">
+          <span class="ann-section-label">Consistency <span class="ann-section-count purple">{COUNT}</span></span>
+          <span class="ann-section-controls">
+            <button class="ann-filter-toggle" onclick="event.stopPropagation(); annToggleCategory('consistency')" title="Show/hide on page">&#9678;</button>
+            <span class="ann-section-chevron">&#9660;</span>
+          </span>
+        </div>
+        <div class="ann-section-desc"><strong>X</strong> — Same component differs across pages (structure, behavior, or style).</div>
       </div>
-      <div class="ann-section-desc"><strong>X</strong> — Same component differs across pages (structure, behavior, or style).</div>
       <div class="ann-section-body">
         <div class="ann-item" id="ann-X1" data-target="x1" onclick="annScrollToElement('x1')">
           <span class="ann-item-badge purple">X1</span>
@@ -1005,13 +1017,15 @@ Place before `</body>`:
     <!-- MOCK SELF-VALIDATION (Teal) -->
     <div class="ann-section" id="annSectionCoherence">
       <div class="ann-section-head" onclick="annToggleSection('annSectionCoherence')">
-        <span class="ann-section-label">Mock Validation <span class="ann-section-count teal">{COUNT}</span></span>
-        <span class="ann-section-controls">
-          <button class="ann-filter-toggle" onclick="event.stopPropagation(); annToggleCategory('coherence')" title="Show/hide on page">&#9678;</button>
-          <span class="ann-section-chevron">&#9660;</span>
-        </span>
+        <div class="ann-section-head-row">
+          <span class="ann-section-label">Mock Validation <span class="ann-section-count teal">{COUNT}</span></span>
+          <span class="ann-section-controls">
+            <button class="ann-filter-toggle" onclick="event.stopPropagation(); annToggleCategory('coherence')" title="Show/hide on page">&#9678;</button>
+            <span class="ann-section-chevron">&#9660;</span>
+          </span>
+        </div>
+        <div class="ann-section-desc"><strong>M</strong> — Mock contradicts itself: data mismatches, dead-end flows, missing states, orphan elements.</div>
       </div>
-      <div class="ann-section-desc"><strong>M</strong> — Mock contradicts itself: data mismatches, dead-end flows, missing states, orphan elements.</div>
       <div class="ann-section-body">
         <div class="ann-item" id="ann-M1" data-target="m1" onclick="annScrollToElement('m1')">
           <span class="ann-item-badge teal">M1</span>
