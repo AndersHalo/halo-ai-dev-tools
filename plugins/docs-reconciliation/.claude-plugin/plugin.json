@@ -1,0 +1,24 @@
+{
+  "name": "docs-reconciliation",
+  "version": "1.0.0",
+  "description": "Multi-document reconciliation engine. Cross-references PRD (always present) against UX Design System and/or Mock documents to detect conflicts, coverage gaps, scope additions, naming drift, cascade violations, and specificity gaps. Supports bilateral (PRD+UX or PRD+Mock) and trilateral (PRD+UX+Mock) modes. Generates: (1) markdown reconciliation report with per-document maturity scores, (2) interactive HTML dashboard with coverage heatmap, filterable matrix, and per-document gauges, (3) editable Excalidraw diagrams (coverage heatmap, Venn overlap, traceability flow, gap treemap), and (4) optional delta tracking across runs.",
+  "author": {
+    "name": "anderson.monroy@halopowered.com"
+  },
+  "keywords": [
+    "prd",
+    "ux",
+    "mock",
+    "reconciliation",
+    "audit",
+    "requirements",
+    "traceability",
+    "gap-analysis",
+    "consistency",
+    "excalidraw",
+    "heatmap",
+    "multi-document",
+    "cascade",
+    "design-system"
+  ]
+}
