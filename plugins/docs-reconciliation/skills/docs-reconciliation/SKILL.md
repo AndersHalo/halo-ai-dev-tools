@@ -761,6 +761,7 @@ If a previous reconciliation folder is provided:
 13. **Output completeness verification** — After all files are generated, verify every expected file exists. If any is missing, regenerate it from `reconciliation-data.json` (not from scratch).
 14. **Session-safe checkpointing** — `reconciliation-data.json` is the checkpoint. Once written, all analysis is persisted. If context runs out, the user starts a new session pointing to the JSON and only missing outputs are generated. Never re-read original documents in a resume session.
 15. **Proactive context warnings** — At Phase 0, estimate context pressure from input document sizes. If documents total >5000 lines, warn the user upfront that the workflow will split across sessions. Do not silently run out of context and leave empty files.
+16. **Direct execution, no subagents** — Run all phases (extraction, comparison, output generation) directly in the main conversation. Do NOT delegate extraction or comparison to subagents/sub-tasks. Subagents add tool-call overhead, duplicate context reads, and run slower than sequential direct execution. Read each document once, extract all inventories in a single pass, then proceed to comparison. The only exception is Phase 10 (Excalidraw diagrams), where each diagram may be generated as a separate write operation.
 
 ---
 
