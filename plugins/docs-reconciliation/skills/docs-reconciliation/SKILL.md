@@ -177,6 +177,7 @@ When the user asks to resume or generate outputs from an existing JSON:
 - Finding descriptions must be **verbatim identical** in `reconciliation.md` and `reconciliation-matrix.html`
 - Severity for a given ID must be consistent across all outputs
 - Every finding must include a **suffix tag** indicating which documents are involved: `[PRD<>UX]`, `[PRD<>Mock]`, `[UX<>Mock]`, `[PRD>UX>Mock]`
+- **Sister findings:** When the same requirement or concept has gaps, conflicts, or drift across multiple document pairs, each pair gets its own finding with a unique sequential ID. Never consolidate cross-pair issues into a single finding. Two different `docsTag` values always means two different finding IDs.
 
 ---
 
@@ -280,6 +281,8 @@ Parse the UX document into structured inventories. **Only extract inventories th
 | Sub-components | Child components |
 | Props/Config | Configurable properties |
 
+**Completeness note:** When the UX document mentions a component by name but does not define its behavior, variants, or states, mark it as `mentioned-only` rather than `defined`. During Phase 4A, a `mentioned-only` component does NOT satisfy a PRD requirement that specifies interaction details.
+
 **U4. Component States** — Which states each component supports (hover, focus, disabled, loading, empty, error)
 
 **U5. Page/View Definitions** — Pages the UX defines, with component placement
@@ -337,6 +340,8 @@ Parse mock documents into structured inventories. Mocks may be markdown descript
 | Visual properties | Size, color, position, text content as visible |
 | Variants shown | Which variant is rendered |
 
+**Functional completeness:** For each component, assess whether the Mock implements it fully or only partially. Record as `full` (complete interaction surface present), `trigger-only` (button/icon/link present but no interaction surface behind it), or `partial` (some elements present but key behaviors missing) in the `Variants shown` field. During Phase 4C, a `trigger-only` or `partial` component does NOT satisfy a PRD requirement that specifies interactive behavior.
+
 **K3. Screen Layout**
 
 | Field | Description |
@@ -382,6 +387,13 @@ Parse mock documents into structured inventories. Mocks may be markdown descript
 ### Phase 4 — Cross-Document Comparison
 
 Run comparison checks based on input mode. Each check direction only runs if both source and target documents are present.
+
+**CRITICAL — Cross-phase independence rule:**
+- Each comparison direction (4A, 4B, 4C, 4D, 4E, 4F) runs **independently from scratch**.
+- A finding produced in one direction does NOT satisfy the same check in another direction.
+- If a PRD requirement has gaps in multiple satellite documents, each gap produces a **separate finding** with its own unique ID and the corresponding `docsTag`.
+- Never skip, merge, or deduplicate findings across document pairs. Two different `docsTag` values = two different findings, even if the underlying PRD requirement is the same.
+- When starting each sub-phase (4A, 4B, 4C, etc.), iterate over the full inventory from scratch — do not filter out items that already have findings from a prior sub-phase.
 
 #### 4A. PRD -> UX (does UX cover what PRD requires?)
 
@@ -713,6 +725,7 @@ Treemap showing findings distribution:
 15. Excalidraw files are valid JSON matching the Excalidraw v2 schema
 16. All diagrams include complete legends
 17. **Output completeness check**: Verify all files exist in the output directory before declaring done. If any file is missing, regenerate it from `reconciliation-data.json`.
+18. **Cross-pair coverage check (trilateral only):** For every PRD requirement that has a W or V finding tagged `[PRD<>UX]`, verify that Phase 4C independently evaluated the same requirement against Mock. If Mock also has a gap or conflict, a separate finding with `[PRD<>Mock]` must exist. Conversely, for every `[PRD<>Mock]` finding, verify Phase 4A independently evaluated against UX. Flag any requirement that has a finding in one direction but was never evaluated in the other.
 
 ### Phase 12 — Delta Mode (optional)
 

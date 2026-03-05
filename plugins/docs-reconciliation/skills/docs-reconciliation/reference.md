@@ -6,1208 +6,1102 @@ This file contains the HTML/CSS/JS templates for generated outputs. Loaded on-de
 
 ## 1. Reconciliation Matrix HTML Template (reconciliation-matrix.html)
 
+### Design Principles
+
+1. **Progressive disclosure** — Summary first, details on demand. Users see the health of their documents in 2 seconds, drill into specifics when ready.
+2. **F-pattern scanning** — Key metrics top-left, status indicators on the left edge, actions on the right.
+3. **Human-readable everywhere** — No codes without labels. "Conflict" not "V". "PRD vs UX" not "[PRD<>UX]".
+4. **Copy-friendly** — Expanded detail panels are fully selectable. Clicking inside them never collapses the row.
+5. **Responsive** — Stacks gracefully on narrow viewports.
+6. **Minimal cognitive load** — 4 typography sizes, restrained color palette, generous whitespace.
+
 ```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Docs Reconciliation Dashboard</title>
+<title>Docs Reconciliation</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-  /* --- Base --- */
+  /* ===========================================
+     DESIGN TOKENS
+     =========================================== */
+  :root {
+    /* Typography */
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --text-xs: 11px;
+    --text-sm: 12px;
+    --text-md: 14px;
+    --text-lg: 16px;
+    --text-xl: 24px;
+    --text-2xl: 32px;
+
+    /* Spacing (4px base) */
+    --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
+    --sp-5: 20px; --sp-6: 24px; --sp-8: 32px; --sp-10: 40px;
+
+    /* Radius */
+    --r-sm: 6px; --r-md: 8px; --r-lg: 12px; --r-xl: 16px;
+
+    /* Neutrals */
+    --n-50: #f8fafc; --n-100: #f1f5f9; --n-200: #e2e8f0; --n-300: #cbd5e1;
+    --n-400: #94a3b8; --n-500: #64748b; --n-600: #475569;
+    --n-700: #334155; --n-800: #1e293b; --n-900: #0f172a;
+
+    /* Status colors */
+    --c-aligned: #22c55e; --c-aligned-bg: #dcfce7; --c-aligned-text: #15803d;
+    --c-partial: #f59e0b; --c-partial-bg: #fef3c7; --c-partial-text: #a16207;
+    --c-conflict: #ef4444; --c-conflict-bg: #fee2e2; --c-conflict-text: #dc2626;
+    --c-gap: #3b82f6; --c-gap-bg: #dbeafe; --c-gap-text: #2563eb;
+    --c-addition: #f97316; --c-addition-bg: #fff7ed; --c-addition-text: #ea580c;
+    --c-cascade: #ec4899; --c-cascade-bg: #fce7f3; --c-cascade-text: #db2777;
+
+    /* Finding type colors */
+    --f-V: #fee2e2; --f-V-text: #dc2626;
+    --f-N: #ede9fe; --f-N-text: #7c3aed;
+    --f-W: #dbeafe; --f-W-text: #2563eb;
+    --f-Q: #fff7ed; --f-Q-text: #ea580c;
+    --f-C: #fce7f3; --f-C-text: #db2777;
+    --f-S: #fef3c7; --f-S-text: #b45309;
+
+    /* Document colors */
+    --doc-prd: #eab308; --doc-prd-bg: #fffbeb;
+    --doc-ux: #3b82f6; --doc-ux-bg: #eff6ff;
+    --doc-mock: #22c55e; --doc-mock-bg: #f0fdf4;
+
+    /* Severity */
+    --sev-blocker: #dc2626; --sev-major: #f59e0b; --sev-minor: #6b7280;
+  }
+
+  /* ===========================================
+     BASE
+     =========================================== */
   body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: #f8fafc;
-    color: #1e293b;
+    font-family: var(--font);
+    background: var(--n-50);
+    color: var(--n-800);
     line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
   }
+  .container { max-width: 1280px; margin: 0 auto; padding: 0 var(--sp-6); }
 
-  /* --- Header --- */
-  .mx-header {
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-    color: #f1f5f9;
-    padding: 28px 32px 20px;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    box-shadow: 0 2px 12px rgba(0,0,0,.15);
+  /* ===========================================
+     HERO / HEADER
+     =========================================== */
+  .hero {
+    background: linear-gradient(135deg, var(--n-900) 0%, var(--n-800) 100%);
+    color: var(--n-100);
+    padding: var(--sp-8) 0 var(--sp-6);
   }
-  .mx-header-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 6px;
-  }
-  .mx-header h1 { font-size: 22px; font-weight: 700; }
-  .mx-header-actions { display: flex; gap: 8px; }
-  .mx-header-btn {
-    padding: 5px 12px;
-    border: 1px solid rgba(255,255,255,.2);
-    border-radius: 6px;
-    background: rgba(255,255,255,.08);
-    color: #cbd5e1;
-    font-size: 12px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all .15s;
-  }
-  .mx-header-btn:hover { background: rgba(255,255,255,.15); color: #fff; }
-  .mx-header-btn.active { background: rgba(255,255,255,.2); color: #fff; border-color: rgba(255,255,255,.4); }
-  .mx-header .mx-subtitle { font-size: 13px; color: #94a3b8; }
-  .mx-mode-badge {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 11px;
-    font-weight: 600;
-    background: rgba(99,102,241,.3);
-    color: #a5b4fc;
-    margin-left: 8px;
-  }
-
-  /* --- Tab Navigation --- */
-  .mx-tabs {
-    display: flex;
-    background: #fff;
-    border-bottom: 1px solid #e2e8f0;
-    padding: 0 32px;
-  }
-  .mx-tab {
-    padding: 12px 20px;
-    font-size: 13px;
-    font-weight: 600;
-    color: #64748b;
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    transition: all .15s;
-  }
-  .mx-tab:hover { color: #1e293b; }
-  .mx-tab.active { color: #0f172a; border-bottom-color: #3b82f6; }
-  .mx-tab-count {
-    font-size: 10px;
-    font-weight: 700;
-    padding: 1px 6px;
-    border-radius: 10px;
-    margin-left: 6px;
-    background: #f1f5f9;
-    color: #64748b;
-  }
-  .mx-tab.active .mx-tab-count { background: #dbeafe; color: #2563eb; }
-
-  /* --- View panels (toggled by tabs) --- */
-  .mx-view { display: none; }
-  .mx-view.active { display: block; }
-
-  /* --- Alignment Gauge --- */
-  .mx-gauge {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 32px;
-    background: #fff;
-    border-bottom: 1px solid #e2e8f0;
-  }
-  .mx-gauge-label { font-size: 13px; font-weight: 600; color: #475569; white-space: nowrap; }
-  .mx-gauge-bar {
-    flex: 1; height: 10px; background: #e2e8f0;
-    border-radius: 5px; overflow: hidden; position: relative;
-  }
-  .mx-gauge-fill { height: 100%; border-radius: 5px; transition: width .6s ease; }
-  .mx-gauge-score { font-size: 20px; font-weight: 800; white-space: nowrap; }
-
-  /* --- Per-document gauges --- */
-  .mx-doc-gauges {
-    display: flex;
-    gap: 16px;
-    padding: 10px 32px;
-    background: #fff;
-    border-bottom: 1px solid #e2e8f0;
-  }
-  .mx-doc-gauge {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 14px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-  }
-  .mx-doc-gauge-icon {
-    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
-  }
-  .mx-doc-gauge-label { font-size: 12px; font-weight: 600; color: #475569; }
-  .mx-doc-gauge-bar {
-    flex: 1; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden;
-  }
-  .mx-doc-gauge-fill { height: 100%; border-radius: 3px; }
-  .mx-doc-gauge-score { font-size: 14px; font-weight: 700; }
-
-  /* --- Stats Bar --- */
-  .mx-stats {
-    display: flex; gap: 4px; padding: 12px 32px;
-    background: #fff; border-bottom: 1px solid #e2e8f0; flex-wrap: wrap;
-  }
-  .mx-stat {
-    display: flex; align-items: center; gap: 6px;
-    font-size: 12px; font-weight: 600;
-    padding: 6px 14px; border-radius: 6px;
-    background: #f8fafc; border: 1px solid #e2e8f0;
-  }
-  .mx-stat-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .mx-stat-value { font-size: 16px; font-weight: 700; }
-  .mx-stat-total {
-    margin-right: 8px; padding: 6px 16px;
-    background: #0f172a; color: #f1f5f9;
-    border-radius: 6px; border: none;
-  }
-  .mx-stat-total .mx-stat-value { color: #fff; }
-
-  /* --- Controls --- */
-  .mx-controls {
-    display: flex; gap: 8px; padding: 12px 32px;
-    background: #f1f5f9; border-bottom: 1px solid #e2e8f0;
-    flex-wrap: wrap; align-items: center;
-  }
-  .mx-search {
-    padding: 8px 12px 8px 36px;
-    border: 1px solid #cbd5e1; border-radius: 6px;
-    font-size: 13px; width: 280px; outline: none;
-    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E") 10px center no-repeat;
-  }
-  .mx-search:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.15); }
-  .mx-controls-group {
-    display: flex; gap: 4px; padding: 2px;
-    background: #e2e8f0; border-radius: 8px;
-  }
-  .mx-filter-btn {
-    padding: 5px 12px; border: none; border-radius: 6px;
-    background: transparent; font-size: 12px; font-weight: 600;
-    cursor: pointer; transition: all .15s; color: #64748b;
-  }
-  .mx-filter-btn:hover { background: rgba(255,255,255,.6); color: #1e293b; }
-  .mx-filter-btn.active { background: #fff; color: #0f172a; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
-  .mx-filter-btn .mx-filter-count {
-    font-size: 10px; font-weight: 700;
-    padding: 1px 5px; border-radius: 10px; margin-left: 4px;
-  }
-  .mx-controls-sep { width: 1px; height: 24px; background: #cbd5e1; margin: 0 4px; }
-  .mx-sev-filter {
-    padding: 5px 10px; border: 1px solid #cbd5e1; border-radius: 6px;
-    background: #fff; font-size: 11px; font-weight: 600;
-    cursor: pointer; transition: all .15s; color: #64748b;
-  }
-  .mx-sev-filter:hover { background: #f8fafc; }
-  .mx-sev-filter.active { border-color: #0f172a; color: #0f172a; background: #f8fafc; }
-  .mx-doc-filter {
-    padding: 5px 10px; border: 1px solid #cbd5e1; border-radius: 6px;
-    background: #fff; font-size: 11px; font-weight: 600;
-    cursor: pointer; transition: all .15s; color: #64748b;
-  }
-  .mx-doc-filter:hover { background: #f8fafc; }
-  .mx-doc-filter.active { border-color: #6366f1; color: #6366f1; background: #eef2ff; }
-  .mx-row-count { font-size: 12px; color: #94a3b8; margin-left: auto; white-space: nowrap; }
-
-  /* --- Legend Panel (collapsible) --- */
-  .mx-legend {
-    max-height: 0; overflow: hidden;
-    transition: max-height .3s ease, padding .3s ease;
-    background: #fff; border-bottom: 1px solid #e2e8f0;
-  }
-  .mx-legend.open { max-height: 800px; padding: 20px 32px; }
-  .mx-legend-title { font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 16px; }
-  .mx-legend-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
-  .mx-legend-section h4 {
-    font-size: 11px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: .05em; color: #64748b; margin-bottom: 8px;
-    padding-bottom: 4px; border-bottom: 1px solid #e2e8f0;
-  }
-  .mx-legend-item {
-    display: flex; align-items: center; gap: 8px;
-    font-size: 12px; padding: 3px 0; color: #475569;
-  }
-  .mx-legend-code {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 28px; height: 20px; border-radius: 4px;
-    font-size: 11px; font-weight: 700; flex-shrink: 0;
-  }
-  .mx-legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-
-  /* --- Keyboard Hints --- */
-  .mx-hints {
-    display: flex; gap: 16px; padding: 8px 32px;
-    background: #fefce8; border-bottom: 1px solid #fde68a;
-    font-size: 11px; color: #92400e; align-items: center;
-  }
-  .mx-hints kbd {
-    display: inline-block; padding: 1px 5px; background: #fff;
-    border: 1px solid #d4d4d8; border-radius: 3px;
-    font-family: monospace; font-size: 11px; box-shadow: 0 1px 0 #d4d4d8;
-  }
-
-  /* =========================================
-     HEATMAP VIEW
-     ========================================= */
-  .mx-heatmap {
-    padding: 24px 32px;
-  }
-  .mx-heatmap-title {
-    font-size: 16px; font-weight: 700; margin-bottom: 16px; color: #0f172a;
-  }
-  .mx-heatmap-grid {
-    display: grid;
-    gap: 2px;
-    background: #e2e8f0;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    overflow: hidden;
-  }
-  /* grid-template-columns set dynamically: "200px repeat(N, 1fr)" where N = document count */
-  .mx-hm-header {
-    background: #0f172a;
-    color: #f1f5f9;
-    font-size: 12px;
-    font-weight: 700;
-    padding: 10px 14px;
-    text-align: center;
-  }
-  .mx-hm-header-corner { text-align: left; }
-  .mx-hm-label {
-    background: #fff;
-    font-size: 12px;
-    font-weight: 600;
-    padding: 8px 14px;
-    color: #1e293b;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    border-right: 1px solid #e2e8f0;
-  }
-  .mx-hm-label-id {
-    font-size: 10px;
-    font-weight: 700;
-    color: #64748b;
-    font-family: monospace;
-  }
-  .mx-hm-cell {
-    padding: 8px;
-    text-align: center;
-    font-size: 11px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all .15s;
-    position: relative;
-  }
-  .mx-hm-cell:hover { opacity: .85; transform: scale(1.05); z-index: 1; }
-  .mx-hm-cell[data-status="aligned"] { background: #dcfce7; color: #15803d; }
-  .mx-hm-cell[data-status="partial"] { background: #fef3c7; color: #a16207; }
-  .mx-hm-cell[data-status="conflict"] { background: #fee2e2; color: #dc2626; }
-  .mx-hm-cell[data-status="gap"] { background: #dbeafe; color: #2563eb; }
-  .mx-hm-cell[data-status="addition"] { background: #fff7ed; color: #ea580c; }
-  .mx-hm-cell[data-status="na"] { background: #f1f5f9; color: #94a3b8; }
-  .mx-hm-cell[data-status="source"] { background: #fef3c7; color: #92400e; }
-  /* Group divider row */
-  .mx-hm-group {
-    grid-column: 1 / -1;
-    background: #f1f5f9;
-    padding: 6px 14px;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .05em;
-    color: #475569;
-  }
-  /* Heatmap legend */
-  .mx-hm-legend {
-    display: flex;
-    gap: 16px;
-    padding: 12px 0;
-    margin-top: 12px;
+  .hero-top {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    margin-bottom: var(--sp-6); gap: var(--sp-4);
     flex-wrap: wrap;
   }
-  .mx-hm-legend-item {
-    display: flex; align-items: center; gap: 6px; font-size: 12px; color: #475569;
+  .hero h1 { font-size: var(--text-xl); font-weight: 700; line-height: 1.2; }
+  .hero-subtitle { font-size: var(--text-md); color: var(--n-400); margin-top: var(--sp-1); }
+  .hero-badge {
+    display: inline-block; padding: 2px 10px; border-radius: var(--r-sm);
+    font-size: var(--text-xs); font-weight: 600;
+    background: rgba(99,102,241,.25); color: #a5b4fc;
+    margin-left: var(--sp-2); vertical-align: middle;
   }
-  .mx-hm-legend-swatch {
-    width: 16px; height: 16px; border-radius: 3px; flex-shrink: 0;
+  .hero-actions { display: flex; gap: var(--sp-2); flex-shrink: 0; }
+  .hero-btn {
+    padding: var(--sp-2) var(--sp-3); border: 1px solid rgba(255,255,255,.15);
+    border-radius: var(--r-sm); background: rgba(255,255,255,.06);
+    color: var(--n-300); font-size: var(--text-sm); font-weight: 500;
+    cursor: pointer; transition: all .15s; font-family: var(--font);
+  }
+  .hero-btn:hover { background: rgba(255,255,255,.12); color: #fff; }
+  .hero-btn.active { background: rgba(255,255,255,.18); color: #fff; border-color: rgba(255,255,255,.3); }
+
+  /* --- Score + Metric Cards --- */
+  .metrics {
+    display: grid; grid-template-columns: auto 1fr; gap: var(--sp-6);
+    align-items: center;
+  }
+  .score-ring {
+    width: 88px; height: 88px; position: relative;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .score-ring svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+  .score-ring-track { fill: none; stroke: rgba(255,255,255,.1); stroke-width: 6; }
+  .score-ring-fill { fill: none; stroke-width: 6; stroke-linecap: round; transition: stroke-dashoffset .8s ease; }
+  .score-ring-value {
+    font-size: var(--text-xl); font-weight: 800; color: #fff;
+    position: relative; z-index: 1;
+  }
+  .score-ring-label {
+    position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%);
+    font-size: var(--text-xs); color: var(--n-400); white-space: nowrap;
+  }
+  .metric-cards {
+    display: flex; gap: var(--sp-3); flex-wrap: wrap;
+  }
+  .metric-card {
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08);
+    border-radius: var(--r-md); padding: var(--sp-3) var(--sp-4);
+    min-width: 100px; text-align: center;
+    transition: background .15s;
+  }
+  .metric-card:hover { background: rgba(255,255,255,.1); }
+  .metric-card-value { font-size: var(--text-xl); font-weight: 800; color: #fff; }
+  .metric-card-label { font-size: var(--text-xs); color: var(--n-400); margin-top: 2px; }
+  .metric-card-dot {
+    display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    margin-right: var(--sp-1); vertical-align: middle;
   }
 
-  /* =========================================
-     MATRIX VIEW (row-based)
-     ========================================= */
-  .mx-body { padding: 24px 32px; }
+  /* --- Document Coverage Bars --- */
+  .doc-bars {
+    display: flex; gap: var(--sp-4); margin-top: var(--sp-5);
+    flex-wrap: wrap;
+  }
+  .doc-bar {
+    flex: 1; min-width: 200px;
+    display: flex; align-items: center; gap: var(--sp-3);
+    padding: var(--sp-2) var(--sp-4);
+    background: rgba(255,255,255,.05); border-radius: var(--r-md);
+  }
+  .doc-bar-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .doc-bar-name { font-size: var(--text-sm); font-weight: 600; color: var(--n-300); white-space: nowrap; }
+  .doc-bar-track {
+    flex: 1; height: 6px; background: rgba(255,255,255,.1); border-radius: 3px; overflow: hidden;
+  }
+  .doc-bar-fill { height: 100%; border-radius: 3px; transition: width .6s ease; }
+  .doc-bar-pct { font-size: var(--text-md); font-weight: 700; color: #fff; min-width: 40px; text-align: right; }
 
-  .mx-row {
-    display: grid;
-    gap: 0;
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    overflow: hidden;
-    transition: box-shadow .15s;
-    cursor: pointer;
+  /* ===========================================
+     TOOLBAR (sticky)
+     =========================================== */
+  .toolbar {
+    position: sticky; top: 0; z-index: 90;
+    background: #fff; border-bottom: 1px solid var(--n-200);
+    box-shadow: 0 1px 3px rgba(0,0,0,.05);
+  }
+  .toolbar-inner {
+    display: flex; align-items: center; gap: var(--sp-3);
+    padding: var(--sp-3) 0; flex-wrap: wrap;
+  }
+  .toolbar-tabs {
+    display: flex; gap: 0; margin-right: var(--sp-4);
+  }
+  .toolbar-tab {
+    padding: var(--sp-2) var(--sp-4); font-size: var(--text-sm); font-weight: 600;
+    color: var(--n-500); cursor: pointer; border-bottom: 2px solid transparent;
+    transition: all .15s; background: none; border-top: none; border-left: none; border-right: none;
+    font-family: var(--font);
+  }
+  .toolbar-tab:hover { color: var(--n-800); }
+  .toolbar-tab.active { color: var(--n-900); border-bottom-color: var(--c-gap); }
+  .toolbar-tab-count {
+    font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px;
+    margin-left: var(--sp-1); background: var(--n-100); color: var(--n-500);
+  }
+  .toolbar-tab.active .toolbar-tab-count { background: var(--c-gap-bg); color: var(--c-gap-text); }
+  .toolbar-search {
+    padding: var(--sp-2) var(--sp-3) var(--sp-2) 34px;
+    border: 1px solid var(--n-300); border-radius: var(--r-sm);
+    font-size: var(--text-sm); width: 240px; outline: none;
+    font-family: var(--font);
+    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E") 10px center no-repeat;
+  }
+  .toolbar-search:focus { border-color: var(--c-gap); box-shadow: 0 0 0 3px rgba(59,130,246,.1); }
+  .toolbar-sep { width: 1px; height: 20px; background: var(--n-200); }
+
+  /* Filter pills */
+  .pill-group { display: flex; gap: 2px; background: var(--n-100); border-radius: var(--r-sm); padding: 2px; }
+  .pill {
+    padding: var(--sp-1) var(--sp-3); border: none; border-radius: var(--r-sm);
+    background: transparent; font-size: var(--text-xs); font-weight: 600;
+    cursor: pointer; transition: all .15s; color: var(--n-500); font-family: var(--font);
+    white-space: nowrap;
+  }
+  .pill:hover { background: rgba(255,255,255,.7); color: var(--n-700); }
+  .pill.active { background: #fff; color: var(--n-900); box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+
+  /* Severity & doc-pair filters */
+  .filter-btn {
+    padding: var(--sp-1) var(--sp-2); border: 1px solid var(--n-200); border-radius: var(--r-sm);
+    background: #fff; font-size: var(--text-xs); font-weight: 600;
+    cursor: pointer; transition: all .15s; color: var(--n-500); font-family: var(--font);
+    white-space: nowrap;
+  }
+  .filter-btn:hover { border-color: var(--n-400); color: var(--n-700); }
+  .filter-btn.active { border-color: var(--n-800); color: var(--n-900); background: var(--n-50); }
+  .toolbar-count { font-size: var(--text-sm); color: var(--n-400); margin-left: auto; white-space: nowrap; }
+
+  /* ===========================================
+     HELP PANEL (floating, toggled by ? button)
+     =========================================== */
+  .help-panel {
+    position: fixed; top: 0; right: -420px; width: 400px; height: 100vh;
+    background: #fff; box-shadow: -4px 0 24px rgba(0,0,0,.12);
+    z-index: 200; overflow-y: auto; transition: right .3s ease;
+    padding: var(--sp-6);
+  }
+  .help-panel.open { right: 0; }
+  .help-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.3);
+    z-index: 199; display: none;
+  }
+  .help-overlay.open { display: block; }
+  .help-panel-title {
+    font-size: var(--text-lg); font-weight: 700; margin-bottom: var(--sp-5);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .help-close {
+    width: 28px; height: 28px; border: none; background: var(--n-100);
+    border-radius: var(--r-sm); cursor: pointer; font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--n-500); transition: all .15s;
+  }
+  .help-close:hover { background: var(--n-200); color: var(--n-800); }
+  .help-section { margin-bottom: var(--sp-5); }
+  .help-section h4 {
+    font-size: var(--text-xs); font-weight: 700; text-transform: uppercase;
+    letter-spacing: .05em; color: var(--n-500); margin-bottom: var(--sp-2);
+    padding-bottom: var(--sp-1); border-bottom: 1px solid var(--n-200);
+  }
+  .help-item {
+    display: flex; align-items: center; gap: var(--sp-2);
+    font-size: var(--text-sm); padding: 3px 0; color: var(--n-600);
+  }
+  .help-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 28px; height: 20px; border-radius: var(--r-sm); padding: 0 6px;
+    font-size: var(--text-xs); font-weight: 700; flex-shrink: 0;
+  }
+  .help-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .help-kbd {
+    display: flex; gap: var(--sp-4); flex-wrap: wrap; margin-top: var(--sp-2);
+  }
+  .help-kbd span { font-size: var(--text-xs); color: var(--n-500); }
+  .help-kbd kbd {
+    display: inline-block; padding: 1px 5px; background: var(--n-100);
+    border: 1px solid var(--n-200); border-radius: 3px;
+    font-family: monospace; font-size: var(--text-xs);
+    box-shadow: 0 1px 0 var(--n-200);
+  }
+
+  /* ===========================================
+     VIEWS
+     =========================================== */
+  .view { display: none; }
+  .view.active { display: block; }
+  .view-body { padding: var(--sp-6) 0 var(--sp-10); }
+
+  /* ===========================================
+     REQUIREMENT CARDS (Matrix View)
+     =========================================== */
+  .req-card {
+    background: #fff; border: 1px solid var(--n-200);
+    border-radius: var(--r-lg); margin-bottom: var(--sp-3);
+    overflow: hidden; transition: box-shadow .15s;
     position: relative;
   }
-  /* grid-template-columns set per mode: "1fr 1fr" (bilateral) or "1fr 1fr 1fr" (trilateral) */
-  .mx-row:hover { box-shadow: 0 2px 12px rgba(0,0,0,.07); }
-  .mx-row::after {
-    content: '';
-    position: absolute; top: 16px; right: 12px;
-    width: 0; height: 0;
-    border-left: 5px solid transparent;
-    border-right: 5px solid transparent;
-    border-top: 5px solid #cbd5e1;
-    transition: transform .2s;
-  }
-  .mx-row.expanded::after { transform: rotate(180deg); }
+  .req-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,.05); }
 
   /* Status stripe */
-  .mx-row[data-status="aligned"] { border-left: 4px solid #22c55e; }
-  .mx-row[data-status="partial"] { border-left: 4px solid #f59e0b; }
-  .mx-row[data-status="conflict"] { border-left: 4px solid #ef4444; }
-  .mx-row[data-status="gap"] { border-left: 4px solid #3b82f6; }
-  .mx-row[data-status="addition"] { border-left: 4px solid #f97316; }
-  .mx-row[data-status="cascade"] { border-left: 4px solid #ec4899; }
+  .req-card[data-status="aligned"] { border-left: 4px solid var(--c-aligned); }
+  .req-card[data-status="partial"] { border-left: 4px solid var(--c-partial); }
+  .req-card[data-status="conflict"] { border-left: 4px solid var(--c-conflict); }
+  .req-card[data-status="gap"] { border-left: 4px solid var(--c-gap); }
+  .req-card[data-status="addition"] { border-left: 4px solid var(--c-addition); }
+  .req-card[data-status="cascade"] { border-left: 4px solid var(--c-cascade); }
 
-  /* --- Columns --- */
-  .mx-col { padding: 14px 18px; }
-  .mx-col-prd { border-right: 1px solid #e2e8f0; background: #fffbeb; }
-  .mx-col-ux { background: #eff6ff; }
-  .mx-col-mock { border-left: 1px solid #e2e8f0; background: #f0fdf4; }
-  /* In bilateral PRD+Mock, the mock column uses the second slot */
-  .mx-col-label {
-    font-size: 10px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: .05em; color: #64748b; margin-bottom: 6px;
+  /* Card header (always visible, clickable) */
+  .req-header {
+    padding: var(--sp-4) var(--sp-5);
+    cursor: pointer;
+    display: flex; align-items: flex-start; gap: var(--sp-4);
+    position: relative;
   }
-  .mx-col-title { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
-  .mx-col-text { font-size: 13px; color: #475569; line-height: 1.5; }
-  .mx-col-empty { font-size: 13px; color: #94a3b8; font-style: italic; }
-
-  /* --- Status Badge --- */
-  .mx-status {
-    display: inline-block; padding: 2px 8px; border-radius: 4px;
-    font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 6px;
+  .req-header:hover { background: var(--n-50); }
+  .req-header-main { flex: 1; min-width: 0; }
+  .req-header-top {
+    display: flex; align-items: center; gap: var(--sp-2);
+    margin-bottom: var(--sp-1); flex-wrap: wrap;
   }
-  .mx-status-aligned { background: #dcfce7; color: #15803d; }
-  .mx-status-partial { background: #fef3c7; color: #a16207; }
-  .mx-status-conflict { background: #fee2e2; color: #dc2626; }
-  .mx-status-gap { background: #dbeafe; color: #2563eb; }
-  .mx-status-addition { background: #fff7ed; color: #ea580c; }
-  .mx-status-cascade { background: #fce7f3; color: #db2777; }
-
-  /* --- Finding Badges --- */
-  .mx-finding {
-    display: inline-flex; align-items: center; gap: 5px;
-    padding: 3px 9px; border-radius: 4px;
-    font-size: 12px; font-weight: 600;
-    margin-top: 6px; margin-right: 4px;
-    cursor: pointer; transition: all .15s;
+  .req-status {
+    display: inline-block; padding: 2px 8px; border-radius: var(--r-sm);
+    font-size: var(--text-xs); font-weight: 700; text-transform: uppercase;
   }
-  .mx-finding:hover { opacity: .85; transform: translateY(-1px); }
-  .mx-finding-V { background: #fee2e2; color: #dc2626; }
-  .mx-finding-N { background: #ede9fe; color: #7c3aed; }
-  .mx-finding-W { background: #dbeafe; color: #2563eb; }
-  .mx-finding-Q { background: #fff7ed; color: #ea580c; }
-  .mx-finding-C { background: #fce7f3; color: #db2777; }
-  .mx-finding-S { background: #fef3c7; color: #b45309; }
+  .req-status-aligned { background: var(--c-aligned-bg); color: var(--c-aligned-text); }
+  .req-status-partial { background: var(--c-partial-bg); color: var(--c-partial-text); }
+  .req-status-conflict { background: var(--c-conflict-bg); color: var(--c-conflict-text); }
+  .req-status-gap { background: var(--c-gap-bg); color: var(--c-gap-text); }
+  .req-status-addition { background: var(--c-addition-bg); color: var(--c-addition-text); }
+  .req-status-cascade { background: var(--c-cascade-bg); color: var(--c-cascade-text); }
+  .req-id { font-size: var(--text-sm); font-weight: 600; color: var(--n-500); font-family: monospace; }
+  .req-title { font-size: var(--text-md); font-weight: 600; color: var(--n-800); }
+  .req-desc { font-size: var(--text-sm); color: var(--n-600); margin-top: 2px; }
+  .req-findings-summary {
+    display: flex; gap: var(--sp-2); flex-wrap: wrap; margin-top: var(--sp-2);
+  }
 
-  /* --- Severity Pills --- */
-  .mx-severity {
+  /* Finding chip (in header) */
+  .chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 8px; border-radius: var(--r-sm);
+    font-size: var(--text-xs); font-weight: 600;
+    line-height: 1.2;
+  }
+  .chip-label { font-weight: 700; }
+  .chip-code { opacity: .6; font-family: monospace; font-size: 10px; }
+  .chip-V { background: var(--f-V); color: var(--f-V-text); }
+  .chip-N { background: var(--f-N); color: var(--f-N-text); }
+  .chip-W { background: var(--f-W); color: var(--f-W-text); }
+  .chip-Q { background: var(--f-Q); color: var(--f-Q-text); }
+  .chip-C { background: var(--f-C); color: var(--f-C-text); }
+  .chip-S { background: var(--f-S); color: var(--f-S-text); }
+  .sev-pill {
     font-size: 10px; font-weight: 700; padding: 1px 6px;
-    border-radius: 3px; text-transform: uppercase;
+    border-radius: 3px; text-transform: uppercase; color: #fff;
   }
-  .mx-sev-blocker { background: #dc2626; color: #fff; }
-  .mx-sev-major { background: #f59e0b; color: #fff; }
-  .mx-sev-minor { background: #6b7280; color: #fff; }
-
-  /* --- Doc Pair Tag --- */
-  .mx-doc-tag {
-    display: inline-block; padding: 1px 6px; border-radius: 3px;
-    font-size: 10px; font-weight: 600; font-family: monospace;
-    background: #f1f5f9; color: #64748b; margin-left: 4px;
+  .sev-blocker { background: var(--sev-blocker); }
+  .sev-major { background: var(--sev-major); }
+  .sev-minor { background: var(--sev-minor); }
+  .doc-tag {
+    font-size: 10px; font-weight: 600; padding: 1px 6px;
+    border-radius: 3px; background: var(--n-100); color: var(--n-500);
   }
 
-  /* --- Expanded Detail --- */
-  .mx-detail {
-    grid-column: 1 / -1;
-    padding: 16px 20px;
-    background: #f8fafc;
-    border-top: 1px solid #e2e8f0;
-    display: none;
-    font-size: 13px;
+  /* Expand arrow */
+  .req-expand {
+    width: 28px; height: 28px; border-radius: var(--r-sm);
+    background: var(--n-100); display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 2px; transition: all .15s;
   }
-  .mx-row.expanded .mx-detail { display: block; }
-  .mx-detail-desc { margin-bottom: 8px; line-height: 1.6; }
-  .mx-detail-quote {
-    padding: 10px 14px;
-    border-left: 3px solid;
-    margin: 10px 0;
-    font-size: 12px;
-    background: #fff;
-    border-radius: 0 6px 6px 0;
-    line-height: 1.5;
+  .req-expand svg { width: 14px; height: 14px; transition: transform .2s; color: var(--n-400); }
+  .req-card.expanded .req-expand svg { transform: rotate(180deg); }
+  .req-card.expanded .req-expand { background: var(--n-200); }
+
+  /* Document columns (collapsed = hidden, expanded = shown) */
+  .req-docs {
+    display: none; border-top: 1px solid var(--n-200);
   }
-  .mx-detail-quote-prd { border-color: #eab308; background: #fffef5; }
-  .mx-detail-quote-ux { border-color: #3b82f6; background: #f8fbff; }
-  .mx-detail-quote-mock { border-color: #22c55e; background: #f5fef7; }
-  .mx-detail-quote-label {
-    font-size: 10px; font-weight: 700; text-transform: uppercase;
-    color: #64748b; margin-bottom: 4px;
+  .req-card.expanded .req-docs { display: grid; }
+  .req-doc {
+    padding: var(--sp-4) var(--sp-5);
+    border-right: 1px solid var(--n-200);
   }
-  .mx-detail-cascade {
-    margin: 12px 0;
-    padding: 12px 16px;
-    background: #fdf2f8;
-    border: 1px solid #fbcfe8;
-    border-radius: 6px;
+  .req-doc:last-child { border-right: none; }
+  .req-doc-prd { background: var(--doc-prd-bg); }
+  .req-doc-ux { background: var(--doc-ux-bg); }
+  .req-doc-mock { background: var(--doc-mock-bg); }
+  .req-doc-label {
+    font-size: var(--text-xs); font-weight: 700; text-transform: uppercase;
+    letter-spacing: .04em; color: var(--n-500); margin-bottom: var(--sp-2);
+    display: flex; align-items: center; gap: var(--sp-2);
   }
-  .mx-detail-cascade-chain {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-    flex-wrap: wrap;
+  .req-doc-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .req-doc-text { font-size: var(--text-sm); color: var(--n-700); line-height: 1.6; }
+  .req-doc-empty { font-size: var(--text-sm); color: var(--n-400); font-style: italic; }
+  .req-doc-chips { margin-top: var(--sp-2); display: flex; gap: var(--sp-1); flex-wrap: wrap; }
+
+  /* Finding detail cards (expanded) */
+  .req-findings {
+    display: none; border-top: 1px solid var(--n-200);
+    padding: var(--sp-4) var(--sp-5);
+    background: var(--n-50);
+    cursor: auto; user-select: text; -webkit-user-select: text;
   }
-  .mx-detail-cascade-step {
-    padding: 4px 10px;
-    border-radius: 4px;
-    font-weight: 600;
-    font-size: 11px;
+  .req-card.expanded .req-findings { display: block; }
+  .finding-card {
+    background: #fff; border: 1px solid var(--n-200); border-radius: var(--r-md);
+    padding: var(--sp-4); margin-bottom: var(--sp-3);
   }
-  .mx-detail-cascade-arrow { color: #ec4899; font-weight: 700; }
-  .mx-detail-recommendation {
-    margin-top: 12px;
-    padding: 10px 14px;
-    background: #f0fdf4;
-    border: 1px solid #bbf7d0;
-    border-radius: 6px;
-    font-size: 12px;
-    color: #166534;
+  .finding-card:last-child { margin-bottom: 0; }
+  .finding-header {
+    display: flex; align-items: center; gap: var(--sp-2);
+    flex-wrap: wrap; margin-bottom: var(--sp-3);
   }
-  .mx-detail-recommendation strong {
-    font-size: 10px; text-transform: uppercase; letter-spacing: .03em;
+  .finding-desc { font-size: var(--text-sm); color: var(--n-700); line-height: 1.6; margin-bottom: var(--sp-3); }
+  .finding-quote {
+    padding: var(--sp-3) var(--sp-4); border-left: 3px solid;
+    margin: var(--sp-2) 0; font-size: var(--text-sm);
+    border-radius: 0 var(--r-sm) var(--r-sm) 0;
+    line-height: 1.6; user-select: text; -webkit-user-select: text;
+  }
+  .finding-quote-prd { border-color: var(--doc-prd); background: #fffef5; }
+  .finding-quote-ux { border-color: var(--doc-ux); background: #f8fbff; }
+  .finding-quote-mock { border-color: var(--doc-mock); background: #f5fef7; }
+  .finding-quote-label {
+    font-size: var(--text-xs); font-weight: 700; text-transform: uppercase;
+    color: var(--n-500); margin-bottom: var(--sp-1);
+  }
+  .finding-cascade {
+    padding: var(--sp-3) var(--sp-4); background: var(--c-cascade-bg);
+    border: 1px solid #fbcfe8; border-radius: var(--r-md);
+    margin: var(--sp-3) 0;
+  }
+  .finding-cascade-title { font-size: var(--text-xs); font-weight: 700; color: var(--c-cascade-text); margin-bottom: var(--sp-2); }
+  .finding-cascade-chain {
+    display: flex; align-items: center; gap: var(--sp-2);
+    flex-wrap: wrap; font-size: var(--text-sm);
+  }
+  .finding-cascade-step {
+    padding: var(--sp-1) var(--sp-3); border-radius: var(--r-sm);
+    font-weight: 600; font-size: var(--text-xs);
+  }
+  .finding-cascade-arrow { color: var(--c-cascade-text); font-weight: 700; }
+  .finding-rec {
+    margin-top: var(--sp-3); padding: var(--sp-3) var(--sp-4);
+    background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: var(--r-md);
+    font-size: var(--text-sm); color: #166534;
+  }
+  .finding-rec-label { font-size: var(--text-xs); font-weight: 700; text-transform: uppercase; letter-spacing: .03em; }
+
+  /* ===========================================
+     NAMING DRIFT TABLE
+     =========================================== */
+  .naming-section {
+    background: #fff; border: 1px solid var(--n-200); border-radius: var(--r-lg);
+    border-left: 4px solid var(--f-N-text); overflow: hidden; margin-bottom: var(--sp-6);
+  }
+  .naming-header {
+    padding: var(--sp-3) var(--sp-5); background: var(--f-N);
+    font-size: var(--text-sm); font-weight: 700; color: var(--f-N-text);
+  }
+  .naming-section table { width: 100%; font-size: var(--text-sm); border-collapse: collapse; }
+  .naming-section th {
+    padding: var(--sp-2) var(--sp-4); text-align: left; font-weight: 600;
+    background: var(--n-50); color: var(--n-600);
+  }
+  .naming-section td { padding: var(--sp-2) var(--sp-4); color: var(--n-700); }
+  .naming-section tr:not(:last-child) td { border-bottom: 1px solid var(--n-100); }
+
+  /* ===========================================
+     HEATMAP VIEW
+     =========================================== */
+  .heatmap-title { font-size: var(--text-lg); font-weight: 700; margin-bottom: var(--sp-4); }
+  .heatmap-grid {
+    display: grid; gap: 2px; background: var(--n-200);
+    border: 1px solid var(--n-200); border-radius: var(--r-md); overflow: hidden;
+  }
+  .hm-header {
+    background: var(--n-900); color: var(--n-100);
+    font-size: var(--text-sm); font-weight: 700;
+    padding: var(--sp-3) var(--sp-4); text-align: center;
+  }
+  .hm-header-corner { text-align: left; }
+  .hm-label {
+    background: #fff; font-size: var(--text-sm); font-weight: 600;
+    padding: var(--sp-2) var(--sp-4); color: var(--n-800);
+    display: flex; align-items: center; gap: var(--sp-2);
+    border-right: 1px solid var(--n-200);
+  }
+  .hm-label-id { font-size: 10px; font-weight: 700; color: var(--n-500); font-family: monospace; }
+  .hm-cell {
+    padding: var(--sp-2); text-align: center; font-size: var(--text-xs); font-weight: 600;
+    cursor: default; transition: opacity .15s;
+  }
+  .hm-cell:hover { opacity: .8; }
+  .hm-cell[data-status="aligned"] { background: var(--c-aligned-bg); color: var(--c-aligned-text); }
+  .hm-cell[data-status="partial"] { background: var(--c-partial-bg); color: var(--c-partial-text); }
+  .hm-cell[data-status="conflict"] { background: var(--c-conflict-bg); color: var(--c-conflict-text); }
+  .hm-cell[data-status="gap"] { background: var(--c-gap-bg); color: var(--c-gap-text); }
+  .hm-cell[data-status="addition"] { background: var(--c-addition-bg); color: var(--c-addition-text); }
+  .hm-cell[data-status="na"] { background: var(--n-100); color: var(--n-400); }
+  .hm-cell[data-status="source"] { background: var(--c-partial-bg); color: #92400e; }
+  .hm-group {
+    grid-column: 1 / -1; background: var(--n-100);
+    padding: var(--sp-2) var(--sp-4); font-size: var(--text-xs);
+    font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--n-600);
+  }
+  .hm-legend {
+    display: flex; gap: var(--sp-4); padding: var(--sp-3) 0;
+    margin-top: var(--sp-3); flex-wrap: wrap;
+  }
+  .hm-legend-item { display: flex; align-items: center; gap: var(--sp-2); font-size: var(--text-sm); color: var(--n-600); }
+  .hm-legend-swatch { width: 16px; height: 16px; border-radius: 3px; flex-shrink: 0; }
+
+  /* ===========================================
+     LOADING / ERROR / FOOTER
+     =========================================== */
+  .state-msg { text-align: center; padding: var(--sp-10) var(--sp-8); }
+  .state-msg p { font-size: var(--text-md); }
+  .state-msg .sub { font-size: var(--text-sm); color: var(--n-400); margin-top: var(--sp-2); }
+  .footer {
+    text-align: center; padding: var(--sp-6);
+    font-size: var(--text-sm); color: var(--n-400);
+    border-top: 1px solid var(--n-200);
   }
 
-  /* --- Naming Drift Table --- */
-  .mx-naming-table {
-    margin-bottom: 24px;
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    border-left: 4px solid #7c3aed;
-    overflow: hidden;
-  }
-  .mx-naming-header {
-    padding: 12px 20px;
-    background: #ede9fe;
-    font-size: 13px;
-    font-weight: 700;
-    color: #7c3aed;
-  }
-  .mx-naming-table table {
-    width: 100%; font-size: 13px; border-collapse: collapse;
-  }
-  .mx-naming-table th {
-    padding: 8px 16px; text-align: left; font-weight: 600; background: #f8fafc;
-  }
-  .mx-naming-table td { padding: 8px 16px; }
-
-  /* --- Footer --- */
-  .mx-footer {
-    text-align: center; padding: 24px;
-    font-size: 12px; color: #94a3b8;
-    border-top: 1px solid #e2e8f0; margin-top: 32px;
+  /* ===========================================
+     RESPONSIVE
+     =========================================== */
+  @media (max-width: 768px) {
+    .container { padding: 0 var(--sp-4); }
+    .hero { padding: var(--sp-5) 0; }
+    .hero h1 { font-size: var(--text-lg); }
+    .metrics { grid-template-columns: 1fr; gap: var(--sp-4); }
+    .score-ring { margin: 0 auto; }
+    .metric-cards { justify-content: center; }
+    .doc-bars { flex-direction: column; }
+    .toolbar-inner { padding: var(--sp-2) 0; }
+    .toolbar-search { width: 100%; order: -1; }
+    .req-docs { grid-template-columns: 1fr !important; }
+    .req-doc { border-right: none; border-bottom: 1px solid var(--n-200); }
+    .req-doc:last-child { border-bottom: none; }
+    .help-panel { width: 100%; right: -100%; }
+    .heatmap-grid { font-size: 10px; }
   }
 </style>
 </head>
 <body>
 
-<!-- ===== HEADER ===== -->
-<div class="mx-header">
-  <div class="mx-header-top">
-    <h1>Docs Reconciliation Dashboard <span class="mx-mode-badge">{MODE}</span></h1>
-    <div class="mx-header-actions">
-      <button class="mx-header-btn" data-action="toggle-legend">Legend</button>
-      <button class="mx-header-btn" data-action="expand-all">Expand All</button>
-      <button class="mx-header-btn" data-action="collapse-all">Collapse All</button>
+<!-- ===== HERO ===== -->
+<div class="hero">
+  <div class="container">
+    <div class="hero-top">
+      <div>
+        <h1 id="hero-title">Docs Reconciliation<span class="hero-badge" id="hero-mode"></span></h1>
+        <div class="hero-subtitle" id="hero-sub"></div>
+      </div>
+      <div class="hero-actions">
+        <button class="hero-btn" data-action="help">? Help</button>
+        <button class="hero-btn" data-action="expand-all">Expand All</button>
+        <button class="hero-btn" data-action="collapse-all">Collapse All</button>
+      </div>
+    </div>
+    <div class="metrics">
+      <div class="score-ring" id="score-ring">
+        <svg viewBox="0 0 88 88"><circle class="score-ring-track" cx="44" cy="44" r="38"/><circle class="score-ring-fill" id="score-arc" cx="44" cy="44" r="38"/></svg>
+        <span class="score-ring-value" id="score-value">0%</span>
+        <span class="score-ring-label">Overall Alignment</span>
+      </div>
+      <div class="metric-cards" id="metric-cards"></div>
+    </div>
+    <div class="doc-bars" id="doc-bars"></div>
+  </div>
+</div>
+
+<!-- ===== HELP PANEL (slide-in drawer) ===== -->
+<div class="help-overlay" id="help-overlay"></div>
+<div class="help-panel" id="help-panel">
+  <div class="help-panel-title">Reference Guide <button class="help-close" id="help-close">&times;</button></div>
+  <div class="help-section">
+    <h4>Finding Types</h4>
+    <div class="help-item"><span class="help-badge" style="background:var(--f-V);color:var(--f-V-text);">V</span> <strong>Conflict</strong> — Documents contradict each other</div>
+    <div class="help-item"><span class="help-badge" style="background:var(--f-N);color:var(--f-N-text);">N</span> <strong>Naming Drift</strong> — Same concept, different names</div>
+    <div class="help-item"><span class="help-badge" style="background:var(--f-W);color:var(--f-W-text);">W</span> <strong>Coverage Gap</strong> — Required by PRD, missing elsewhere</div>
+    <div class="help-item"><span class="help-badge" style="background:var(--f-Q);color:var(--f-Q-text);">Q</span> <strong>Scope Addition</strong> — Added without PRD requirement</div>
+    <div class="help-item"><span class="help-badge" style="background:var(--f-C);color:var(--f-C-text);">C</span> <strong>Cascade</strong> — Progressive drift across documents</div>
+    <div class="help-item"><span class="help-badge" style="background:var(--f-S);color:var(--f-S-text);">S</span> <strong>Specificity Gap</strong> — Downstream invented details</div>
+    <div class="help-item"><span class="help-badge" style="background:#e0e7ff;color:#6366f1;">D</span> <strong>PRD Issue</strong> — Internal PRD inconsistency</div>
+    <div class="help-item"><span class="help-badge" style="background:#ccfbf1;color:#0d9488;">E</span> <strong>UX Issue</strong> — Internal UX inconsistency</div>
+    <div class="help-item"><span class="help-badge" style="background:var(--n-100);color:var(--n-500);">M</span> <strong>Mock Issue</strong> — Internal Mock inconsistency</div>
+  </div>
+  <div class="help-section">
+    <h4>Requirement Status</h4>
+    <div class="help-item"><span class="help-dot" style="background:var(--c-aligned);"></span> <strong>Aligned</strong> — Fully covered, no conflicts</div>
+    <div class="help-item"><span class="help-dot" style="background:var(--c-partial);"></span> <strong>Partial</strong> — Some coverage, gaps remain</div>
+    <div class="help-item"><span class="help-dot" style="background:var(--c-conflict);"></span> <strong>Conflict</strong> — Documents contradict</div>
+    <div class="help-item"><span class="help-dot" style="background:var(--c-gap);"></span> <strong>Gap</strong> — Missing from one or more documents</div>
+    <div class="help-item"><span class="help-dot" style="background:var(--c-addition);"></span> <strong>Addition</strong> — Not required by PRD</div>
+    <div class="help-item"><span class="help-dot" style="background:var(--c-cascade);"></span> <strong>Cascade</strong> — Progressive drift</div>
+  </div>
+  <div class="help-section">
+    <h4>Severity Levels</h4>
+    <div class="help-item"><span class="sev-pill sev-blocker">BLOCKER</span> Contradicts — blocks progress</div>
+    <div class="help-item"><span class="sev-pill sev-major">MAJOR</span> Significant gap — causes rework</div>
+    <div class="help-item"><span class="sev-pill sev-minor">MINOR</span> Low-risk cosmetic issue</div>
+  </div>
+  <div class="help-section">
+    <h4>Keyboard Shortcuts</h4>
+    <div class="help-kbd">
+      <span><kbd>/</kbd> Search</span>
+      <span><kbd>Esc</kbd> Clear</span>
+      <span><kbd>[</kbd><kbd>]</kbd> Navigate</span>
+      <span><kbd>Enter</kbd> Expand</span>
+      <span><kbd>?</kbd> Help</span>
+      <span><kbd>H</kbd> Coverage Map</span>
     </div>
   </div>
-  <div class="mx-subtitle">{PRD_TITLE} — {DATE} — Documents: {DOC_LIST}</div>
 </div>
 
-<!-- ===== COLLAPSIBLE LEGEND ===== -->
-<div class="mx-legend" id="legend-panel">
-  <div class="mx-legend-title">Glossary & Legend</div>
-  <div class="mx-legend-grid">
-    <div class="mx-legend-section">
-      <h4>Finding Categories</h4>
-      <div class="mx-legend-item"><span class="mx-legend-code" style="background:#fee2e2;color:#dc2626;">V</span> <strong>Conflict</strong> — Two+ docs contradict each other</div>
-      <div class="mx-legend-item"><span class="mx-legend-code" style="background:#ede9fe;color:#7c3aed;">N</span> <strong>Naming Drift</strong> — Same concept, different names</div>
-      <div class="mx-legend-item"><span class="mx-legend-code" style="background:#dbeafe;color:#2563eb;">W</span> <strong>Coverage Gap</strong> — PRD requires, target missing</div>
-      <div class="mx-legend-item"><span class="mx-legend-code" style="background:#fff7ed;color:#ea580c;">Q</span> <strong>Scope Addition</strong> — Doc adds without PRD backing</div>
-      <div class="mx-legend-item"><span class="mx-legend-code" style="background:#fce7f3;color:#db2777;">C</span> <strong>Cascade Violation</strong> — Progressive drift PRD->UX->Mock</div>
-      <div class="mx-legend-item"><span class="mx-legend-code" style="background:#fef3c7;color:#b45309;">S</span> <strong>Specificity Gap</strong> — Downstream invented details</div>
-      <div class="mx-legend-item"><span class="mx-legend-code" style="background:#e0e7ff;color:#6366f1;">D</span> <strong>PRD Issue</strong> — Internal PRD problem (report only)</div>
-      <div class="mx-legend-item"><span class="mx-legend-code" style="background:#ccfbf1;color:#0d9488;">E</span> <strong>UX Issue</strong> — Internal UX problem (report only)</div>
-      <div class="mx-legend-item"><span class="mx-legend-code" style="background:#f1f5f9;color:#64748b;">M</span> <strong>Mock Issue</strong> — Internal Mock problem (report only)</div>
-    </div>
-    <div class="mx-legend-section">
-      <h4>Row Statuses</h4>
-      <div class="mx-legend-item"><span class="mx-legend-dot" style="background:#22c55e;"></span> <strong>Aligned</strong> — Fully covered, no conflicts</div>
-      <div class="mx-legend-item"><span class="mx-legend-dot" style="background:#f59e0b;"></span> <strong>Partial</strong> — Some coverage, gaps remain</div>
-      <div class="mx-legend-item"><span class="mx-legend-dot" style="background:#ef4444;"></span> <strong>Conflict</strong> — Documents contradict</div>
-      <div class="mx-legend-item"><span class="mx-legend-dot" style="background:#3b82f6;"></span> <strong>Gap</strong> — Missing from target document(s)</div>
-      <div class="mx-legend-item"><span class="mx-legend-dot" style="background:#f97316;"></span> <strong>Addition</strong> — Added without PRD backing</div>
-      <div class="mx-legend-item"><span class="mx-legend-dot" style="background:#ec4899;"></span> <strong>Cascade</strong> — Progressive drift across chain</div>
-    </div>
-    <div class="mx-legend-section">
-      <h4>Severity Levels</h4>
-      <div class="mx-legend-item"><span class="mx-severity mx-sev-blocker">BLOCKER</span> Contradicts — blocks next phase</div>
-      <div class="mx-legend-item"><span class="mx-severity mx-sev-major">MAJOR</span> Significant gap — causes rework</div>
-      <div class="mx-legend-item"><span class="mx-severity mx-sev-minor">MINOR</span> Low-risk terminology or cosmetic</div>
-      <h4 style="margin-top:16px;">Document Pair Tags</h4>
-      <div class="mx-legend-item"><span class="mx-doc-tag">[PRD&lt;&gt;UX]</span> PRD and UX finding</div>
-      <div class="mx-legend-item"><span class="mx-doc-tag">[PRD&lt;&gt;Mock]</span> PRD and Mock finding</div>
-      <div class="mx-legend-item"><span class="mx-doc-tag">[UX&lt;&gt;Mock]</span> UX and Mock finding</div>
-      <div class="mx-legend-item"><span class="mx-doc-tag">[PRD&gt;UX&gt;Mock]</span> Cascade across all three</div>
-    </div>
-  </div>
-</div>
-
-<!-- ===== ALIGNMENT GAUGE ===== -->
-<div class="mx-gauge">
-  <span class="mx-gauge-label">Overall Alignment</span>
-  <div class="mx-gauge-bar">
-    <div class="mx-gauge-fill" id="gauge-fill" style="width:{ALIGNMENT_SCORE}%;"></div>
-  </div>
-  <span class="mx-gauge-score" id="gauge-score">{ALIGNMENT_SCORE}%</span>
-</div>
-
-<!-- ===== PER-DOCUMENT GAUGES ===== -->
-<div class="mx-doc-gauges">
-  <!-- Repeat per provided document. Omit documents not in input. -->
-  <!--
-  <div class="mx-doc-gauge">
-    <div class="mx-doc-gauge-icon" style="background:{DOC_COLOR}"></div>
-    <span class="mx-doc-gauge-label">{DOC_NAME} Coverage</span>
-    <div class="mx-doc-gauge-bar">
-      <div class="mx-doc-gauge-fill" style="width:{DOC_COVERAGE}%; background:{DOC_COLOR};"></div>
-    </div>
-    <span class="mx-doc-gauge-score" style="color:{DOC_COLOR}">{DOC_COVERAGE}%</span>
-  </div>
-  -->
-</div>
-
-<!-- ===== STATS BAR ===== -->
-<div class="mx-stats">
-  <div class="mx-stat mx-stat-total">
-    <span class="mx-stat-value">{TOTAL_REQUIREMENTS}</span> Requirements
-  </div>
-  <div class="mx-stat">
-    <div class="mx-stat-dot" style="background:#22c55e"></div>
-    <span class="mx-stat-value">{ALIGNED_COUNT}</span> Aligned
-  </div>
-  <div class="mx-stat">
-    <div class="mx-stat-dot" style="background:#f59e0b"></div>
-    <span class="mx-stat-value">{PARTIAL_COUNT}</span> Partial
-  </div>
-  <div class="mx-stat">
-    <div class="mx-stat-dot" style="background:#ef4444"></div>
-    <span class="mx-stat-value">{CONFLICT_COUNT}</span> Conflicts
-  </div>
-  <div class="mx-stat">
-    <div class="mx-stat-dot" style="background:#3b82f6"></div>
-    <span class="mx-stat-value">{GAP_COUNT}</span> Gaps
-  </div>
-  <div class="mx-stat">
-    <div class="mx-stat-dot" style="background:#f97316"></div>
-    <span class="mx-stat-value">{ADDITION_COUNT}</span> Additions
-  </div>
-  <!-- Only in trilateral mode: -->
-  <!--
-  <div class="mx-stat">
-    <div class="mx-stat-dot" style="background:#ec4899"></div>
-    <span class="mx-stat-value">{CASCADE_COUNT}</span> Cascades
-  </div>
-  -->
-</div>
-
-<!-- ===== VIEW TABS ===== -->
-<div class="mx-tabs">
-  <div class="mx-tab active" data-view="matrix">Matrix <span class="mx-tab-count">{TOTAL_FINDINGS}</span></div>
-  <div class="mx-tab" data-view="heatmap">Heatmap</div>
-</div>
-
-<!-- ===== CONTROLS ===== -->
-<div class="mx-controls">
-  <input type="text" class="mx-search" placeholder="Search by ID, keyword, component..." data-action="search">
-  <div class="mx-controls-group">
-    <button class="mx-filter-btn active" data-filter="all">All</button>
-    <button class="mx-filter-btn" data-filter="conflict">Conflicts</button>
-    <button class="mx-filter-btn" data-filter="gap">Gaps</button>
-    <button class="mx-filter-btn" data-filter="partial">Partial</button>
-    <button class="mx-filter-btn" data-filter="addition">Additions</button>
-    <button class="mx-filter-btn" data-filter="cascade">Cascades</button>
-    <button class="mx-filter-btn" data-filter="aligned">Aligned</button>
-  </div>
-  <div class="mx-controls-sep"></div>
-  <button class="mx-sev-filter" data-severity="all">All Sev.</button>
-  <button class="mx-sev-filter" data-severity="blocker">Blockers</button>
-  <button class="mx-sev-filter" data-severity="major">Major</button>
-  <button class="mx-sev-filter" data-severity="minor">Minor</button>
-  <div class="mx-controls-sep"></div>
-  <!-- Document pair filters — only shown in trilateral mode -->
-  <!--
-  <button class="mx-doc-filter active" data-docs="all">All Pairs</button>
-  <button class="mx-doc-filter" data-docs="prd-ux">[PRD<>UX]</button>
-  <button class="mx-doc-filter" data-docs="prd-mock">[PRD<>Mock]</button>
-  <button class="mx-doc-filter" data-docs="ux-mock">[UX<>Mock]</button>
-  -->
-  <span class="mx-row-count" id="row-count"></span>
-</div>
-
-<!-- ===== KEYBOARD HINTS ===== -->
-<div class="mx-hints">
-  <span><kbd>/</kbd> Search</span>
-  <span><kbd>Esc</kbd> Clear</span>
-  <span><kbd>[</kbd> <kbd>]</kbd> Prev / Next row</span>
-  <span><kbd>Enter</kbd> Expand / Collapse</span>
-  <span><kbd>L</kbd> Toggle legend</span>
-  <span><kbd>H</kbd> Toggle heatmap</span>
-  <span>Click any row to expand details</span>
-</div>
-
-<!-- ===== HEATMAP VIEW ===== -->
-<div class="mx-view" id="view-heatmap">
-  <div class="mx-heatmap">
-    <div class="mx-heatmap-title">Coverage Heatmap — Requirements x Documents</div>
-    <div id="heatmap-grid"></div>
-    <div class="mx-hm-legend">
-      <div class="mx-hm-legend-item"><div class="mx-hm-legend-swatch" style="background:#fef3c7;"></div> PRD (Source)</div>
-      <div class="mx-hm-legend-item"><div class="mx-hm-legend-swatch" style="background:#dcfce7;"></div> Aligned</div>
-      <div class="mx-hm-legend-item"><div class="mx-hm-legend-swatch" style="background:#fef3c7;border:1px solid #fde68a;"></div> Partial</div>
-      <div class="mx-hm-legend-item"><div class="mx-hm-legend-swatch" style="background:#fee2e2;"></div> Conflict</div>
-      <div class="mx-hm-legend-item"><div class="mx-hm-legend-swatch" style="background:#dbeafe;"></div> Gap</div>
-      <div class="mx-hm-legend-item"><div class="mx-hm-legend-swatch" style="background:#fff7ed;"></div> Addition</div>
-      <div class="mx-hm-legend-item"><div class="mx-hm-legend-swatch" style="background:#f1f5f9;"></div> N/A</div>
+<!-- ===== TOOLBAR ===== -->
+<div class="toolbar">
+  <div class="container">
+    <div class="toolbar-inner">
+      <div class="toolbar-tabs">
+        <button class="toolbar-tab active" data-view="matrix">Requirements <span class="toolbar-tab-count" id="tab-count-matrix"></span></button>
+        <button class="toolbar-tab" data-view="heatmap">Coverage Map</button>
+      </div>
+      <input type="text" class="toolbar-search" placeholder="Search requirements..." data-action="search">
+      <div class="pill-group" id="status-pills">
+        <button class="pill active" data-filter="all">All</button>
+        <button class="pill" data-filter="conflict">Conflicts</button>
+        <button class="pill" data-filter="gap">Gaps</button>
+        <button class="pill" data-filter="partial">Partial</button>
+        <button class="pill" data-filter="addition">Additions</button>
+        <button class="pill" data-filter="aligned">Aligned</button>
+      </div>
+      <div class="toolbar-sep"></div>
+      <button class="filter-btn active" data-severity="all">All Severity</button>
+      <button class="filter-btn" data-severity="blocker">Blockers</button>
+      <button class="filter-btn" data-severity="major">Major</button>
+      <button class="filter-btn" data-severity="minor">Minor</button>
+      <span class="toolbar-count" id="row-count"></span>
     </div>
   </div>
 </div>
 
 <!-- ===== MATRIX VIEW ===== -->
-<div class="mx-view active" id="view-matrix">
-  <div id="naming-drift-container"></div>
-  <div class="mx-body" id="matrix-body">
-    <!-- Populated dynamically from reconciliation-data.json -->
+<div class="view active" id="view-matrix">
+  <div class="container">
+    <div class="view-body">
+      <div id="naming-drift-container"></div>
+      <div id="matrix-body"></div>
+    </div>
   </div>
 </div>
 
-<!-- ===== LOADING STATE ===== -->
-<div id="loading-state" style="text-align:center;padding:64px 32px;color:#94a3b8;">
-  <p style="font-size:14px;">Loading reconciliation data...</p>
+<!-- ===== HEATMAP VIEW ===== -->
+<div class="view" id="view-heatmap">
+  <div class="container">
+    <div class="view-body">
+      <div class="heatmap-title">Coverage Map &mdash; Requirements vs Documents</div>
+      <div id="heatmap-grid"></div>
+      <div class="hm-legend">
+        <div class="hm-legend-item"><div class="hm-legend-swatch" style="background:var(--c-partial-bg);"></div> Source (PRD)</div>
+        <div class="hm-legend-item"><div class="hm-legend-swatch" style="background:var(--c-aligned-bg);"></div> Aligned</div>
+        <div class="hm-legend-item"><div class="hm-legend-swatch" style="background:var(--c-partial-bg);border:1px solid #fde68a;"></div> Partial</div>
+        <div class="hm-legend-item"><div class="hm-legend-swatch" style="background:var(--c-conflict-bg);"></div> Conflict</div>
+        <div class="hm-legend-item"><div class="hm-legend-swatch" style="background:var(--c-gap-bg);"></div> Gap</div>
+        <div class="hm-legend-item"><div class="hm-legend-swatch" style="background:var(--c-addition-bg);"></div> Addition</div>
+        <div class="hm-legend-item"><div class="hm-legend-swatch" style="background:var(--n-100);"></div> N/A</div>
+      </div>
+    </div>
+  </div>
 </div>
 
-<!-- ===== ERROR STATE ===== -->
-<div id="error-state" style="display:none;text-align:center;padding:64px 32px;color:#dc2626;">
-  <p style="font-size:14px;font-weight:600;">Failed to load reconciliation-data.json</p>
-  <p style="font-size:12px;color:#94a3b8;margin-top:8px;">Make sure the HTML file is in the same directory as reconciliation-data.json</p>
+<!-- ===== LOADING / ERROR ===== -->
+<div id="loading-state" class="state-msg"><p>Loading reconciliation data&hellip;</p></div>
+<div id="error-state" class="state-msg" style="display:none;">
+  <p style="color:var(--c-conflict);">Failed to load reconciliation-data.json</p>
+  <p class="sub">Ensure this HTML file is in the same directory as reconciliation-data.json</p>
 </div>
 
 <!-- ===== FOOTER ===== -->
-<div class="mx-footer">
-  Docs Reconciliation Dashboard
-</div>
+<div class="footer" id="footer">Docs Reconciliation Dashboard</div>
 
 <script>
 (function() {
   /* =====================================================
      DATA-DRIVEN RENDERING
-     All content is loaded from reconciliation-data.json.
+     All content loaded from reconciliation-data.json.
      This template NEVER contains inline finding data.
      ===================================================== */
 
   var DATA = null;
 
   /* --- DOM refs --- */
-  var body = document.getElementById('matrix-body');
-  var search = document.querySelector('[data-action="search"]');
-  var filterBtns = document.querySelectorAll('.mx-filter-btn');
-  var sevBtns = document.querySelectorAll('.mx-sev-filter');
+  var matrixBody = document.getElementById('matrix-body');
+  var searchEl = document.querySelector('[data-action="search"]');
+  var statusPills = document.querySelectorAll('#status-pills .pill');
+  var sevBtns = document.querySelectorAll('.filter-btn[data-severity]');
   var rowCountEl = document.getElementById('row-count');
-  var legendPanel = document.getElementById('legend-panel');
-  var gaugeFill = document.getElementById('gauge-fill');
-  var gaugeScore = document.getElementById('gauge-score');
-  var tabs = document.querySelectorAll('.mx-tab');
-  var views = document.querySelectorAll('.mx-view');
-  var focusedRowIdx = -1;
+  var tabs = document.querySelectorAll('.toolbar-tab');
+  var views = document.querySelectorAll('.view');
+  var focusedIdx = -1;
 
-  /* --- Status/severity config --- */
-  var STATUS_LABELS = { aligned:'Aligned', partial:'Partial', conflict:'Conflict', gap:'Gap', addition:'Addition', cascade:'Cascade' };
+  /* --- Human-readable labels --- */
+  var NAMES = {
+    V:'Conflict', N:'Naming Drift', W:'Coverage Gap',
+    Q:'Scope Addition', C:'Cascade', S:'Specificity Gap',
+    D:'PRD Issue', E:'UX Issue', M:'Mock Issue'
+  };
+  var STATUS = {
+    aligned:'Aligned', partial:'Partial', conflict:'Conflict',
+    gap:'Gap', addition:'Addition', cascade:'Cascade', na:'N/A', source:'Source'
+  };
   var STATUS_ORDER = ['cascade','conflict','gap','partial','addition','aligned'];
-  var SEV_ORDER = { blocker:0, major:1, minor:2 };
-  var FINDING_COLORS = { V:'#fee2e2', N:'#ede9fe', W:'#dbeafe', Q:'#fff7ed', C:'#fce7f3', S:'#fef3c7' };
-  var FINDING_TEXT = { V:'#dc2626', N:'#7c3aed', W:'#2563eb', Q:'#ea580c', C:'#db2777', S:'#b45309' };
-  var DOC_LABELS = { prd:'PRD Requirement', ux:'UX Definition', mock:'Mock Representation' };
-  var DOC_CLASSES = { prd:'mx-col-prd', ux:'mx-col-ux', mock:'mx-col-mock' };
-  var DOC_QUOTE_CLASSES = { prd:'mx-detail-quote-prd', ux:'mx-detail-quote-ux', mock:'mx-detail-quote-mock' };
-  var DOC_QUOTE_LABELS = { prd:'PRD says', ux:'UX says', mock:'Mock shows' };
+  var SEV_ORDER = {blocker:0,major:1,minor:2};
+  var DOC_CLS = {prd:'req-doc-prd',ux:'req-doc-ux',mock:'req-doc-mock'};
+  var DOC_QUOTE_CLS = {prd:'finding-quote-prd',ux:'finding-quote-ux',mock:'finding-quote-mock'};
+  var DOC_QUOTE_VERB = {prd:'PRD states',ux:'UX defines',mock:'Mock shows'};
+
+  function friendly(tag) {
+    if (!tag) return '';
+    return tag.replace('[PRD<>UX]','PRD vs UX').replace('[PRD<>Mock]','PRD vs Mock')
+      .replace('[UX<>Mock]','UX vs Mock').replace('[PRD>UX>Mock]','PRD \u2192 UX \u2192 Mock');
+  }
+  function esc(s) { var e=document.createElement('span'); e.textContent=s||''; return e.innerHTML; }
+  function docKeys(d) {
+    var k=['prd'];
+    if (d.meta.documents.ux&&d.meta.documents.ux.name) k.push('ux');
+    if (d.meta.documents.mock&&d.meta.documents.mock.name) k.push('mock');
+    return k;
+  }
+  function docName(d,k) { return k==='prd'?'PRD':(d.meta.documents[k]?d.meta.documents[k].name:k); }
+  function docColor(d,k) { return k==='prd'?'var(--doc-prd)':(d.meta.documents[k]?d.meta.documents[k].color:'#999'); }
 
   /* --- Fetch data --- */
   fetch('./reconciliation-data.json')
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      DATA = data;
-      document.getElementById('loading-state').style.display = 'none';
-      renderDashboard(data);
-    })
-    .catch(function(err) {
-      document.getElementById('loading-state').style.display = 'none';
-      document.getElementById('error-state').style.display = 'block';
-      console.error('Failed to load reconciliation-data.json:', err);
-    });
+    .then(function(r){return r.json();})
+    .then(function(data){ DATA=data; document.getElementById('loading-state').style.display='none'; render(data); })
+    .catch(function(err){ document.getElementById('loading-state').style.display='none'; document.getElementById('error-state').style.display='block'; console.error(err); });
 
   /* =====================================================
-     RENDER DASHBOARD
+     RENDER
      ===================================================== */
-  function renderDashboard(d) {
-    /* Header */
-    document.querySelector('.mx-subtitle').textContent = d.meta.title + ' — ' + d.meta.date + ' — Documents: ' + getDocList(d);
-    document.querySelector('.mx-mode-badge').textContent = d.meta.mode;
-    document.querySelector('.mx-footer').textContent = 'Docs Reconciliation Dashboard — Generated ' + d.meta.date + ' — Mode: ' + d.meta.mode;
+  function render(d) {
+    var keys = docKeys(d);
 
-    /* Gauge */
+    /* Hero */
+    document.getElementById('hero-title').innerHTML = esc(d.meta.title) + '<span class="hero-badge">' + esc(d.meta.mode) + '</span>';
+    document.getElementById('hero-mode').textContent = d.meta.mode;
+    document.getElementById('hero-sub').textContent = d.meta.date + ' \u2014 ' + keys.map(function(k){return docName(d,k);}).join(', ');
+
+    /* Score ring */
     var score = d.scores.overallAlignment;
-    gaugeFill.style.width = score + '%';
-    gaugeScore.textContent = score + '%';
-    var gc = score >= 80 ? '#22c55e' : score >= 50 ? '#f59e0b' : '#ef4444';
-    gaugeFill.style.background = 'linear-gradient(90deg,' + gc + ',' + gc + 'dd)';
-    gaugeScore.style.color = gc;
+    var circ = 2 * Math.PI * 38;
+    var arc = document.getElementById('score-arc');
+    arc.setAttribute('stroke-dasharray', circ);
+    arc.setAttribute('stroke-dashoffset', circ - (circ * score / 100));
+    var sc = score>=80?'var(--c-aligned)':score>=50?'var(--c-partial)':'var(--c-conflict)';
+    arc.style.stroke = sc;
+    document.getElementById('score-value').textContent = score+'%';
 
-    /* Per-document gauges */
-    renderDocGauges(d);
+    /* Metric cards */
+    var mc = document.getElementById('metric-cards');
+    var items = [
+      {v:d.stats.totalRequirements, l:'Requirements', c:''},
+      {v:d.stats.byStatus.aligned||0, l:'Aligned', c:'var(--c-aligned)'},
+      {v:d.stats.byStatus.conflict||0, l:'Conflicts', c:'var(--c-conflict)'},
+      {v:d.stats.byStatus.gap||0, l:'Gaps', c:'var(--c-gap)'},
+      {v:d.stats.byStatus.addition||0, l:'Additions', c:'var(--c-addition)'}
+    ];
+    if (d.meta.mode==='trilateral') items.push({v:d.stats.byStatus.cascade||0,l:'Cascades',c:'var(--c-cascade)'});
+    mc.innerHTML = items.map(function(i){
+      var dot = i.c ? '<span class="metric-card-dot" style="background:'+i.c+'"></span>' : '';
+      return '<div class="metric-card"><div class="metric-card-value">'+i.v+'</div><div class="metric-card-label">'+dot+i.l+'</div></div>';
+    }).join('');
 
-    /* Stats bar */
-    renderStats(d);
+    /* Doc coverage bars */
+    var db = document.getElementById('doc-bars');
+    db.innerHTML = keys.filter(function(k){return k!=='prd';}).map(function(k){
+      var cov = d.scores.perDocument[k]; if (cov===null||cov===undefined) return '';
+      return '<div class="doc-bar"><div class="doc-bar-dot" style="background:'+docColor(d,k)+'"></div>'+
+        '<span class="doc-bar-name">'+esc(docName(d,k))+' Coverage</span>'+
+        '<div class="doc-bar-track"><div class="doc-bar-fill" style="width:'+cov+'%;background:'+docColor(d,k)+'"></div></div>'+
+        '<span class="doc-bar-pct">'+cov+'%</span></div>';
+    }).join('');
 
-    /* Tabs count */
-    document.querySelector('[data-view="matrix"] .mx-tab-count').textContent = d.stats.totalFindings;
+    /* Tab count */
+    document.getElementById('tab-count-matrix').textContent = d.stats.totalFindings;
 
-    /* Doc pair filters (trilateral only) */
-    if (d.meta.mode === 'trilateral') { renderDocFilters(); }
+    /* Doc pair filters (trilateral) */
+    if (d.meta.mode==='trilateral') {
+      var sep = document.querySelector('.toolbar-sep');
+      ['All Pairs','PRD vs UX','PRD vs Mock','UX vs Mock'].forEach(function(label,i){
+        var b = document.createElement('button');
+        b.className = 'filter-btn doc-pair-btn' + (i===0?' active':'');
+        b.dataset.docs = ['all','prd-ux','prd-mock','ux-mock'][i];
+        b.textContent = label;
+        sep.parentNode.insertBefore(b, sep);
+      });
+      var newSep = document.createElement('div');
+      newSep.className = 'toolbar-sep';
+      sep.parentNode.insertBefore(newSep, sep);
+    }
 
-    /* Naming drift table */
-    if (d.namingDrift && d.namingDrift.length > 0) { renderNamingDrift(d); }
+    /* Naming drift */
+    if (d.namingDrift && d.namingDrift.length) renderNaming(d, keys);
 
     /* Heatmap */
-    renderHeatmap(d);
+    renderHeatmap(d, keys);
 
-    /* Matrix rows */
-    renderMatrix(d);
+    /* Matrix */
+    renderMatrix(d, keys);
 
-    /* Activate controls */
+    /* Footer */
+    document.getElementById('footer').textContent = 'Docs Reconciliation \u2014 Generated '+d.meta.date+' \u2014 '+d.meta.mode;
+
+    /* Init controls */
     initControls();
   }
 
-  function getDocList(d) {
-    var docs = ['PRD'];
-    if (d.meta.documents.ux && d.meta.documents.ux.name) docs.push(d.meta.documents.ux.name);
-    if (d.meta.documents.mock && d.meta.documents.mock.name) docs.push(d.meta.documents.mock.name);
-    return docs.join(', ');
-  }
-
-  function getDocKeys(d) {
-    var keys = ['prd'];
-    if (d.meta.documents.ux && d.meta.documents.ux.name) keys.push('ux');
-    if (d.meta.documents.mock && d.meta.documents.mock.name) keys.push('mock');
-    return keys;
-  }
-
-  function esc(s) { var el = document.createElement('span'); el.textContent = s || ''; return el.innerHTML; }
-
-  /* --- Per-document gauges --- */
-  function renderDocGauges(d) {
-    var container = document.querySelector('.mx-doc-gauges');
-    container.innerHTML = '';
-    var keys = getDocKeys(d);
-    keys.forEach(function(k) {
-      if (k === 'prd') return;
-      var cov = d.scores.perDocument[k];
-      if (cov === null || cov === undefined) return;
-      var doc = d.meta.documents[k];
-      var div = document.createElement('div');
-      div.className = 'mx-doc-gauge';
-      div.innerHTML = '<div class="mx-doc-gauge-icon" style="background:' + doc.color + '"></div>' +
-        '<span class="mx-doc-gauge-label">' + esc(doc.name) + ' Coverage</span>' +
-        '<div class="mx-doc-gauge-bar"><div class="mx-doc-gauge-fill" style="width:' + cov + '%;background:' + doc.color + ';"></div></div>' +
-        '<span class="mx-doc-gauge-score" style="color:' + doc.color + '">' + cov + '%</span>';
-      container.appendChild(div);
-    });
-  }
-
-  /* --- Stats --- */
-  function renderStats(d) {
-    var container = document.querySelector('.mx-stats');
-    container.innerHTML = '';
-    var items = [
-      { label:'Requirements', value:d.stats.totalRequirements, cls:'mx-stat-total' },
-      { label:'Aligned', value:d.stats.byStatus.aligned, color:'#22c55e' },
-      { label:'Partial', value:d.stats.byStatus.partial, color:'#f59e0b' },
-      { label:'Conflicts', value:d.stats.byStatus.conflict, color:'#ef4444' },
-      { label:'Gaps', value:d.stats.byStatus.gap, color:'#3b82f6' },
-      { label:'Additions', value:d.stats.byStatus.addition, color:'#f97316' }
-    ];
-    if (d.meta.mode === 'trilateral') {
-      items.push({ label:'Cascades', value:d.stats.byStatus.cascade || 0, color:'#ec4899' });
-    }
-    items.forEach(function(item) {
-      var div = document.createElement('div');
-      div.className = 'mx-stat' + (item.cls ? ' ' + item.cls : '');
-      var dot = item.color ? '<div class="mx-stat-dot" style="background:' + item.color + '"></div>' : '';
-      div.innerHTML = dot + '<span class="mx-stat-value">' + item.value + '</span> ' + item.label;
-      container.appendChild(div);
-    });
-  }
-
-  /* --- Doc pair filters --- */
-  function renderDocFilters() {
-    var sep = document.querySelectorAll('.mx-controls-sep');
-    var lastSep = sep[sep.length - 1];
-    var pairs = [
-      { label:'All Pairs', docs:'all' },
-      { label:'[PRD<>UX]', docs:'prd-ux' },
-      { label:'[PRD<>Mock]', docs:'prd-mock' },
-      { label:'[UX<>Mock]', docs:'ux-mock' }
-    ];
-    pairs.forEach(function(p, i) {
-      var btn = document.createElement('button');
-      btn.className = 'mx-doc-filter' + (i === 0 ? ' active' : '');
-      btn.dataset.docs = p.docs;
-      btn.textContent = p.label;
-      lastSep.parentNode.insertBefore(btn, lastSep.nextSibling);
-    });
-  }
-
   /* --- Naming drift --- */
-  function renderNamingDrift(d) {
-    var container = document.getElementById('naming-drift-container');
-    var keys = getDocKeys(d);
-    var html = '<div class="mx-naming-table"><div class="mx-naming-header">Naming Drift — Same concepts, different names</div><table><thead><tr><th>ID</th><th>PRD Term</th>';
-    if (keys.indexOf('ux') !== -1) html += '<th>UX Term</th>';
-    if (keys.indexOf('mock') !== -1) html += '<th>Mock Term</th>';
-    html += '<th>Docs</th><th>Context</th><th>Severity</th></tr></thead><tbody>';
-    d.namingDrift.forEach(function(n) {
-      html += '<tr><td><span class="mx-finding mx-finding-N" style="margin:0;">' + esc(n.findingId) + '</span></td>';
-      html += '<td>"' + esc(n.terms.prd) + '"</td>';
-      if (keys.indexOf('ux') !== -1) html += '<td>' + (n.terms.ux ? '"' + esc(n.terms.ux) + '"' : '—') + '</td>';
-      if (keys.indexOf('mock') !== -1) html += '<td>' + (n.terms.mock ? '"' + esc(n.terms.mock) + '"' : '—') + '</td>';
-      html += '<td><span class="mx-doc-tag">' + esc(n.docsTag) + '</span></td>';
-      html += '<td>' + esc(n.context) + '</td>';
-      html += '<td><span class="mx-severity mx-sev-' + n.severity + '">' + n.severity.toUpperCase() + '</span></td></tr>';
+  function renderNaming(d, keys) {
+    var c = document.getElementById('naming-drift-container');
+    var h = '<div class="naming-section"><div class="naming-header">Naming Drift \u2014 Same concept called different things across documents</div><table><thead><tr><th>Finding</th><th>PRD Term</th>';
+    if (keys.indexOf('ux')!==-1) h+='<th>UX Term</th>';
+    if (keys.indexOf('mock')!==-1) h+='<th>Mock Term</th>';
+    h += '<th>Documents</th><th>Context</th><th>Severity</th></tr></thead><tbody>';
+    d.namingDrift.forEach(function(n){
+      h += '<tr><td><span class="chip chip-N"><span class="chip-label">Naming Drift</span> <span class="chip-code">'+esc(n.findingId)+'</span></span></td>';
+      h += '<td>\u201c'+esc(n.terms.prd)+'\u201d</td>';
+      if (keys.indexOf('ux')!==-1) h+='<td>'+(n.terms.ux?'\u201c'+esc(n.terms.ux)+'\u201d':'\u2014')+'</td>';
+      if (keys.indexOf('mock')!==-1) h+='<td>'+(n.terms.mock?'\u201c'+esc(n.terms.mock)+'\u201d':'\u2014')+'</td>';
+      h += '<td><span class="doc-tag">'+esc(friendly(n.docsTag))+'</span></td>';
+      h += '<td>'+esc(n.context)+'</td>';
+      h += '<td><span class="sev-pill sev-'+n.severity+'">'+n.severity.toUpperCase()+'</span></td></tr>';
     });
-    html += '</tbody></table></div>';
-    container.innerHTML = html;
+    h += '</tbody></table></div>';
+    c.innerHTML = h;
   }
 
   /* --- Heatmap --- */
-  function renderHeatmap(d) {
-    var container = document.getElementById('heatmap-grid');
-    var keys = getDocKeys(d);
-    var cols = '200px' + keys.map(function() { return ' 1fr'; }).join('');
-    var html = '<div class="mx-heatmap-grid" style="grid-template-columns:' + cols + ';">';
-    /* Header */
-    html += '<div class="mx-hm-header mx-hm-header-corner">Requirement</div>';
-    keys.forEach(function(k) {
-      var name = k === 'prd' ? 'PRD (Source)' : d.meta.documents[k].name;
-      html += '<div class="mx-hm-header">' + esc(name) + '</div>';
-    });
-    /* Group rows */
-    var groupMap = {};
-    (d.groups || []).forEach(function(g) { g.requirementIds.forEach(function(id) { groupMap[id] = g; }); });
-    var lastGroup = null;
-    sortRequirements(d.requirements).forEach(function(req) {
-      var g = groupMap[req.id];
-      if (g && g.id !== lastGroup) {
-        html += '<div class="mx-hm-group">' + esc(g.name) + '</div>';
-        lastGroup = g.id;
-      }
-      html += '<div class="mx-hm-label"><span class="mx-hm-label-id">' + esc(req.id) + '</span> ' + esc(req.title) + '</div>';
-      keys.forEach(function(k) {
-        if (k === 'prd') {
-          html += '<div class="mx-hm-cell" data-status="source" title="PRD: Source of truth">PRD</div>';
-        } else {
-          var pd = req.perDocument[k];
-          var st = pd ? pd.status : 'na';
-          if (!st || st === 'null') st = 'na';
-          var ids = pd && pd.findingIds ? pd.findingIds.join(', ') : '';
-          var text = st === 'aligned' ? 'OK' : st === 'na' ? 'N/A' : ids || st;
-          var title = d.meta.documents[k].name + ': ' + (STATUS_LABELS[st] || st) + (ids ? ' ' + ids : '');
-          html += '<div class="mx-hm-cell" data-status="' + st + '" title="' + esc(title) + '">' + esc(text) + '</div>';
-        }
+  function renderHeatmap(d, keys) {
+    var c = document.getElementById('heatmap-grid');
+    var cols = '200px'+keys.map(function(){return ' 1fr';}).join('');
+    var h = '<div class="heatmap-grid" style="grid-template-columns:'+cols+';">';
+    h += '<div class="hm-header hm-header-corner">Requirement</div>';
+    keys.forEach(function(k){ h+='<div class="hm-header">'+esc(docName(d,k)+(k==='prd'?' (Source)':''))+'</div>'; });
+    var gm={}; (d.groups||[]).forEach(function(g){g.requirementIds.forEach(function(id){gm[id]=g;});});
+    var lg=null;
+    sortReqs(d.requirements).forEach(function(req){
+      var g=gm[req.id];
+      if (g&&g.id!==lg) { h+='<div class="hm-group">'+esc(g.name)+'</div>'; lg=g.id; }
+      h += '<div class="hm-label"><span class="hm-label-id">'+esc(req.id)+'</span> '+esc(req.title)+'</div>';
+      keys.forEach(function(k){
+        if (k==='prd') { h+='<div class="hm-cell" data-status="source" title="PRD: Source">Source</div>'; return; }
+        var pd=req.perDocument[k]; var st=pd?pd.status:'na'; if(!st||st==='null') st='na';
+        h+='<div class="hm-cell" data-status="'+st+'" title="'+esc(docName(d,k)+': '+(STATUS[st]||st))+'">'+(STATUS[st]||st)+'</div>';
       });
     });
-    html += '</div>';
-    container.innerHTML = html;
+    h += '</div>';
+    c.innerHTML = h;
   }
 
   /* --- Matrix --- */
-  function renderMatrix(d) {
-    var keys = getDocKeys(d);
-    var colCount = keys.length;
-    var gridCols = keys.map(function() { return '1fr'; }).join(' ');
-    var findingMap = {};
-    d.findings.forEach(function(f) { findingMap[f.id] = f; });
-    var sorted = sortRequirements(d.requirements);
-    var html = '';
-    sorted.forEach(function(req) {
+  function renderMatrix(d, keys) {
+    var fm={}; d.findings.forEach(function(f){fm[f.id]=f;});
+    var gridCols = keys.map(function(){return '1fr';}).join(' ');
+    var h = '';
+    sortReqs(d.requirements).forEach(function(req){
       var st = req.overallStatus;
-      var highSev = getHighestSeverity(req, findingMap);
-      var docPairs = getDocPairs(req, findingMap);
-      html += '<div class="mx-row" style="grid-template-columns:' + gridCols + ';" data-status="' + st + '"' +
-        (highSev ? ' data-severity="' + highSev + '"' : '') +
-        ' data-fr="' + esc(req.id) + '" data-docs="' + docPairs + '" data-keywords="' + esc(req.keywords || '') + '">';
-      /* Columns */
-      keys.forEach(function(k) {
-        var cls = DOC_CLASSES[k] || '';
-        var label = DOC_LABELS[k] || k;
+      var sev = highSev(req,fm);
+      var dp = docPairs(req,fm);
+      h += '<div class="req-card" data-status="'+st+'"'+(sev?' data-severity="'+sev+'":'')+' data-fr="'+esc(req.id)+'" data-docs="'+dp+'" data-keywords="'+esc(req.keywords||'')+'">';
+
+      /* --- Header (always visible) --- */
+      h += '<div class="req-header">';
+      h += '<div class="req-header-main">';
+      h += '<div class="req-header-top">';
+      h += '<span class="req-status req-status-'+st+'">'+(STATUS[st]||st)+'</span>';
+      h += '<span class="req-id">'+esc(req.id)+'</span>';
+      h += '</div>';
+      h += '<div class="req-title">'+esc(req.title)+'</div>';
+      var prdPd = req.perDocument.prd;
+      h += '<div class="req-desc">'+esc(prdPd?prdPd.summary:req.description)+'</div>';
+      /* Finding chips */
+      if (req.findingIds && req.findingIds.length) {
+        h += '<div class="req-findings-summary">';
+        req.findingIds.forEach(function(fid){
+          var f=fm[fid]; if(!f) return;
+          h += '<span class="chip chip-'+f.code+'"><span class="chip-label">'+(NAMES[f.code]||f.code)+'</span> <span class="chip-code">'+fid+'</span></span>';
+          h += '<span class="sev-pill sev-'+f.severity+'">'+f.severity.toUpperCase()+'</span>';
+        });
+        h += '</div>';
+      }
+      h += '</div>'; /* .req-header-main */
+      h += '<div class="req-expand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></div>';
+      h += '</div>'; /* .req-header */
+
+      /* --- Document columns (shown when expanded) --- */
+      h += '<div class="req-docs" style="grid-template-columns:'+gridCols+';">';
+      keys.forEach(function(k){
+        var cls = DOC_CLS[k]||'';
         var pd = req.perDocument[k];
-        html += '<div class="mx-col ' + cls + '">';
-        html += '<div class="mx-col-label">' + label + '</div>';
-        if (k === 'prd') {
-          html += '<span class="mx-status mx-status-' + st + '">' + (STATUS_LABELS[st] || st) + '</span>';
-          html += '<div class="mx-col-title">' + esc(req.id) + ': ' + esc(req.title) + '</div>';
-          html += '<div class="mx-col-text">' + esc(pd ? pd.summary : req.description) + '</div>';
-          /* Finding badges on PRD col (V, W, N, C) */
-          var badges = (req.findingIds || []).filter(function(fid) {
-            var f = findingMap[fid];
-            return f && 'VNWC'.indexOf(f.code) !== -1;
-          });
-          if (badges.length) {
-            html += '<div>';
-            badges.forEach(function(fid) {
-              var f = findingMap[fid];
-              html += '<span class="mx-finding mx-finding-' + f.code + '" data-finding="' + fid + '">' + fid +
-                ' <span class="mx-severity mx-sev-' + f.severity + '">' + f.severity.toUpperCase() + '</span>' +
-                ' <span class="mx-doc-tag">' + esc(f.docsTag) + '</span></span>';
-            });
-            html += '</div>';
+        h += '<div class="req-doc '+cls+'">';
+        h += '<div class="req-doc-label"><span class="req-doc-dot" style="background:'+docColor(d,k)+'"></span> '+esc(docName(d,k))+'</div>';
+        if (k==='prd') {
+          h += '<div class="req-doc-text">'+esc(pd?pd.summary:req.description)+'</div>';
+        } else if (pd && pd.summary) {
+          h += '<div class="req-doc-text">'+esc(pd.summary)+'</div>';
+          var sat = (pd.findingIds||[]).filter(function(fid){ var f=fm[fid]; return f&&'QS'.indexOf(f.code)!==-1; });
+          if (sat.length) {
+            h += '<div class="req-doc-chips">';
+            sat.forEach(function(fid){ var f=fm[fid]; h+='<span class="chip chip-'+f.code+'"><span class="chip-label">'+(NAMES[f.code]||f.code)+'</span> <span class="chip-code">'+fid+'</span></span>'; });
+            h += '</div>';
           }
         } else {
-          if (pd && pd.summary) {
-            html += '<div class="mx-col-title">' + esc(pd.summary) + '</div>';
-            /* Q/S badges on satellite cols */
-            var satBadges = (pd.findingIds || []).filter(function(fid) {
-              var f = findingMap[fid];
-              return f && 'QS'.indexOf(f.code) !== -1;
-            });
-            if (satBadges.length) {
-              html += '<div>';
-              satBadges.forEach(function(fid) {
-                var f = findingMap[fid];
-                html += '<span class="mx-finding mx-finding-' + f.code + '" data-finding="' + fid + '">' + fid +
-                  ' <span class="mx-severity mx-sev-' + f.severity + '">' + f.severity.toUpperCase() + '</span></span>';
-              });
-              html += '</div>';
-            }
-          } else {
-            var emptyText = st === 'addition' ? 'Not required by PRD' : 'Not defined in ' + (d.meta.documents[k] ? d.meta.documents[k].name : k);
-            html += '<div class="mx-col-empty">' + emptyText + '</div>';
-          }
+          h += '<div class="req-doc-empty">'+(st==='addition'?'Not required by PRD':'Not covered')+'</div>';
         }
-        html += '</div>';
+        h += '</div>';
       });
-      /* Detail panel */
+      h += '</div>'; /* .req-docs */
+
+      /* --- Finding detail cards (shown when expanded, copy-friendly) --- */
       if (req.findingIds && req.findingIds.length) {
-        html += '<div class="mx-detail">';
-        req.findingIds.forEach(function(fid, idx) {
-          var f = findingMap[fid];
-          if (!f) return;
-          if (idx > 0) html += '<hr style="border:none;border-top:1px solid #e2e8f0;margin:12px 0;">';
-          html += '<div class="mx-detail-desc"><strong>' + fid + ' ' + f.severity.toUpperCase() + ' — ' + esc(f.description) + '</strong> <span class="mx-doc-tag">' + esc(f.docsTag) + '</span></div>';
+        h += '<div class="req-findings">';
+        req.findingIds.forEach(function(fid){
+          var f=fm[fid]; if(!f) return;
+          h += '<div class="finding-card">';
+          h += '<div class="finding-header">';
+          h += '<span class="chip chip-'+f.code+'" style="margin:0"><span class="chip-label">'+(NAMES[f.code]||f.code)+'</span> <span class="chip-code">'+fid+'</span></span>';
+          h += '<span class="sev-pill sev-'+f.severity+'">'+f.severity.toUpperCase()+'</span>';
+          h += '<span class="doc-tag">'+esc(friendly(f.docsTag))+'</span>';
+          h += '</div>';
+          h += '<div class="finding-desc">'+esc(f.description)+'</div>';
           /* Cascade chain */
-          if (f.code === 'C') {
-            var cas = d.cascades.find(function(c) { return c.findingId === fid; });
+          if (f.code==='C') {
+            var cas = d.cascades.find(function(c){return c.findingId===fid;});
             if (cas) {
-              html += '<div class="mx-detail-cascade">';
-              html += '<div style="font-size:11px;font-weight:700;color:#db2777;margin-bottom:8px;">Cascade Chain:</div>';
-              html += '<div class="mx-detail-cascade-chain">';
-              html += '<span class="mx-detail-cascade-step" style="background:#fffbeb;color:#92400e;">PRD: "' + esc(cas.chain.prd) + '"</span>';
-              html += '<span class="mx-detail-cascade-arrow">-></span>';
-              html += '<span class="mx-detail-cascade-step" style="background:#eff6ff;color:#1d4ed8;">UX: ' + esc(cas.chain.ux) + '</span>';
-              html += '<span class="mx-detail-cascade-arrow">-></span>';
-              html += '<span class="mx-detail-cascade-step" style="background:#f0fdf4;color:#166534;">Mock: ' + esc(cas.chain.mock) + '</span>';
-              html += '</div></div>';
+              h += '<div class="finding-cascade"><div class="finding-cascade-title">How this requirement drifted across documents:</div>';
+              h += '<div class="finding-cascade-chain">';
+              h += '<span class="finding-cascade-step" style="background:var(--doc-prd-bg);color:#92400e;">PRD: \u201c'+esc(cas.chain.prd)+'\u201d</span>';
+              h += '<span class="finding-cascade-arrow">\u2192</span>';
+              h += '<span class="finding-cascade-step" style="background:var(--doc-ux-bg);color:#1d4ed8;">UX: \u201c'+esc(cas.chain.ux)+'\u201d</span>';
+              h += '<span class="finding-cascade-arrow">\u2192</span>';
+              h += '<span class="finding-cascade-step" style="background:var(--doc-mock-bg);color:#166534;">Mock: \u201c'+esc(cas.chain.mock)+'\u201d</span>';
+              h += '</div></div>';
             }
           }
           /* Quotes */
-          ['prd','ux','mock'].forEach(function(dk) {
-            if (f.quotes && f.quotes[dk]) {
-              html += '<div class="mx-detail-quote ' + (DOC_QUOTE_CLASSES[dk] || '') + '">';
-              html += '<div class="mx-detail-quote-label">' + (DOC_QUOTE_LABELS[dk] || dk) + '</div>';
-              html += '"' + esc(f.quotes[dk]) + '"';
-              html += '</div>';
+          ['prd','ux','mock'].forEach(function(dk){
+            if (f.quotes&&f.quotes[dk]) {
+              h += '<div class="finding-quote '+(DOC_QUOTE_CLS[dk]||'')+'">';
+              h += '<div class="finding-quote-label">'+(DOC_QUOTE_VERB[dk]||dk)+':</div>';
+              h += '\u201c'+esc(f.quotes[dk])+'\u201d</div>';
             }
           });
-          html += '<div class="mx-detail-recommendation"><strong>Recommendation:</strong> ' + esc(f.recommendation) + '</div>';
+          h += '<div class="finding-rec"><span class="finding-rec-label">Recommendation:</span> '+esc(f.recommendation)+'</div>';
+          h += '</div>'; /* .finding-card */
         });
-        html += '</div>';
+        h += '</div>'; /* .req-findings */
       }
-      html += '</div>';
+      h += '</div>'; /* .req-card */
     });
-    body.innerHTML = html;
+    matrixBody.innerHTML = h;
   }
 
-  /* --- Sort requirements by status priority then severity --- */
-  function sortRequirements(reqs) {
-    return reqs.slice().sort(function(a, b) {
-      var sa = STATUS_ORDER.indexOf(a.overallStatus);
-      var sb = STATUS_ORDER.indexOf(b.overallStatus);
-      if (sa === -1) sa = 99;
-      if (sb === -1) sb = 99;
-      if (sa !== sb) return sa - sb;
-      return 0;
+  /* --- Helpers --- */
+  function sortReqs(reqs) {
+    return reqs.slice().sort(function(a,b){
+      var sa=STATUS_ORDER.indexOf(a.overallStatus); var sb=STATUS_ORDER.indexOf(b.overallStatus);
+      if(sa===-1) sa=99; if(sb===-1) sb=99;
+      return sa-sb;
     });
   }
-
-  function getHighestSeverity(req, findingMap) {
-    var best = null;
-    (req.findingIds || []).forEach(function(fid) {
-      var f = findingMap[fid];
-      if (!f) return;
-      if (!best || (SEV_ORDER[f.severity] || 99) < (SEV_ORDER[best] || 99)) best = f.severity;
-    });
-    return best;
+  function highSev(req,fm) {
+    var b=null;
+    (req.findingIds||[]).forEach(function(fid){var f=fm[fid];if(!f)return;if(!b||(SEV_ORDER[f.severity]||99)<(SEV_ORDER[b]||99))b=f.severity;});
+    return b;
   }
-
-  function getDocPairs(req, findingMap) {
-    var pairs = {};
-    (req.findingIds || []).forEach(function(fid) {
-      var f = findingMap[fid];
-      if (!f) return;
-      var tag = f.docsTag.replace(/[\[\]>]/g, '').toLowerCase().replace(/\s/g, '');
-      tag.split(',').forEach(function(t) { pairs[t] = true; });
-    });
-    return Object.keys(pairs).join(' ');
+  function docPairs(req,fm) {
+    var p={};
+    (req.findingIds||[]).forEach(function(fid){var f=fm[fid];if(!f)return;var t=f.docsTag.replace(/[\[\]>]/g,'').toLowerCase().replace(/\s/g,'');t.split(',').forEach(function(x){p[x]=true;});});
+    return Object.keys(p).join(' ');
   }
 
   /* =====================================================
-     CONTROLS (filter, search, keyboard — static logic)
+     CONTROLS
      ===================================================== */
   function initControls() {
-    var activeStatus = 'all';
-    var activeSeverity = 'all';
-    var activeDocs = 'all';
+    var activeStatus='all', activeSev='all', activeDocs='all';
 
-    function updateRowCount() {
-      var visible = document.querySelectorAll('.mx-row:not([style*="display: none"])').length;
-      var total = document.querySelectorAll('.mx-row').length;
-      rowCountEl.textContent = visible === total ? total + ' items' : visible + ' of ' + total + ' items';
+    function countVisible() {
+      var vis=document.querySelectorAll('.req-card:not([style*="display: none"])').length;
+      var tot=document.querySelectorAll('.req-card').length;
+      rowCountEl.textContent = vis===tot ? tot+' requirements' : vis+' of '+tot;
     }
-    updateRowCount();
+    countVisible();
 
     function applyFilters() {
-      document.querySelectorAll('.mx-row').forEach(function(row) {
-        var sm = activeStatus === 'all' || row.dataset.status === activeStatus;
-        var sv = activeSeverity === 'all' || row.dataset.severity === activeSeverity || (!row.dataset.severity && activeSeverity === 'all');
-        var dm = activeDocs === 'all' || (row.dataset.docs && row.dataset.docs.indexOf(activeDocs) !== -1);
-        row.style.display = sm && sv && dm ? '' : 'none';
+      document.querySelectorAll('.req-card').forEach(function(c){
+        var sm = activeStatus==='all'||c.dataset.status===activeStatus;
+        var sv = activeSev==='all'||c.dataset.severity===activeSev||(!c.dataset.severity&&activeSev==='all');
+        var dm = activeDocs==='all'||(c.dataset.docs&&c.dataset.docs.indexOf(activeDocs)!==-1);
+        c.style.display = sm&&sv&&dm ? '' : 'none';
       });
-      updateRowCount();
+      countVisible();
     }
 
-    /* Status filters */
-    filterBtns.forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        filterBtns.forEach(function(b) { b.classList.remove('active'); });
-        btn.classList.add('active');
-        activeStatus = btn.dataset.filter;
-        applyFilters();
+    /* Status pills */
+    statusPills.forEach(function(p){
+      p.addEventListener('click',function(){
+        statusPills.forEach(function(x){x.classList.remove('active');});
+        p.classList.add('active'); activeStatus=p.dataset.filter; applyFilters();
       });
     });
 
-    /* Severity filters */
-    sevBtns.forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        sevBtns.forEach(function(b) { b.classList.remove('active'); });
-        btn.classList.add('active');
-        activeSeverity = btn.dataset.severity;
-        applyFilters();
-      });
-    });
-    sevBtns[0].classList.add('active');
-
-    /* Doc pair filters (dynamic) */
-    document.querySelectorAll('.mx-doc-filter').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        document.querySelectorAll('.mx-doc-filter').forEach(function(b) { b.classList.remove('active'); });
-        btn.classList.add('active');
-        activeDocs = btn.dataset.docs;
-        applyFilters();
+    /* Severity */
+    sevBtns.forEach(function(b){
+      b.addEventListener('click',function(){
+        sevBtns.forEach(function(x){x.classList.remove('active');});
+        b.classList.add('active'); activeSev=b.dataset.severity; applyFilters();
       });
     });
 
-    /* Row expand/collapse */
-    body.addEventListener('click', function(e) {
-      var row = e.target.closest('.mx-row');
-      if (!row) return;
-      if (e.target.closest('.mx-finding')) { row.classList.add('expanded'); return; }
-      row.classList.toggle('expanded');
+    /* Doc pair filters */
+    document.querySelectorAll('.doc-pair-btn').forEach(function(b){
+      b.addEventListener('click',function(){
+        document.querySelectorAll('.doc-pair-btn').forEach(function(x){x.classList.remove('active');});
+        b.classList.add('active'); activeDocs=b.dataset.docs; applyFilters();
+      });
+    });
+
+    /* Row expand/collapse — header click only, detail is copy-safe */
+    matrixBody.addEventListener('click',function(e){
+      if (e.target.closest('.req-findings')) return;
+      if (window.getSelection&&window.getSelection().toString().length>0) return;
+      var header = e.target.closest('.req-header');
+      if (!header) return;
+      var card = header.closest('.req-card');
+      if (card) card.classList.toggle('expanded');
     });
 
     /* Search */
-    search.addEventListener('input', function() {
-      var q = search.value.toLowerCase();
-      document.querySelectorAll('.mx-row').forEach(function(row) {
-        var text = (row.dataset.fr + ' ' + row.dataset.keywords + ' ' + row.dataset.docs + ' ' + row.textContent).toLowerCase();
-        row.style.display = text.indexOf(q) !== -1 ? '' : 'none';
+    searchEl.addEventListener('input',function(){
+      var q=searchEl.value.toLowerCase();
+      document.querySelectorAll('.req-card').forEach(function(c){
+        var t=(c.dataset.fr+' '+c.dataset.keywords+' '+c.dataset.docs+' '+c.textContent).toLowerCase();
+        c.style.display=t.indexOf(q)!==-1?'':'none';
       });
-      if (!q) { activeStatus = 'all'; applyFilters(); filterBtns.forEach(function(b) { b.classList.remove('active'); }); filterBtns[0].classList.add('active'); }
-      updateRowCount();
+      if(!q){activeStatus='all';applyFilters();statusPills.forEach(function(p){p.classList.remove('active');});statusPills[0].classList.add('active');}
+      countVisible();
     });
 
-    /* Tab switching */
-    tabs.forEach(function(tab) {
-      tab.addEventListener('click', function() {
-        tabs.forEach(function(t) { t.classList.remove('active'); });
+    /* Tabs */
+    tabs.forEach(function(tab){
+      tab.addEventListener('click',function(){
+        tabs.forEach(function(t){t.classList.remove('active');});
         tab.classList.add('active');
-        views.forEach(function(v) { v.classList.remove('active'); });
-        var target = document.getElementById('view-' + tab.dataset.view);
-        if (target) target.classList.add('active');
+        views.forEach(function(v){v.classList.remove('active');});
+        var target=document.getElementById('view-'+tab.dataset.view);
+        if(target)target.classList.add('active');
       });
     });
 
-    /* Legend toggle */
-    function toggleLegend() {
-      legendPanel.classList.toggle('open');
-      document.querySelector('[data-action="toggle-legend"]').classList.toggle('active', legendPanel.classList.contains('open'));
-    }
-    document.querySelector('[data-action="toggle-legend"]').addEventListener('click', toggleLegend);
+    /* Help panel */
+    var helpPanel=document.getElementById('help-panel');
+    var helpOverlay=document.getElementById('help-overlay');
+    function toggleHelp(){helpPanel.classList.toggle('open');helpOverlay.classList.toggle('open');}
+    document.querySelector('[data-action="help"]').addEventListener('click',toggleHelp);
+    document.getElementById('help-close').addEventListener('click',toggleHelp);
+    helpOverlay.addEventListener('click',toggleHelp);
 
     /* Expand/Collapse all */
-    document.querySelector('[data-action="expand-all"]').addEventListener('click', function() {
-      document.querySelectorAll('.mx-row').forEach(function(r) { r.classList.add('expanded'); });
+    document.querySelector('[data-action="expand-all"]').addEventListener('click',function(){
+      document.querySelectorAll('.req-card').forEach(function(c){c.classList.add('expanded');});
     });
-    document.querySelector('[data-action="collapse-all"]').addEventListener('click', function() {
-      document.querySelectorAll('.mx-row').forEach(function(r) { r.classList.remove('expanded'); });
+    document.querySelector('[data-action="collapse-all"]').addEventListener('click',function(){
+      document.querySelectorAll('.req-card').forEach(function(c){c.classList.remove('expanded');});
     });
 
-    /* Keyboard navigation */
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') { search.value = ''; search.dispatchEvent(new Event('input')); search.blur(); return; }
-      if (e.key === '/' && document.activeElement !== search) { e.preventDefault(); search.focus(); return; }
-      if ((e.key === 'l' || e.key === 'L') && document.activeElement !== search) { toggleLegend(); return; }
-      if ((e.key === 'h' || e.key === 'H') && document.activeElement !== search) {
-        var ht = document.querySelector('[data-view="heatmap"]');
-        (ht.classList.contains('active') ? document.querySelector('[data-view="matrix"]') : ht).click();
-        return;
+    /* Keyboard */
+    document.addEventListener('keydown',function(e){
+      if(e.key==='Escape'){searchEl.value='';searchEl.dispatchEvent(new Event('input'));searchEl.blur();if(helpPanel.classList.contains('open'))toggleHelp();return;}
+      if(e.key==='/'&&document.activeElement!==searchEl){e.preventDefault();searchEl.focus();return;}
+      if(e.key==='?'&&document.activeElement!==searchEl){toggleHelp();return;}
+      if((e.key==='h'||e.key==='H')&&document.activeElement!==searchEl){
+        var ht=document.querySelector('[data-view="heatmap"]');
+        (ht.classList.contains('active')?document.querySelector('[data-view="matrix"]'):ht).click();return;
       }
-      var rows = Array.from(document.querySelectorAll('.mx-row:not([style*="display: none"])'));
-      if (!rows.length) return;
-      if (e.key === ']') { e.preventDefault(); focusedRowIdx = Math.min(focusedRowIdx + 1, rows.length - 1); rows[focusedRowIdx].scrollIntoView({ behavior:'smooth', block:'center' }); rows.forEach(function(r) { r.style.outline=''; }); rows[focusedRowIdx].style.outline = '2px solid #3b82f6'; }
-      if (e.key === '[') { e.preventDefault(); focusedRowIdx = Math.max(focusedRowIdx - 1, 0); rows[focusedRowIdx].scrollIntoView({ behavior:'smooth', block:'center' }); rows.forEach(function(r) { r.style.outline=''; }); rows[focusedRowIdx].style.outline = '2px solid #3b82f6'; }
-      if (e.key === 'Enter' && focusedRowIdx >= 0 && document.activeElement !== search) { e.preventDefault(); rows[focusedRowIdx].classList.toggle('expanded'); }
+      var cards=Array.from(document.querySelectorAll('.req-card:not([style*="display: none"])'));
+      if(!cards.length) return;
+      if(e.key===']'){e.preventDefault();focusedIdx=Math.min(focusedIdx+1,cards.length-1);cards[focusedIdx].scrollIntoView({behavior:'smooth',block:'center'});cards.forEach(function(c){c.style.outline='';});cards[focusedIdx].style.outline='2px solid var(--c-gap)';cards[focusedIdx].style.outlineOffset='2px';}
+      if(e.key==='['){e.preventDefault();focusedIdx=Math.max(focusedIdx-1,0);cards[focusedIdx].scrollIntoView({behavior:'smooth',block:'center'});cards.forEach(function(c){c.style.outline='';});cards[focusedIdx].style.outline='2px solid var(--c-gap)';cards[focusedIdx].style.outlineOffset='2px';}
+      if(e.key==='Enter'&&focusedIdx>=0&&document.activeElement!==searchEl){e.preventDefault();cards[focusedIdx].classList.toggle('expanded');}
     });
   }
 })();
@@ -1218,56 +1112,86 @@ This file contains the HTML/CSS/JS templates for generated outputs. Loaded on-de
 
 ---
 
-## 2. Matrix Row Generation Rules
+## 2. Requirement Card Structure
 
-### Status assignment per row
+### Card anatomy
+
+Each requirement renders as a `.req-card` with three zones:
+
+```
+┌─ req-card ──────────────────────────────────────┐
+│ ┌─ req-header (always visible, clickable) ────┐ │
+│ │ [Conflict] FR-1                        [▼]  │ │
+│ │ User Login                                   │ │
+│ │ Users must be able to log in with email...   │ │
+│ │ [Conflict V1] [BLOCKER] [Coverage Gap W3]... │ │
+│ └─────────────────────────────────────────────┘ │
+│ ┌─ req-docs (expanded only) ──────────────────┐ │
+│ │ PRD          │ UX Design    │ Mock           │ │
+│ │ "Users..."   │ "Login..."   │ "Shows..."     │ │
+│ └─────────────────────────────────────────────┘ │
+│ ┌─ req-findings (expanded only, copy-safe) ───┐ │
+│ │ ┌─ finding-card ──────────────────────────┐  │ │
+│ │ │ [Conflict V1] [BLOCKER] [PRD vs UX]     │  │ │
+│ │ │ Description text...                      │  │ │
+│ │ │ PRD states: "..."                        │  │ │
+│ │ │ UX defines: "..."                        │  │ │
+│ │ │ Recommendation: ...                      │  │ │
+│ │ └─────────────────────────────────────────┘  │ │
+│ └─────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────┘
+```
+
+### Click behavior
+
+| Area | Click action |
+|------|--------------|
+| `.req-header` | Toggle expand/collapse |
+| `.req-docs` | Nothing (text selectable) |
+| `.req-findings` | Nothing (text selectable, copy-friendly) |
+| Any area with text selected | Nothing (preserves selection) |
+
+### Status assignment per card
 
 | Condition | `data-status` |
 |-----------|---------------|
-| Requirement fully covered in all present documents, no findings | `aligned` |
-| Requirement partially covered (some W findings) | `partial` |
-| V finding exists for this requirement | `conflict` |
-| Only W findings (no coverage at all in one+ doc) | `gap` |
-| Row represents a Q finding (scope addition) | `addition` |
-| C finding exists (cascade violation) | `cascade` |
+| Requirement fully covered, no findings | `aligned` |
+| Partially covered | `partial` |
+| V finding exists | `conflict` |
+| Only W findings | `gap` |
+| Q finding (scope addition) | `addition` |
+| C finding (cascade) | `cascade` |
 
-### Row ordering
+### Card ordering
 
-1. **Cascade** (C) first — systemic issue
-2. **Conflicts** (V) second — highest priority
-3. **Gaps** (W) third
+1. **Cascades** first — systemic cross-document drift
+2. **Conflicts** second — highest priority
+3. **Gaps** third — missing coverage
 4. **Partial** fourth
-5. **Additions** (Q) fifth
+5. **Additions** fifth
 6. **Aligned** last
 
-Within each group, order by severity (BLOCKER -> MAJOR -> MINOR), then by FR ID.
+Within each group, order by severity (BLOCKER > MAJOR > MINOR), then by FR ID.
 
-### Finding badge placement
+### Finding chip display
 
-- V findings: badge in the **PRD column** (since PRD is always involved)
-- N findings: badge in the **PRD column**
-- W findings: badge in the **PRD column** (PRD requires, target missing)
-- Q findings: badge in the **target document column** (that doc adds scope)
-- C findings: badge in the **PRD column** (cascade originates from PRD)
-- S findings: badge in the **downstream document column** (where detail was invented)
+Chips always show **human-readable name first**, code as secondary:
 
-### Data attributes per row
+```
+[Conflict V1]  [Coverage Gap W3]  [Scope Addition Q2]
+```
+
+Never show bare codes like `V1` or `W3` without the category name.
+
+### Data attributes per card
 
 | Attribute | Value |
 |-----------|-------|
 | `data-status` | aligned / partial / conflict / gap / addition / cascade |
 | `data-severity` | blocker / major / minor (highest finding; omit for aligned) |
-| `data-fr` | FR ID(s) for search |
-| `data-docs` | Space-separated doc pairs: `prd-ux`, `prd-mock`, `ux-mock`, `prd-ux-mock` |
+| `data-fr` | FR ID for search |
+| `data-docs` | Space-separated: `prd-ux`, `prd-mock`, `ux-mock` |
 | `data-keywords` | Space-separated search terms |
-
-### Detail panel content
-
-Every row with findings must have a `.mx-detail` section containing:
-- Finding ID + severity + description + doc pair tag (verbatim from reconciliation.md)
-- Quote blocks for each involved document (`.mx-detail-quote-prd`, `.mx-detail-quote-ux`, `.mx-detail-quote-mock`)
-- For cascade findings: cascade chain visualization (`.mx-detail-cascade`)
-- Recommendation block (`.mx-detail-recommendation`)
 
 ### Column adaptation
 
@@ -1277,105 +1201,89 @@ Every row with findings must have a `.mx-detail` section containing:
 | PRD + Mock | PRD, Mock | `1fr 1fr` |
 | PRD + UX + Mock | PRD, UX, Mock | `1fr 1fr 1fr` |
 
-Column backgrounds:
-- PRD: `#fffbeb` (amber tint)
-- UX: `#eff6ff` (blue tint)
-- Mock: `#f0fdf4` (green tint)
+On viewports < 768px, columns stack vertically (`grid-template-columns: 1fr`).
 
 ---
 
-## 3. Heatmap Generation Rules
+## 3. Heatmap Rules
 
 ### Grid structure
 
 - First column (200px): requirement labels with FR ID
 - Remaining columns (1fr each): one per document
-- PRD column always shows "PRD" as source of truth (amber background)
-- Group rows by feature area with `.mx-hm-group` divider rows
+- PRD column always shows "Source" (amber background)
+- Group rows by feature area with `.hm-group` divider rows
 
 ### Cell content
 
-| Status | Cell text | Purpose |
+Cells show **human-readable status words**:
+
+| Status | Cell text | Meaning |
 |--------|-----------|---------|
-| source | `PRD` | PRD column — always source of truth |
-| aligned | `OK` | Document covers this requirement |
-| partial | Finding ID(s) | Partial coverage |
-| conflict | Finding ID(s) | Contradicts PRD |
-| gap | Finding ID(s) | Not defined |
-| addition | Finding ID(s) | Added without PRD backing |
-| na | `N/A` | Requirement doesn't apply to this document |
+| source | `Source` | PRD — source of truth |
+| aligned | `Aligned` | Covered |
+| partial | `Partial` | Incomplete |
+| conflict | `Conflict` | Contradicts PRD |
+| gap | `Gap` | Not defined |
+| addition | `Addition` | Not in PRD |
+| na | `N/A` | Not applicable |
 
-### Heatmap tooltips
+### Tooltips
 
-Each cell must have a `title` attribute: `"{DocName}: {Status} {FindingIDs}"`
+Each cell: `title="{DocName}: {Status}"` (e.g., "UX Design: Aligned")
 
 ---
 
 ## 4. Pre-Delivery Checklist
 
-### Finding Quality
+### Findings
 - [ ] Every finding quotes specific text from source documents
-- [ ] Conflict (V) findings cite all involved documents
-- [ ] Gap (W) findings cite the PRD requirement and name the missing document
-- [ ] Addition (Q) findings cite the element and name the adding document
-- [ ] Cascade (C) findings trace through all three documents with quotes
-- [ ] Specificity (S) findings identify the invented detail
-- [ ] Naming (N) findings list all document terms and context
-- [ ] Every finding has a document pair tag
-- [ ] Severities are justified and consistent
+- [ ] Conflict findings cite all involved documents
+- [ ] Coverage Gap findings name the PRD requirement and missing document
+- [ ] Scope Addition findings name the adding document
+- [ ] Cascade findings trace through all three documents
+- [ ] Naming Drift findings list terms and context
+- [ ] Every finding has a human-readable document pair tag
+- [ ] Severities are consistent across all outputs
 
-### IDs & Counts
-- [ ] All finding IDs globally unique per prefix
-- [ ] Executive summary counts match actual findings
-- [ ] Alignment score calculation correct: aligned / (total - N/A) x 100
+### Counts
+- [ ] Finding IDs globally unique per prefix
+- [ ] Summary counts match actual findings
+- [ ] Alignment score: aligned / (total - N/A) x 100
 
 ### reconciliation.md
 - [ ] All sections present per report-template.md
-- [ ] Sections for non-provided documents are skipped entirely
-- [ ] Reconciliation matrix table covers every FR with per-document columns
+- [ ] Non-provided document sections skipped
+- [ ] Reconciliation matrix covers every FR
 - [ ] Recommendations organized by severity
-- [ ] Document maturity assessment included for each provided document
 
 ### reconciliation-matrix.html
-- [ ] Opens in browser without errors
-- [ ] Mode badge shows correct mode (bilateral/trilateral)
-- [ ] Correct number of columns per input mode
-- [ ] Alignment gauge score and color match reconciliation.md
-- [ ] Per-document gauges show correct coverage percentages
-- [ ] Stats bar counts match reconciliation.md
-- [ ] Tab switching between Matrix and Heatmap works
-- [ ] Search filters rows correctly
-- [ ] Status filter buttons work
-- [ ] Severity filter buttons work
-- [ ] Document pair filter buttons work (trilateral only)
-- [ ] Row expand/collapse works (click + Enter key)
+- [ ] Opens in browser without console errors
+- [ ] Score ring displays correct percentage and color
+- [ ] Metric cards show correct counts
+- [ ] Document coverage bars match report data
+- [ ] Help panel opens with `?` button and lists all finding types
+- [ ] Requirements tab shows correct finding count
+- [ ] Search filters cards correctly
+- [ ] Status pill filters work
+- [ ] Severity filters work
+- [ ] Document pair filters work (trilateral only)
+- [ ] **Card expands only from header click**, not from detail area
+- [ ] **Text in expanded detail is fully selectable and copyable**
+- [ ] **Text selection anywhere prevents accidental toggle**
 - [ ] Expand All / Collapse All buttons work
-- [ ] Legend panel opens/closes and shows all 9 finding categories
-- [ ] Keyboard navigation works (/, Esc, [, ], Enter, L, H)
-- [ ] Row count updates when filters/search applied
+- [ ] Keyboard shortcuts work (/, Esc, [, ], Enter, ?, H)
+- [ ] Finding chips show **human-readable name + code** (e.g., "Conflict V1")
+- [ ] Document pair tags show **plain language** (e.g., "PRD vs UX")
+- [ ] Heatmap cells show **status words** (e.g., "Aligned", "Gap")
 - [ ] Finding descriptions verbatim from reconciliation.md
-- [ ] Document quotes match source documents
-- [ ] Cascade chain visualization correct for C findings
-- [ ] Recommendation blocks present for rows with findings
-- [ ] Rows ordered by priority
-- [ ] Naming drift table appears if N findings exist
-- [ ] Heatmap grid has correct column count
-- [ ] Heatmap cells have correct status colors
-- [ ] Heatmap legend is complete
+- [ ] Cascade chain shows drift narrative with arrows
+- [ ] Responsive layout stacks columns on mobile
+- [ ] Naming drift table visible when N findings exist
 - [ ] Heatmap group dividers match feature areas
 
 ### Excalidraw diagrams
-- [ ] All .excalidraw files are valid JSON
-- [ ] Coverage heatmap matches reconciliation.md data
-- [ ] Venn diagram circle count matches input mode
-- [ ] Traceability flow column count matches input mode
-- [ ] All diagrams include complete legends
-- [ ] Colors match the finding category colors defined in SKILL.md
-
-### Cross-Output Consistency
-- [ ] Every finding ID in reconciliation.md exists in reconciliation-matrix.html
-- [ ] Finding descriptions character-for-character identical
-- [ ] Severity for each finding same in both outputs
-- [ ] Status per requirement consistent
-- [ ] Heatmap cell statuses match matrix row statuses
-- [ ] Excalidraw diagram data matches report data
+- [ ] Valid JSON matching Excalidraw v2 schema
+- [ ] Data matches report
+- [ ] Circle/column count matches input mode
+- [ ] Complete legends with category colors
