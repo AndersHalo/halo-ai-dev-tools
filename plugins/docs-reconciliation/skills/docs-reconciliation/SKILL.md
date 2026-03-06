@@ -33,15 +33,12 @@ This skill answers:
 | 3 | **Mock file or folder** | No | Markdown description of mocks, annotated screenshots, or HTML mock files |
 | 4 | **Previous reconciliation folder** | No | Enables delta mode — compares against a prior run |
 | 5 | **Generate Excalidraw diagrams** | No | If not provided by the user, **ask**: "Would you like to generate Excalidraw diagrams (coverage heatmap, Venn overlap, traceability flow, gap treemap)? These are optional and can be generated later from the JSON data." Accepts yes/no. Defaults to no if the user does not specify. |
-| 6 | **Visual verification (Puppeteer)** | No | When mock inputs include `.html` files, if not specified by the user, **ask**: "Your mocks include HTML files. Would you like to run Puppeteer visual verification? This renders the HTML and checks whether components from the PRD/UX actually exist in the rendered page." Accepts yes/no. Defaults to no. Only available when mock input #3 contains `.html` files. Requires `npx puppeteer` to be available. |
-
 **Rules:**
 - At least **PRD + one other document** must be provided
 - All file paths must be provided explicitly by the user. Never auto-discover.
 - The skill adapts to whichever combination is provided (PRD+UX, PRD+Mock, PRD+UX+Mock)
 - If the user explicitly includes or excludes diagrams in their request, respect that choice without asking again
-- If the user explicitly includes or excludes visual verification, respect that choice without asking again
-- Visual verification is only offered when HTML mock files are detected — never for markdown-only mocks
+- **Puppeteer visual verification** runs automatically when mock input #3 contains `.html` files. No user prompt needed — it is part of the standard workflow. Requires `npx puppeteer` to be available. If Puppeteer is not installed, skip gracefully with a warning.
 
 ---
 
@@ -212,7 +209,7 @@ When the user asks to resume or generate outputs from an existing JSON:
 4. If previous reconciliation folder provided, load it for delta comparison
 5. **Estimate context pressure**: Count total lines across all input documents. If >5000 lines total, warn the user that the workflow may need to split across sessions, and that `reconciliation-data.json` will be the checkpoint
 6. **Resolve diagram choice**: If the user already specified input #5 (generate diagrams yes/no), use that. Otherwise, ask: "Would you like to generate Excalidraw diagrams (coverage heatmap, Venn overlap, traceability flow, gap treemap)? These are optional and can be generated later from the JSON data." Record the choice as `generateDiagrams` (boolean). If false, skip Phase 10 entirely.
-7. **Resolve visual verification choice**: If mock input #3 contains `.html` files, check if the user already specified input #6. If not, ask: "Your mocks include HTML files. Would you like to run Puppeteer visual verification? This renders the HTML and checks whether components from the PRD/UX actually exist in the rendered page." Record as `visualVerification` (boolean). If false or no HTML mocks, skip Phase 3B entirely.
+7. **Detect HTML mocks**: If mock input #3 contains `.html` files, set `visualVerification = true` and Phase 3B will run automatically. If no HTML mocks, set `visualVerification = false` and skip Phase 3B.
 
 ### Phase 1 — PRD Extraction
 
@@ -397,20 +394,19 @@ Parse mock documents into structured inventories. Mocks may be markdown descript
 | Typography | Font sizes, weights visible |
 | Spacing | Margins, padding visible |
 
-### Phase 3B — Puppeteer Visual Verification — SKIP if `visualVerification` is false
+### Phase 3B — Puppeteer Element Detection — SKIP if `visualVerification` is false
 
-Only run this phase if: (a) the user opted in during Phase 0 step 7, AND (b) mock input #3 contains `.html` files. If skipped, proceed to Phase 4.
+Runs automatically when mock input #3 contains `.html` files. If no HTML mocks, skip to Phase 4.
 
-**Purpose**: Render HTML mock files with Puppeteer and verify that components identified in PRD (P3) and UX (U3) are visually present in the rendered page. This enriches the K2 (Visual Component Inventory) and K7 (Visual Specifications) inventories with precise computed data from the actual DOM.
+**Purpose**: Render HTML mock files with Puppeteer and detect whether requirements (P1) and components (P3) from the PRD actually exist as visible elements in the rendered page. This is a presence check only — it answers "is this element in the DOM?" not "does it look correct?".
 
 #### 3B.1 — Build the search checklist
 
-Combine the reconciled inventories into a single checklist of elements to look for:
+Combine PRD inventories into a checklist of elements to look for:
 
 | Source | What to search for | Example |
 |--------|-------------------|---------|
 | P3 (PRD Component Mentions) | Component names and their context | "search input", "data table", "filter dropdown" |
-| U3 (UX Component Registry) | Component names and variants | "SearchInput", "DataTable--sortable" |
 | P1 (Functional Requirements) | Key interaction surfaces | "export button", "date range picker" |
 | P2 (Page/View Registry) | Page titles and landmarks | "Dashboard", "Settings" |
 
@@ -421,7 +417,7 @@ For each item, generate search heuristics:
 - **Attribute match** — Query by `aria-label`, `data-testid`, `placeholder`, `name` attributes
 - **Class/ID match** — Query by class names or IDs containing the component name (case-insensitive partial match)
 
-#### 3B.2 — Run Puppeteer verification script
+#### 3B.2 — Run Puppeteer detection script
 
 For each HTML mock file, execute a Puppeteer script that:
 
@@ -430,30 +426,18 @@ For each HTML mock file, execute a Puppeteer script that:
 3. Waits for the page to be fully loaded (`networkidle0`)
 4. For each item on the search checklist:
    a. Run all heuristic queries against the DOM
-   b. Record whether the element was **found**, **partial** (similar element exists but not exact match), or **not found**
-   c. If found, extract:
-      - **Bounding box** — position and dimensions (`getBoundingClientRect()`)
-      - **Computed styles** — colors, fonts, spacing, border-radius (`getComputedStyle()`)
-      - **Visibility** — is it visible, hidden, or off-screen?
-      - **Text content** — inner text of the element
-      - **Interactive** — does it have click/focus handlers? Is it a `<button>`, `<a>`, `<input>`?
+   b. Record whether the element was **found** or **not found**
+   c. If found, record the matched selector and whether the element is visible (non-zero dimensions, not `display:none`)
 5. Take a full-page screenshot and save to the output directory as `visual-verification/{mock-filename}.png`
 6. Output results as `visual-verification/verification-results.json`
 
 See [puppeteer-visual-verification.md](puppeteer-visual-verification.md) for the script template.
 
-#### 3B.3 — Enrich K inventories
+#### 3B.3 — Enrich K2 inventory
 
-Use the Puppeteer results to upgrade K2 and K7 inventories:
+Use the Puppeteer results to add a `domVerified: true/false` field to K2 (Visual Component Inventory) entries. For verified components, also record `visible: true/false`.
 
-| Original inventory | Enrichment |
-|-------------------|------------|
-| K2 (Visual Component Inventory) | Add `domVerified: true/false` field. For verified components, add computed `boundingBox`, `visibility`, `interactive` status. Change `partial` mock components to `full` if Puppeteer confirms complete interaction surface. |
-| K7 (Visual Specifications) | Replace manually-parsed values with Puppeteer-extracted `getComputedStyle` values: actual hex colors, font-family, font-size, font-weight, padding, margin, border-radius. |
-| K3 (Screen Layout) | Add measured positions and dimensions for verified components, replacing estimated layout with actual bounding boxes. |
-| K4 (State Representations) | If Puppeteer triggered states (hover, focus), record which states were visually confirmed. |
-
-#### 3B.4 — Generate visual verification summary
+#### 3B.4 — Generate verification summary
 
 Add a `visualVerification` section to `reconciliation-data.json` containing:
 
@@ -470,28 +454,26 @@ Add a `visualVerification` section to `reconciliation-data.json` containing:
         "mockFile": "mock-dashboard.html",
         "status": "found",
         "selector": "input[type='search']",
-        "boundingBox": { "x": 120, "y": 80, "width": 320, "height": 40 },
-        "computedStyles": { "background-color": "#ffffff", "font-size": "14px" }
+        "visible": true
       },
       {
-        "source": "U3",
+        "source": "P1",
         "name": "DataTable",
         "mockFile": "mock-dashboard.html",
         "status": "not_found",
-        "heuristicsTriied": ["role=table", "class*=table", "semantic <table>"]
+        "selectorsQueried": ["[role='table']", "[class*='table']", "table"]
       }
     ],
     "summary": {
       "total": 24,
       "found": 18,
-      "partial": 3,
-      "notFound": 3
+      "notFound": 6
     }
   }
 }
 ```
 
-**How Phase 4 uses this data**: When Phase 4C (PRD -> Mock) and 4E (UX <-> Mock) check whether a component is present in the mock, they first check `visualVerification.checklist`. A `not_found` status from Puppeteer is strong evidence for a **W** (Coverage Gap) finding. A `found` status with mismatched computed styles vs UX tokens is evidence for a **V** (Conflict) finding.
+**How Phase 4 uses this data**: When Phase 4C (PRD -> Mock) checks whether a component is present in the mock, it first checks `visualVerification.checklist`. A `not_found` status from Puppeteer is strong DOM-level evidence for a **W** (Coverage Gap) finding. Include in the finding description: "Puppeteer verification: element not found in rendered HTML after querying [N] selectors."
 
 ### Phase 4 — Cross-Document Comparison
 
@@ -561,14 +543,14 @@ Run comparison checks based on input mode. Each check direction only runs if bot
 
 #### 4C. PRD -> Mock (does Mock cover what PRD requires?)
 
-**Puppeteer enhancement**: If Phase 3B ran, check `visualVerification.checklist` for each component before relying on text-based K2 extraction alone. A `not_found` status from Puppeteer is strong DOM-level evidence for a Coverage Gap. Include in the finding description: "Puppeteer verification: element not found in rendered HTML after querying [N] selectors."
+**Puppeteer enhancement**: If Phase 3B ran, check `visualVerification.checklist` for each component. A `not_found` status is strong DOM-level evidence for a Coverage Gap. Include in the finding: "Puppeteer: element not found after querying [N] selectors."
 
 **C1. Requirement-level checks** — For each PRD requirement (P1):
 
 | Check | Finding if failed |
 |-------|-------------------|
 | Is the feature/page represented in a mock screen (K1)? | **W** — Coverage Gap `[PRD<>Mock]` |
-| Are required components visually present (K2)? Check `visualVerification.checklist` if available. | **W** — Coverage Gap `[PRD<>Mock]` |
+| Are required components visually present (K2)? Use `visualVerification.checklist` if available. | **W** — Coverage Gap `[PRD<>Mock]` |
 | Are required states shown (K4)? | **W** — Coverage Gap `[PRD<>Mock]` |
 | Does the mock show behavior contradicting PRD? | **V** — Conflict `[PRD<>Mock]` |
 | Do data fields match PRD requirements (K6 vs P1)? | **V** — Conflict `[PRD<>Mock]` |
@@ -592,8 +574,6 @@ Run comparison checks based on input mode. Each check direction only runs if bot
 
 #### 4E. UX <-> Mock (do UX and Mock agree?) — Only in trilateral mode
 
-**Puppeteer enhancement**: If Phase 3B ran, use `computedStyles` from `visualVerification.checklist` to compare against UX design tokens (U1, U2). This provides exact CSS value comparisons (e.g., UX says `border-radius: 12px`, Puppeteer extracted `border-radius: 8px`). Include in the finding description: "Puppeteer verification: computed [property] is [actual] but UX specifies [expected]."
-
 **E1. Component alignment** — For each UX component (U3) present in mock (K2):
 
 | Check | Finding if failed |
@@ -612,8 +592,8 @@ Run comparison checks based on input mode. Each check direction only runs if bot
 
 | Check | Finding if failed |
 |-------|-------------------|
-| Do mock colors match UX design tokens? Use Puppeteer `computedStyles` if available. | **V** — Conflict `[UX<>Mock]` |
-| Does mock typography match UX specs? Use Puppeteer `computedStyles` if available. | **V** — Conflict `[UX<>Mock]` |
+| Do mock colors match UX design tokens? | **V** — Conflict `[UX<>Mock]` |
+| Does mock typography match UX specs? | **V** — Conflict `[UX<>Mock]` |
 
 **E4. Mock additions beyond UX**:
 
@@ -840,7 +820,7 @@ Treemap showing findings distribution:
 15. Excalidraw files (if generated) are valid JSON matching the Excalidraw v2 schema
 16. All diagrams (if generated) include complete legends
 17. **Output completeness check**: Verify all expected files exist in the output directory before declaring done. If diagrams were opted out, do not flag their absence. If visual verification was opted out, do not flag its absence. If any expected file is missing, regenerate it from `reconciliation-data.json`.
-18. **Visual verification consistency** (if Phase 3B ran): Every W finding for `[PRD<>Mock]` or V finding for `[UX<>Mock]` that has Puppeteer evidence must include the Puppeteer result in the finding description. The `visualVerification` section in `reconciliation-data.json` must match the `verification-results.json` file.
+18. **Visual verification consistency** (if Phase 3B ran): Every W finding for `[PRD<>Mock]` that has Puppeteer evidence must include the Puppeteer result in the finding description. The `visualVerification` section in `reconciliation-data.json` must match the `verification-results.json` file.
 19. **Cross-pair coverage check (trilateral only):** For every PRD requirement that has a W or V finding tagged `[PRD<>UX]`, verify that Phase 4C independently evaluated the same requirement against Mock. If Mock also has a gap or conflict, a separate finding with `[PRD<>Mock]` must exist. Conversely, for every `[PRD<>Mock]` finding, verify Phase 4A independently evaluated against UX. Flag any requirement that has a finding in one direction but was never evaluated in the other.
 
 ### Phase 12 — Delta Mode (optional)

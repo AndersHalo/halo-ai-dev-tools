@@ -1,6 +1,6 @@
-# Puppeteer Visual Verification — Script Template
+# Puppeteer Element Detection — Script Template
 
-This document provides the Node.js script template used by Phase 3B to verify that components from PRD and UX inventories exist in rendered HTML mocks.
+This document provides the Node.js script template used by Phase 3B to detect whether PRD requirements and components exist as visible elements in rendered HTML mocks. This is a presence check only — it answers "is this element in the DOM?", not "does it look correct?".
 
 ## Prerequisites
 
@@ -20,7 +20,7 @@ import { resolve } from 'path';
 // {
 //   "mockFiles": ["path/to/mock.html"],
 //   "checklist": [
-//     { "source": "P3", "name": "search input", "heuristics": { ... } }
+//     { "source": "P3", "name": "search input" }
 //   ]
 // }
 
@@ -44,7 +44,7 @@ for (const mockFile of input.mockFiles) {
   await page.screenshot({ path: screenshotPath, fullPage: true });
 
   for (const item of input.checklist) {
-    const result = await verifyElement(page, item, mockFile);
+    const result = await detectElement(page, item, mockFile);
     results.push(result);
   }
 
@@ -56,21 +56,17 @@ await browser.close();
 // Output results as JSON
 console.log(JSON.stringify({ results, screenshots: input.mockFiles.map(f => f.replace(/\.html$/, '.png')) }));
 
-// --- Verification logic ---
+// --- Detection logic ---
 
-async function verifyElement(page, item, mockFile) {
+async function detectElement(page, item, mockFile) {
   const entry = {
     source: item.source,
     name: item.name,
     mockFile,
     status: 'not_found',
-    heuristicsTriied: [],
+    selectorsQueried: [],
     selector: null,
-    boundingBox: null,
-    computedStyles: null,
-    visibility: null,
-    interactive: null,
-    textContent: null
+    visible: null
   };
 
   // Build query strategies from the component name
@@ -98,7 +94,7 @@ async function verifyElement(page, item, mockFile) {
     `[class*="${namePascal}"]`,
     `[id*="${nameSlug}"]`,
     `[id*="${nameCamel}"]`,
-    // 7. Text content match (handled separately)
+    // 7. Text content match (handled separately below)
   ];
 
   // Also include any custom heuristics from the checklist item
@@ -106,15 +102,16 @@ async function verifyElement(page, item, mockFile) {
     strategies.push(...item.heuristics.selectors);
   }
 
-  // Try each strategy
+  // Try each selector strategy
   for (const selector of strategies) {
-    entry.heuristicsTriied.push(selector);
+    entry.selectorsQueried.push(selector);
     try {
       const el = await page.$(selector);
       if (el) {
+        const visible = await isVisible(page, el);
         entry.status = 'found';
         entry.selector = selector;
-        await extractElementData(page, el, entry);
+        entry.visible = visible;
         return entry;
       }
     } catch {
@@ -123,7 +120,7 @@ async function verifyElement(page, item, mockFile) {
   }
 
   // 7. Text content search (fallback)
-  entry.heuristicsTriied.push(`text:${nameLower}`);
+  entry.selectorsQueried.push(`text:${nameLower}`);
   const textMatch = await page.evaluate((searchText) => {
     const walker = document.createTreeWalker(
       document.body,
@@ -137,24 +134,8 @@ async function verifyElement(page, item, mockFile) {
         if (el) {
           const rect = el.getBoundingClientRect();
           const style = window.getComputedStyle(el);
-          return {
-            found: true,
-            tag: el.tagName.toLowerCase(),
-            textContent: el.textContent.trim().slice(0, 200),
-            boundingBox: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
-            visibility: style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0,
-            interactive: ['A', 'BUTTON', 'INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName),
-            computedStyles: {
-              'background-color': style.backgroundColor,
-              'color': style.color,
-              'font-family': style.fontFamily,
-              'font-size': style.fontSize,
-              'font-weight': style.fontWeight,
-              'padding': style.padding,
-              'margin': style.margin,
-              'border-radius': style.borderRadius
-            }
-          };
+          const visible = style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0;
+          return { found: true, visible };
         }
       }
     }
@@ -164,39 +145,18 @@ async function verifyElement(page, item, mockFile) {
   if (textMatch.found) {
     entry.status = 'found';
     entry.selector = `text:${nameLower}`;
-    entry.boundingBox = textMatch.boundingBox;
-    entry.computedStyles = textMatch.computedStyles;
-    entry.visibility = textMatch.visibility;
-    entry.interactive = textMatch.interactive;
-    entry.textContent = textMatch.textContent;
+    entry.visible = textMatch.visible;
   }
 
   return entry;
 }
 
-async function extractElementData(page, elementHandle, entry) {
-  const data = await page.evaluate((el) => {
+async function isVisible(page, elementHandle) {
+  return page.evaluate((el) => {
     const rect = el.getBoundingClientRect();
     const style = window.getComputedStyle(el);
-    return {
-      textContent: el.textContent.trim().slice(0, 200),
-      boundingBox: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
-      visibility: style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0,
-      interactive: ['A', 'BUTTON', 'INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName),
-      computedStyles: {
-        'background-color': style.backgroundColor,
-        'color': style.color,
-        'font-family': style.fontFamily,
-        'font-size': style.fontSize,
-        'font-weight': style.fontWeight,
-        'padding': style.padding,
-        'margin': style.margin,
-        'border-radius': style.borderRadius
-      }
-    };
+    return style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0;
   }, elementHandle);
-
-  Object.assign(entry, data);
 }
 
 // Map common component names to ARIA role selectors
@@ -292,33 +252,16 @@ The script outputs JSON to stdout:
       "mockFile": "mocks/dashboard.html",
       "status": "found",
       "selector": "input[type='search']",
-      "boundingBox": { "x": 120, "y": 80, "width": 320, "height": 40 },
-      "computedStyles": {
-        "background-color": "rgb(255, 255, 255)",
-        "color": "rgb(0, 0, 0)",
-        "font-family": "Inter, sans-serif",
-        "font-size": "14px",
-        "font-weight": "400",
-        "padding": "8px 12px",
-        "margin": "0px",
-        "border-radius": "8px"
-      },
-      "visibility": true,
-      "interactive": true,
-      "textContent": ""
+      "visible": true
     },
     {
-      "source": "U3",
+      "source": "P1",
       "name": "DataTable",
       "mockFile": "mocks/dashboard.html",
       "status": "not_found",
-      "heuristicsTriied": ["[role=\"table\"]", "[role=\"grid\"]", "table", "[aria-label*=\"datatable\" i]", "[data-testid*=\"data-table\"]", "[class*=\"data-table\"]", "[class*=\"dataTable\"]", "[class*=\"DataTable\"]", "text:datatable"],
+      "selectorsQueried": ["[role=\"table\"]", "[role=\"grid\"]", "table", "[aria-label*=\"datatable\" i]", "[data-testid*=\"data-table\"]", "[class*=\"data-table\"]", "[class*=\"dataTable\"]", "[class*=\"DataTable\"]", "text:datatable"],
       "selector": null,
-      "boundingBox": null,
-      "computedStyles": null,
-      "visibility": null,
-      "interactive": null,
-      "textContent": null
+      "visible": null
     }
   ],
   "screenshots": ["mocks/dashboard.png"]
@@ -329,14 +272,12 @@ The script outputs JSON to stdout:
 
 | Status | Meaning |
 |--------|---------|
-| `found` | Element matched at least one heuristic query, is visible, and occupies space on the page |
-| `not_found` | No heuristic query matched any visible element on the page |
+| `found` | Element matched at least one heuristic query and exists in the DOM |
+| `not_found` | No heuristic query matched any element on the page |
 
 ## How Phase 4 Uses Results
 
-- **Phase 4C (PRD -> Mock)**: A `not_found` status for a P3 component strengthens a **W** (Coverage Gap) finding with DOM-level evidence. The finding description includes: "Puppeteer verification: element not found in rendered HTML after querying [N] selectors."
-- **Phase 4E (UX <-> Mock)**: A `found` status with `computedStyles` that conflict with UX design tokens (U1, U2) provides evidence for a **V** (Conflict) finding. Example: UX specifies `border-radius: 12px` but Puppeteer extracted `border-radius: 8px`.
-- **Phase 4D (Mock -> PRD)**: Elements visible in Puppeteer screenshots but not matching any PRD component may indicate **Q** (Scope Addition) findings.
+- **Phase 4C (PRD -> Mock)**: A `not_found` status for a P3 component strengthens a **W** (Coverage Gap) finding with DOM-level evidence. The finding description includes: "Puppeteer: element not found after querying [N] selectors."
 
 ## Error Handling
 
