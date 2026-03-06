@@ -66,7 +66,8 @@ async function detectElement(page, item, mockFile) {
     status: 'not_found',
     selectorsQueried: [],
     selector: null,
-    visible: null
+    visible: null,
+    boundingBox: null
   };
 
   // Build query strategies from the component name
@@ -109,9 +110,11 @@ async function detectElement(page, item, mockFile) {
       const el = await page.$(selector);
       if (el) {
         const visible = await isVisible(page, el);
+        const box = await el.boundingBox();
         entry.status = 'found';
         entry.selector = selector;
         entry.visible = visible;
+        entry.boundingBox = box ? { x: box.x, y: box.y, width: box.width, height: box.height } : null;
         return entry;
       }
     } catch {
@@ -135,7 +138,11 @@ async function detectElement(page, item, mockFile) {
           const rect = el.getBoundingClientRect();
           const style = window.getComputedStyle(el);
           const visible = style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0;
-          return { found: true, visible };
+          return {
+            found: true,
+            visible,
+            boundingBox: rect.width > 0 ? { x: rect.x, y: rect.y, width: rect.width, height: rect.height } : null
+          };
         }
       }
     }
@@ -146,6 +153,7 @@ async function detectElement(page, item, mockFile) {
     entry.status = 'found';
     entry.selector = `text:${nameLower}`;
     entry.visible = textMatch.visible;
+    entry.boundingBox = textMatch.boundingBox;
   }
 
   return entry;
@@ -252,7 +260,8 @@ The script outputs JSON to stdout:
       "mockFile": "mocks/dashboard.html",
       "status": "found",
       "selector": "input[type='search']",
-      "visible": true
+      "visible": true,
+      "boundingBox": { "x": 240, "y": 80, "width": 320, "height": 40 }
     },
     {
       "source": "P1",
@@ -261,7 +270,8 @@ The script outputs JSON to stdout:
       "status": "not_found",
       "selectorsQueried": ["[role=\"table\"]", "[role=\"grid\"]", "table", "[aria-label*=\"datatable\" i]", "[data-testid*=\"data-table\"]", "[class*=\"data-table\"]", "[class*=\"dataTable\"]", "[class*=\"DataTable\"]", "text:datatable"],
       "selector": null,
-      "visible": null
+      "visible": null,
+      "boundingBox": null
     }
   ],
   "screenshots": ["mocks/dashboard.png"]

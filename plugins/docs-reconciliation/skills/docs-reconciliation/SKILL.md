@@ -61,9 +61,10 @@ docs/audit/docs-reconciliation/{analysis_name}/
 ├── reconciliation.md                # Main markdown report
 ├── reconciliation-data.json         # Structured data (single source of truth for all visual outputs)
 ├── reconciliation-matrix.html       # Interactive HTML dashboard (loads reconciliation-data.json)
-├── visual-verification/             # Only if user opts in to Puppeteer visual verification
+├── visual-verification/             # Only if HTML mocks detected (Puppeteer auto-runs)
 │   ├── visual-verify.mjs            # Generated Puppeteer script
 │   ├── verification-results.json    # DOM verification results per component
+│   ├── verification-map.html        # Interactive screenshot viewer with bounding box overlays
 │   ├── mock-dashboard.png           # Full-page screenshot per HTML mock
 │   └── mock-settings.png            # (one .png per .html mock file)
 ├── diagrams/                        # Only if user opts in to diagram generation
@@ -454,14 +455,18 @@ Add a `visualVerification` section to `reconciliation-data.json` containing:
         "mockFile": "mock-dashboard.html",
         "status": "found",
         "selector": "input[type='search']",
-        "visible": true
+        "visible": true,
+        "boundingBox": { "x": 240, "y": 80, "width": 320, "height": 40 },
+        "uxComponentMatch": { "componentName": "SearchInput", "uxSection": "Section 3.2", "variants": ["default", "focused"] }
       },
       {
         "source": "P1",
         "name": "DataTable",
         "mockFile": "mock-dashboard.html",
         "status": "not_found",
-        "selectorsQueried": ["[role='table']", "[class*='table']", "table"]
+        "selectorsQueried": ["[role='table']", "[class*='table']", "table"],
+        "boundingBox": null,
+        "uxComponentMatch": null
       }
     ],
     "summary": {
@@ -474,6 +479,41 @@ Add a `visualVerification` section to `reconciliation-data.json` containing:
 ```
 
 **How Phase 4 uses this data**: When Phase 4C (PRD -> Mock) checks whether a component is present in the mock, it first checks `visualVerification.checklist`. A `not_found` status from Puppeteer is strong DOM-level evidence for a **W** (Coverage Gap) finding. Include in the finding description: "Puppeteer verification: element not found in rendered HTML after querying [N] selectors."
+
+### Phase 3B.5 — UX Component Matching — SKIP if UX not provided or Phase 3B did not run
+
+After Puppeteer detection completes and before Phase 4, cross-reference each found element against the UX component registry (U3) to identify which UX component rendered it.
+
+#### Matching logic
+
+For each checklist item with `status: "found"`:
+
+1. **Selector-to-component mapping** — Parse the matched CSS selector and compare against U3 component names:
+   - Class name overlap: if selector matched `[class*="department-tile"]` and U3 has a component named "DepartmentTile", that's a match
+   - Convert between naming conventions (kebab-case, camelCase, PascalCase) when comparing
+   - Partial matches count (e.g., selector `.bar-target` matching U3 component "BarChart" via shared prefix)
+
+2. **Component-Page Matrix (U10)** — If available, check which components U10 says should appear on the page that corresponds to this mock file. Prefer matches where U10 confirms the component belongs on this page.
+
+3. **Section reference** — If the UX document uses numbered sections (e.g., "3.6 DepartmentTile"), record the section reference in `uxSection`.
+
+4. **Variants** — If U3 or U4 defines variants for the matched component, record which variants are listed.
+
+#### Output
+
+For each found checklist item, populate:
+
+```json
+{
+  "uxComponentMatch": {
+    "componentName": "DepartmentTile",
+    "uxSection": "Section 3.6",
+    "variants": ["default", "selected", "empty"]
+  }
+}
+```
+
+If no UX component match is found, set `uxComponentMatch` to `null`. This is not an error — it may indicate the Mock implements something the UX doesn't define (potential Q finding).
 
 ### Phase 4 — Cross-Document Comparison
 
@@ -761,6 +801,50 @@ Interactive features (all driven by JSON data at runtime):
 - **Alignment gauge** with overall score
 - **Keyboard navigation** (/, Esc, [, ], Enter, L, H)
 
+### Phase 9B — Generate verification-map.html — SKIP if `visualVerification` is false
+
+See [verification-map-template.md](verification-map-template.md) for the complete HTML/CSS/JS template.
+
+**CRITICAL: Same data-template separation pattern.** This is a static HTML shell that loads `reconciliation-data.json` via `fetch()`. No inline data.
+
+```javascript
+fetch('./reconciliation-data.json')
+  .then(r => r.json())
+  .then(data => renderVerificationMap(data));
+```
+
+The template renders:
+
+- **Screenshot viewer** — One tab per mock screenshot. Each screenshot displayed as a background image (`<img>`) with an SVG overlay layer for bounding box rectangles. Screenshots are loaded from the `visualVerification.screenshots` paths.
+
+- **Bounding box overlays** — For each checklist item with `status: "found"` and non-null `boundingBox`, draw a colored rectangle at `(x, y, width, height)` on the SVG overlay. Colors by requirement status:
+  - Green (`#22c55e`) = aligned requirement
+  - Amber (`#f59e0b`) = partial
+  - Red (`#ef4444`) = conflict
+  - Blue (`#3b82f6`) = gap
+  - Each box labeled with FR ID and short title (e.g., "FR2.3 Search")
+
+- **Side panel** — Clicking a bounding box opens a detail panel showing:
+  - FR requirement ID and full text (from `requirements[]`)
+  - UX component match: component name, UX section reference, variants (from `uxComponentMatch`)
+  - Matched CSS selector (from `selector`)
+  - Visibility status
+  - Linked finding IDs with expandable details
+
+- **Not-found list** — Below the screenshot viewer, a table of all `status: "not_found"` items showing:
+  - Source (P1/P2/P3), element name
+  - Mock file scanned
+  - All selectors tried (from `selectorsQueried`)
+  - Linked W finding ID (if exists) — clickable link to reconciliation-matrix.html
+
+- **Filters** — Toggle visibility by:
+  - Status: found / not_found
+  - Mock file (tab switching)
+  - UX component (dropdown)
+  - Requirement status: aligned / partial / conflict / gap
+
+Output path: `visual-verification/verification-map.html`
+
 ### Phase 10 — Generate Excalidraw Diagrams (one at a time) — SKIP if `generateDiagrams` is false
 
 Only run this phase if the user opted in during Phase 0 step 6. If skipped, proceed directly to Phase 11.
@@ -835,6 +919,8 @@ Treemap showing findings distribution:
 17. **Output completeness check**: Verify all expected files exist in the output directory before declaring done. If diagrams were opted out, do not flag their absence. If visual verification was opted out, do not flag its absence. If any expected file is missing, regenerate it from `reconciliation-data.json`.
 18. **Visual verification consistency** (if Phase 3B ran): Every W finding for `[PRD<>Mock]` that has Puppeteer evidence must include the Puppeteer result in the finding description. The `visualVerification` section in `reconciliation-data.json` must match the `verification-results.json` file.
 19. **Cross-pair coverage check (trilateral only):** For every PRD requirement that has a W or V finding tagged `[PRD<>UX]`, verify that Phase 4C independently evaluated the same requirement against Mock. If Mock also has a gap or conflict, a separate finding with `[PRD<>Mock]` must exist. Conversely, for every `[PRD<>Mock]` finding, verify Phase 4A independently evaluated against UX. Flag any requirement that has a finding in one direction but was never evaluated in the other.
+20. **Verification map consistency** (if Phase 3B ran): `verification-map.html` exists in `visual-verification/`. Every checklist item with `status: "found"` must have a non-null `boundingBox` in `reconciliation-data.json`. The `uxComponentMatch` field must be populated for found items when UX document is provided (Phase 3B.5 ran).
+21. **Bounding box validity** (if Phase 3B ran): Every `boundingBox` must have positive `width` and `height`. Coordinates `x` and `y` must be non-negative. If any bounding box is invalid, log a warning but do not fail.
 
 ### Phase 12 — Delta Mode (incremental analysis)
 
@@ -945,7 +1031,7 @@ After merging, proceed to Phases 7-11 as normal using the merged data. The MD re
 9. **Data consistency** — The MD report, HTML dashboard, and Excalidraw diagrams must all reflect exactly the same findings. Never rewrite or summarize differently between outputs.
 10. **Self-describing outputs** — Every shorthand code, color, or label must have a visible legend or glossary in the same output. No unexplained abbreviations.
 11. **Data-first generation** — Always generate `reconciliation-data.json` before any visual output. The HTML template is static and loads data at runtime via `fetch()`. Never inline finding data into HTML. This prevents output token exhaustion on large audits.
-12. **Sequential output generation** — Generate files in order: JSON -> MD -> HTML -> Excalidraw (one diagram at a time, only if user opted in). If token budget runs low, stop after HTML — the JSON + MD pair is the minimum viable output.
+12. **Sequential output generation** — Generate files in order: JSON -> MD -> HTML dashboard -> verification-map.html (if visual verification ran) -> Excalidraw (one diagram at a time, only if user opted in). If token budget runs low, stop after HTML dashboard — the JSON + MD pair is the minimum viable output.
 13. **Output completeness verification** — After all files are generated, verify every expected file exists. If any is missing, regenerate it from `reconciliation-data.json` (not from scratch).
 14. **Session-safe checkpointing** — `reconciliation-data.json` is the checkpoint. Once written, all analysis is persisted. If context runs out, the user starts a new session pointing to the JSON and only missing outputs are generated. Never re-read original documents in a resume session.
 15. **Proactive context warnings** — At Phase 0, estimate context pressure from input document sizes. If documents total >5000 lines, warn the user upfront that the workflow will split across sessions. Do not silently run out of context and leave empty files.
@@ -960,3 +1046,4 @@ After merging, proceed to Phases 7-11 as normal using the merged data. The MD re
 - For reconciliation-matrix.html template, see [reference.md](reference.md)
 - For Excalidraw diagram templates, see [excalidraw-templates.md](excalidraw-templates.md)
 - For Puppeteer visual verification script, see [puppeteer-visual-verification.md](puppeteer-visual-verification.md)
+- For verification map HTML template, see [verification-map-template.md](verification-map-template.md)

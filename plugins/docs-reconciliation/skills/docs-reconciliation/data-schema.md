@@ -205,6 +205,39 @@ This file defines the JSON schema for `reconciliation-data.json` — the single 
     "totalMock": "number | null"
   },
 
+  "visualVerification": {
+    "enabled": "boolean — true if Phase 3B ran",
+    "mocksScanned": ["string — HTML mock file names"],
+    "screenshots": ["string — relative paths to screenshot PNGs"],
+    "checklist": [
+      {
+        "source": "string — P1 | P2 | P3",
+        "name": "string — component or requirement name",
+        "mockFile": "string — which HTML mock file",
+        "status": "string — 'found' | 'not_found'",
+        "selector": "string | null — CSS selector that matched (null if not_found)",
+        "visible": "boolean | null — whether element is visible (null if not_found)",
+        "boundingBox": {
+          "x": "number — x position in pixels from top-left of page",
+          "y": "number — y position in pixels from top-left of page",
+          "width": "number — element width in pixels",
+          "height": "number — element height in pixels"
+        },
+        "selectorsQueried": ["string — all selectors tried (only populated for not_found)"],
+        "uxComponentMatch": {
+          "componentName": "string | null — matched UX component name from U3 registry",
+          "uxSection": "string | null — UX document section reference (e.g., 'Section 3.6')",
+          "variants": ["string — variant names if applicable"]
+        }
+      }
+    ],
+    "summary": {
+      "total": "number — total checklist items",
+      "found": "number — items with status 'found'",
+      "notFound": "number — items with status 'not_found'"
+    }
+  },
+
   "delta": {
     "previousRunDate": "string | null — YYYY-MM-DD of the previous run (null if not delta mode)",
     "currentRunDate": "string — YYYY-MM-DD of the current run",
