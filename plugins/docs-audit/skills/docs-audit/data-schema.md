@@ -71,6 +71,11 @@ This file defines the JSON schema for `reconciliation-data.json` — the single 
           "visualConsistency": "string"
         }
       }
+    },
+    "health": {
+      "prd": "number | null — 0-100, percentage of internal checks passed (null if no internal findings)",
+      "ux": "number | null — 0-100, percentage of internal checks passed (null if UX not provided)",
+      "mock": "number | null — 0-100, percentage of internal checks passed (null if Mock not provided)"
     }
   },
 
@@ -87,15 +92,15 @@ This file defines the JSON schema for `reconciliation-data.json` — the single 
       "na": "number"
     },
     "byCategory": {
-      "V": "number — conflicts",
-      "N": "number — naming drift",
-      "W": "number — coverage gaps",
-      "Q": "number — scope additions",
-      "C": "number — cascade violations",
-      "S": "number — specificity gaps",
-      "D": "number — PRD internal issues",
-      "E": "number — UX internal issues",
-      "M": "number — Mock internal issues"
+      "conflict": "number",
+      "naming-drift": "number",
+      "coverage-gap": "number",
+      "scope-addition": "number",
+      "cascade-violation": "number",
+      "specificity-gap": "number",
+      "prd-internal": "number",
+      "ux-internal": "number",
+      "mock-internal": "number"
     },
     "bySeverity": {
       "blocker": "number",
@@ -145,9 +150,9 @@ This file defines the JSON schema for `reconciliation-data.json` — the single 
 
   "findings": [
     {
-      "id": "string — V1, W2, Q3, etc.",
-      "code": "string — V | N | W | Q | C | S | D | E | M",
-      "name": "string — category name (Conflict, Coverage Gap, etc.)",
+      "id": "string — e.g., conflict-1, coverage-gap-2, scope-addition-3",
+      "category": "string — full category name (Conflict, Coverage Gap, Naming Drift, etc.)",
+      "categoryKey": "string — kebab-case key (conflict, coverage-gap, naming-drift, etc.)",
       "severity": "string — blocker | major | minor",
       "docsTag": "string — [PRD<>UX] | [PRD<>Mock] | [UX<>Mock] | [PRD>UX>Mock]",
       "requirementId": "string | null — FR ID this finding relates to",
@@ -164,7 +169,7 @@ This file defines the JSON schema for `reconciliation-data.json` — the single 
 
   "namingDrift": [
     {
-      "findingId": "string — N1, N2, etc.",
+      "findingId": "string — naming-drift-1, naming-drift-2, etc.",
       "severity": "string — blocker | major | minor",
       "docsTag": "string",
       "terms": {
@@ -179,7 +184,7 @@ This file defines the JSON schema for `reconciliation-data.json` — the single 
 
   "cascades": [
     {
-      "findingId": "string — C1, C2, etc.",
+      "findingId": "string — cascade-violation-1, cascade-violation-2, etc.",
       "severity": "string",
       "requirementId": "string — FR ID",
       "chain": {
@@ -306,9 +311,25 @@ This file defines the JSON schema for `reconciliation-data.json` — the single 
 
 ### ID rules
 
-- `findings[].id` uses globally sequential prefixes: V1, V2, N1, W1, Q1, C1, S1, D1, E1, M1
+- `findings[].id` uses descriptive kebab-case names, sequential per category: `conflict-1`, `conflict-2`, `naming-drift-1`, `coverage-gap-1`, `scope-addition-1`, `cascade-violation-1`, `specificity-gap-1`, `prd-internal-1`, `ux-internal-1`, `mock-internal-1`
 - `requirements[].id` preserves the original FR ID from the PRD (or auto-assigned if PRD doesn't use IDs)
 - `groups[].id` is kebab-case derived from the group name
+
+### Category keys
+
+Category keys in `byCategory` and `findings[].categoryKey` use kebab-case:
+
+| Category Name | Category Key |
+|---------------|-------------|
+| Conflict | `conflict` |
+| Naming Drift | `naming-drift` |
+| Coverage Gap | `coverage-gap` |
+| Scope Addition | `scope-addition` |
+| Cascade Violation | `cascade-violation` |
+| Specificity Gap | `specificity-gap` |
+| PRD Internal Issue | `prd-internal` |
+| UX Internal Issue | `ux-internal` |
+| Mock Internal Issue | `mock-internal` |
 
 ### Status derivation
 

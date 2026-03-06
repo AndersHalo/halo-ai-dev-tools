@@ -22,18 +22,18 @@ This skill answers:
 - What does each document add that others don't cover?
 - What's missing from each document?
 
-### When to use this skill vs. prd-mock-audit
+### When to use this skill vs. wireframe-audit
 
-| Use **docs-audit** when... | Use **prd-mock-audit** when... |
+| Use **docs-audit** when... | Use **wireframe-audit** when... |
 |---|---|
-| You have 2-3 documents (PRD, UX, Mock) and need to check **alignment before building** | You have HTML mocks already built and need a **detailed implementation audit** |
-| Mock is a markdown description, screenshots, OR HTML | Mock is **HTML only** — the skill reads the actual DOM |
-| You want to compare PRD vs UX (no mock at all) | You always need PRD + HTML mocks |
-| You need trilateral cascade detection (PRD -> UX -> Mock drift) | You need mock self-validation (data consistency, dead-end flows) |
-| You want Excalidraw diagrams and a verification map | You want annotated HTML copies with inline color-coded highlights |
-| Focus: document-level alignment | Focus: element-level implementation correctness + accessibility |
+| You have 2-3 documents (PRD, UX, Mock) and need to check **alignment before building** | You have HTML wireframes and need a **detailed implementation audit** |
+| Mock is a markdown description, screenshots, OR HTML | Wireframe is **HTML only** — the skill reads the actual DOM with Puppeteer |
+| You want to compare PRD vs UX (no mock at all) | You always need HTML wireframe + PRD and/or UX |
+| You need trilateral cascade detection (PRD -> UX -> Mock drift) | You need visual evidence with screenshot markers per component |
+| You want Excalidraw diagrams and a verification map | You want a dashboard with findings explorer + coverage heatmap + screenshot gallery |
+| Focus: document-level alignment + internal consistency | Focus: implementation correctness of built wireframes |
 
-The two skills are **complementary**: run docs-audit first to align documents, then run prd-mock-audit after HTML mocks are built to verify implementation quality.
+The two skills are **complementary**: run docs-audit first to align documents, then wireframe-audit after HTML wireframes are built to verify implementation quality.
 
 ---
 
@@ -163,38 +163,40 @@ When the user asks to resume or generate outputs from an existing JSON:
 
 ## Finding Categories (9)
 
-### Cross-document findings (shown in matrix and report)
+All findings use descriptive names as primary labels. No code abbreviations.
 
-| # | Code | Name | Color | Hex | Scope | Description |
-|---|------|------|-------|-----|-------|-------------|
-| 1 | **V** | Conflict | Red | `#ef4444` | Any 2+ docs | Two or more documents define contradictory behavior for the same feature |
-| 2 | **N** | Naming Drift | Violet | `#7c3aed` | Any 2+ docs | Same concept uses different names across documents |
-| 3 | **W** | Coverage Gap | Blue | `#3b82f6` | PRD -> target | PRD requires something the target document does not define |
-| 4 | **Q** | Scope Addition | Orange | `#f97316` | Target -> PRD | A satellite document defines something with no PRD justification |
-| 5 | **C** | Cascade Violation | Pink | `#ec4899` | PRD -> UX -> Mock | Progressive drift: PRD says X, UX interpreted as Y, Mock built Z |
-| 6 | **S** | Specificity Gap | Amber | `#f59e0b` | Downstream -> source | A downstream document invented details not present in its source |
+### Cross-document findings (shown in matrix, report, and dashboard)
 
-### Internal findings (report-only, not in matrix)
+| # | Category | Key | Color | Hex | Scope | Description |
+|---|----------|-----|-------|-----|-------|-------------|
+| 1 | **Conflict** | `conflict` | Red | `#ef4444` | Any 2+ docs | Two or more documents define contradictory behavior for the same feature |
+| 2 | **Naming Drift** | `naming-drift` | Violet | `#7c3aed` | Any 2+ docs | Same concept uses different names across documents |
+| 3 | **Coverage Gap** | `coverage-gap` | Blue | `#3b82f6` | PRD -> target | PRD requires something the target document does not define |
+| 4 | **Scope Addition** | `scope-addition` | Orange | `#f97316` | Target -> PRD | A satellite document defines something with no PRD justification |
+| 5 | **Cascade Violation** | `cascade-violation` | Pink | `#ec4899` | PRD -> UX -> Mock | Progressive drift: PRD says X, UX interpreted as Y, Mock built Z |
+| 6 | **Specificity Gap** | `specificity-gap` | Amber | `#f59e0b` | Downstream -> source | A downstream document invented details not present in its source |
 
-| # | Code | Name | Color | Hex | Scope |
-|---|------|------|-------|-----|-------|
-| 7 | **D** | PRD Internal Issue | Indigo | `#6366f1` | Contradictions, ambiguity, or gaps within the PRD itself |
-| 8 | **E** | UX Internal Issue | Teal | `#14b8a6` | Contradictions, ambiguity, or undefined references within UX |
-| 9 | **M** | Mock Internal Issue | Slate | `#64748b` | Contradictions, inconsistencies, or orphan elements within the Mock |
+### Internal findings (shown in Document Health tab of dashboard)
+
+| # | Category | Key | Color | Hex | Scope |
+|---|----------|-----|-------|-----|-------|
+| 7 | **PRD Internal Issue** | `prd-internal` | Indigo | `#6366f1` | Contradictions, ambiguity, or gaps within the PRD itself |
+| 8 | **UX Internal Issue** | `ux-internal` | Teal | `#14b8a6` | Contradictions, ambiguity, or undefined references within UX |
+| 9 | **Mock Internal Issue** | `mock-internal` | Slate | `#64748b` | Contradictions, inconsistencies, or orphan elements within the Mock |
 
 ### Severity Levels
 
 | Level | Meaning |
 |-------|---------|
-| BLOCKER | Documents directly contradict — cannot proceed to next phase until resolved |
-| MAJOR | Significant gap or ambiguity — likely causes rework if not resolved |
-| MINOR | Terminology inconsistency or minor omission — low risk |
+| Blocker | Documents directly contradict — cannot proceed to next phase until resolved |
+| Major | Significant gap or ambiguity — likely causes rework if not resolved |
+| Minor | Terminology inconsistency or minor omission — low risk |
 
 ---
 
 ## Finding ID Rules
 
-- IDs are globally sequential per prefix: V1, V2, N1, N2, W1, Q1, C1, S1, D1, E1, M1
+- IDs use descriptive kebab-case names, sequential per category: `conflict-1`, `conflict-2`, `naming-drift-1`, `coverage-gap-1`, `scope-addition-1`, `cascade-violation-1`, `specificity-gap-1`, `prd-internal-1`, `ux-internal-1`, `mock-internal-1`
 - Each finding ID is unique across the entire report
 - Finding descriptions must be **verbatim identical** in `reconciliation.md` and `reconciliation-matrix.html`
 - Severity for a given ID must be consistent across all outputs
@@ -491,7 +493,7 @@ Add a `visualVerification` section to `reconciliation-data.json` containing:
 }
 ```
 
-**How Phase 4 uses this data**: When Phase 4C (PRD -> Mock) checks whether a component is present in the mock, it first checks `visualVerification.checklist`. A `not_found` status from Puppeteer is strong DOM-level evidence for a **W** (Coverage Gap) finding. Include in the finding description: "Puppeteer verification: element not found in rendered HTML after querying [N] selectors."
+**How Phase 4 uses this data**: When Phase 4C (PRD -> Mock) checks whether a component is present in the mock, it first checks `visualVerification.checklist`. A `not_found` status from Puppeteer is strong DOM-level evidence for a **Coverage Gap** finding. Include in the finding description: "Puppeteer verification: element not found in rendered HTML after querying [N] selectors."
 
 ### Phase 3B.5 — UX Component Matching — SKIP if UX not provided or Phase 3B did not run
 
@@ -545,31 +547,31 @@ Run comparison checks based on input mode. Each check direction only runs if bot
 
 | Check | Finding if failed |
 |-------|-------------------|
-| Is the feature/page defined in UX (U5)? | **W** — Coverage Gap `[PRD<>UX]` |
-| Are required components designed in UX (U3)? | **W** — Coverage Gap `[PRD<>UX]` |
-| Are required states designed (U4)? | **W** — Coverage Gap `[PRD<>UX]` |
-| Does UX define the same behavior PRD requires? | **V** — Conflict `[PRD<>UX]` |
-| Do component/page names match? | **N** — Naming Drift `[PRD<>UX]` |
+| Is the feature/page defined in UX (U5)? | **Coverage Gap** `[PRD<>UX]` |
+| Are required components designed in UX (U3)? | **Coverage Gap** `[PRD<>UX]` |
+| Are required states designed (U4)? | **Coverage Gap** `[PRD<>UX]` |
+| Does UX define the same behavior PRD requires? | **Conflict** `[PRD<>UX]` |
+| Do component/page names match? | **Naming Drift** `[PRD<>UX]` |
 
 **A2. Flow checks** (if P5 and U11 both exist):
 
 | Check | Finding if failed |
 |-------|-------------------|
-| Does UX navigation map cover all flow steps? | **W** — Coverage Gap `[PRD<>UX]` |
-| Do flow step sequences match? | **V** — Conflict `[PRD<>UX]` |
+| Does UX navigation map cover all flow steps? | **Coverage Gap** `[PRD<>UX]` |
+| Do flow step sequences match? | **Conflict** `[PRD<>UX]` |
 
 **A3. Page section checks** (if P7 and U9 both exist):
 
 | Check | Finding if failed |
 |-------|-------------------|
-| Is this section present in UX page composition? | **W** — Coverage Gap `[PRD<>UX]` |
-| Do section contents match PRD expectations? | **V** — Conflict `[PRD<>UX]` |
+| Is this section present in UX page composition? | **Coverage Gap** `[PRD<>UX]` |
+| Do section contents match PRD expectations? | **Conflict** `[PRD<>UX]` |
 
 **A4. Component variant checks** (if P3 mentions variants and U3 defines them):
 
 | Check | Finding if failed |
 |-------|-------------------|
-| Does UX define all variants PRD references? | **W** — Coverage Gap `[PRD<>UX]` |
+| Does UX define all variants PRD references? | **Coverage Gap** `[PRD<>UX]` |
 
 #### 4B. UX -> PRD (does UX add things beyond PRD?)
 
@@ -577,83 +579,83 @@ Run comparison checks based on input mode. Each check direction only runs if bot
 
 | Check | Finding if failed |
 |-------|-------------------|
-| Does this component map to a PRD requirement? | **Q** — Scope Addition `[PRD<>UX]` |
-| Does this page map to a PRD page/view? | **Q** — Scope Addition `[PRD<>UX]` |
-| Are there UX states with no PRD justification? | **Q** — Scope Addition `[PRD<>UX]` |
-| Are there interaction patterns not in PRD? | **Q** — Scope Addition `[PRD<>UX]` |
+| Does this component map to a PRD requirement? | **Scope Addition** `[PRD<>UX]` |
+| Does this page map to a PRD page/view? | **Scope Addition** `[PRD<>UX]` |
+| Are there UX states with no PRD justification? | **Scope Addition** `[PRD<>UX]` |
+| Are there interaction patterns not in PRD? | **Scope Addition** `[PRD<>UX]` |
 
 **B2. Page composition checks** (if U9 exists):
 
 | Check | Finding if failed |
 |-------|-------------------|
-| Does this section have PRD backing (P7 or P1)? | **Q** — Scope Addition `[PRD<>UX]` |
+| Does this section have PRD backing (P7 or P1)? | **Scope Addition** `[PRD<>UX]` |
 
 **B3. Navigation checks** (if U11 exists):
 
 | Check | Finding if failed |
 |-------|-------------------|
-| Does this navigation flow map to a PRD flow (P5)? | **Q** — Scope Addition `[PRD<>UX]` |
+| Does this navigation flow map to a PRD flow (P5)? | **Scope Addition** `[PRD<>UX]` |
 
 #### 4C. PRD -> Mock (does Mock cover what PRD requires?)
 
 **Puppeteer enhancement**: If Phase 3B ran, check `visualVerification.checklist` for each component. A `not_found` status is strong DOM-level evidence for a Coverage Gap. Include in the finding: "Puppeteer: element not found after querying [N] selectors."
 
-**C1. Requirement-level checks** — For each PRD requirement (P1):
+**Requirement-level checks** — For each PRD requirement (P1):
 
 | Check | Finding if failed |
 |-------|-------------------|
-| Is the feature/page represented in a mock screen (K1)? | **W** — Coverage Gap `[PRD<>Mock]` |
-| Are required components visually present (K2)? Use `visualVerification.checklist` if available. | **W** — Coverage Gap `[PRD<>Mock]` |
-| Are required states shown (K4)? | **W** — Coverage Gap `[PRD<>Mock]` |
-| Does the mock show behavior contradicting PRD? | **V** — Conflict `[PRD<>Mock]` |
-| Do data fields match PRD requirements (K6 vs P1)? | **V** — Conflict `[PRD<>Mock]` |
+| Is the feature/page represented in a mock screen (K1)? | **Coverage Gap** `[PRD<>Mock]` |
+| Are required components visually present (K2)? Use `visualVerification.checklist` if available. | **Coverage Gap** `[PRD<>Mock]` |
+| Are required states shown (K4)? | **Coverage Gap** `[PRD<>Mock]` |
+| Does the mock show behavior contradicting PRD? | **Conflict** `[PRD<>Mock]` |
+| Do data fields match PRD requirements (K6 vs P1)? | **Conflict** `[PRD<>Mock]` |
 
-**C2. Flow checks** (if P5 and K5 both exist):
+**Flow checks** (if P5 and K5 both exist):
 
 | Check | Finding if failed |
 |-------|-------------------|
-| Does mock navigation cover all flow steps? | **W** — Coverage Gap `[PRD<>Mock]` |
-| Do flow step sequences match? | **V** — Conflict `[PRD<>Mock]` |
+| Does mock navigation cover all flow steps? | **Coverage Gap** `[PRD<>Mock]` |
+| Do flow step sequences match? | **Conflict** `[PRD<>Mock]` |
 
 #### 4D. Mock -> PRD (does Mock add things beyond PRD?)
 
-**D1. Screen/component checks** — For each mock screen (K1) and component (K2):
+**Screen/component checks** — For each mock screen (K1) and component (K2):
 
 | Check | Finding if failed |
 |-------|-------------------|
-| Does this screen map to a PRD page/view? | **Q** — Scope Addition `[PRD<>Mock]` |
-| Does this component map to a PRD requirement? | **Q** — Scope Addition `[PRD<>Mock]` |
-| Are there data fields shown with no PRD requirement? | **Q** — Scope Addition `[PRD<>Mock]` |
+| Does this screen map to a PRD page/view? | **Scope Addition** `[PRD<>Mock]` |
+| Does this component map to a PRD requirement? | **Scope Addition** `[PRD<>Mock]` |
+| Are there data fields shown with no PRD requirement? | **Scope Addition** `[PRD<>Mock]` |
 
 #### 4E. UX <-> Mock (do UX and Mock agree?) — Only in trilateral mode
 
-**E1. Component alignment** — For each UX component (U3) present in mock (K2):
+**Component alignment** — For each UX component (U3) present in mock (K2):
 
 | Check | Finding if failed |
 |-------|-------------------|
-| Does mock render the component as UX specifies? | **V** — Conflict `[UX<>Mock]` |
-| Do variant choices match UX definitions? | **V** — Conflict `[UX<>Mock]` |
-| Does mock follow UX state definitions? | **V** — Conflict `[UX<>Mock]` |
+| Does mock render the component as UX specifies? | **Conflict** `[UX<>Mock]` |
+| Do variant choices match UX definitions? | **Conflict** `[UX<>Mock]` |
+| Does mock follow UX state definitions? | **Conflict** `[UX<>Mock]` |
 
-**E2. Layout alignment** (if U9 and K3 both exist):
-
-| Check | Finding if failed |
-|-------|-------------------|
-| Does mock layout match UX page composition? | **V** — Conflict `[UX<>Mock]` |
-
-**E3. Visual spec alignment** (if U1/U2 and K7 both exist):
+**Layout alignment** (if U9 and K3 both exist):
 
 | Check | Finding if failed |
 |-------|-------------------|
-| Do mock colors match UX design tokens? | **V** — Conflict `[UX<>Mock]` |
-| Does mock typography match UX specs? | **V** — Conflict `[UX<>Mock]` |
+| Does mock layout match UX page composition? | **Conflict** `[UX<>Mock]` |
 
-**E4. Mock additions beyond UX**:
+**Visual spec alignment** (if U1/U2 and K7 both exist):
 
 | Check | Finding if failed |
 |-------|-------------------|
-| Does mock show components not in UX registry? | **Q** — Scope Addition `[UX<>Mock]` |
-| Does mock show states not in UX state definitions? | **Q** — Scope Addition `[UX<>Mock]` |
+| Do mock colors match UX design tokens? | **Conflict** `[UX<>Mock]` |
+| Does mock typography match UX specs? | **Conflict** `[UX<>Mock]` |
+
+**Mock additions beyond UX**:
+
+| Check | Finding if failed |
+|-------|-------------------|
+| Does mock show components not in UX registry? | **Scope Addition** `[UX<>Mock]` |
+| Does mock show states not in UX state definitions? | **Scope Addition** `[UX<>Mock]` |
 
 #### 4F. Cascade Detection — Only in trilateral mode
 
@@ -663,20 +665,20 @@ For each requirement that appears in all three documents, trace the interpretati
 
 | Check | Finding if failed |
 |-------|-------------------|
-| PRD says X, UX says Y (drift), Mock says Z (further drift) | **C** — Cascade Violation `[PRD>UX>Mock]` |
-| Progressive interpretation: each document drifts further from PRD's original intent | **C** — Cascade Violation `[PRD>UX>Mock]` |
+| PRD says X, UX says Y (drift), Mock says Z (further drift) | **Cascade Violation** `[PRD>UX>Mock]` |
+| Progressive interpretation: each document drifts further from PRD's original intent | **Cascade Violation** `[PRD>UX>Mock]` |
 
 **F2. Specificity gap check**:
 
 | Check | Finding if failed |
 |-------|-------------------|
-| UX invented details not present in PRD | **S** — Specificity Gap `[PRD<>UX]` |
-| Mock invented details not present in UX | **S** — Specificity Gap `[UX<>Mock]` |
-| Mock invented details not present in PRD | **S** — Specificity Gap `[PRD<>Mock]` |
+| UX invented details not present in PRD | **Specificity Gap** `[PRD<>UX]` |
+| Mock invented details not present in UX | **Specificity Gap** `[UX<>Mock]` |
+| Mock invented details not present in PRD | **Specificity Gap** `[PRD<>Mock]` |
 
 ### Phase 5 — Internal Consistency
 
-#### 5A. PRD Self-Check (D findings)
+#### 5A. PRD Self-Check (PRD Internal Issue findings)
 
 | Check | Example |
 |-------|---------|
@@ -686,7 +688,7 @@ For each requirement that appears in all three documents, trace the interpretati
 | Duplicate/overlapping FRs | FR-3 and FR-15 describe the same feature differently |
 | Inconsistent terminology | Uses "Resource" and "Asset" interchangeably |
 
-#### 5B. UX Self-Check (E findings) — skip if UX not provided
+#### 5B. UX Self-Check (UX Internal Issue findings) — skip if UX not provided
 
 | Check | Example |
 |-------|---------|
@@ -698,7 +700,7 @@ For each requirement that appears in all three documents, trace the interpretati
 | Page composition gaps | Page lists a section but no components assigned |
 | Navigation dead-ends | Page in navigation map has no outbound routes |
 
-#### 5C. Mock Self-Check (M findings) — skip if Mock not provided
+#### 5C. Mock Self-Check (Mock Internal Issue findings) — skip if Mock not provided
 
 | Check | Example |
 |-------|---------|
@@ -725,9 +727,9 @@ Build a requirement-level scorecard. For each requirement, assign a status **and
 | Status | Example reason |
 |--------|---------------|
 | Aligned | "Defined in PRD (FR-3), UX (SearchInput component with variants), and Mock (visible on Dashboard screen)" |
-| Partial | "PRD defines date range filter (FR-7); UX has DatePicker component but Mock does not show it on any screen (W4)" |
-| Conflict | "PRD says max 50 results per page (FR-12); UX specifies infinite scroll with no pagination (V2)" |
-| Gap | "PRD requires export to CSV (FR-15); not defined in UX or Mock (W8, W9)" |
+| Partial | "PRD defines date range filter (FR-7); UX has DatePicker component but Mock does not show it on any screen (coverage-gap-4)" |
+| Conflict | "PRD says max 50 results per page (FR-12); UX specifies infinite scroll with no pagination (conflict-2)" |
+| Gap | "PRD requires export to CSV (FR-15); not defined in UX or Mock (coverage-gap-8, coverage-gap-9)" |
 | N/A | "Backend authentication requirement — no UI representation needed" |
 
 The reason is stored in `requirements[].reason` in the JSON and displayed in the matrix and MD report.
@@ -737,11 +739,11 @@ Calculate per-document and overall scores:
 - **Overall alignment score**: % of requirements Aligned across all documents
 - **Per-document coverage**: % of requirements covered in each document
 - **Document maturity score**: Per-document completeness rating (how much of its own domain it covers)
-- **Conflict count**: Total V findings
-- **Gap count**: Total W findings
-- **Addition count**: Total Q findings
-- **Cascade count**: Total C findings (trilateral only)
-- **Specificity count**: Total S findings
+- **Conflict count**: Total Conflict findings
+- **Gap count**: Total Coverage Gap findings
+- **Addition count**: Total Scope Addition findings
+- **Cascade count**: Total Cascade Violation findings (trilateral only)
+- **Specificity count**: Total Specificity Gap findings
 
 ### Phase 7 — Generate reconciliation-data.json (FIRST — before any visual output)
 
@@ -756,8 +758,8 @@ The JSON must include:
 - `requirements` — array of all PRD requirements with per-document status and a `reason` string explaining why each requirement has its status
 - `findings` — array of all findings with ID, code, severity, docs tag, descriptions, quotes
 - `inventories` — extracted inventories from each document (P1-P7, U1-U11, K1-K7)
-- `namingDrift` — array of N findings with terms per document
-- `cascades` — array of C findings with full 3-step chain (trilateral only)
+- `namingDrift` — array of Naming Drift findings with terms per document
+- `cascades` — array of Cascade Violation findings with full 3-step chain (trilateral only)
 - `venn` — pre-computed overlap counts for diagram generation
 - `groups` — feature area groupings for heatmap and treemap
 
@@ -771,13 +773,13 @@ Key sections:
 - Executive summary with alignment scores and finding counts
 - Document maturity assessment per document
 - Requirement-by-requirement reconciliation table (showing status per document and the reason for each status)
-- Conflict details (V findings with full context from all involved documents)
-- Gap details (W findings, tagged by which document is missing coverage)
-- Addition details (Q findings, tagged by which document adds scope)
-- Cascade violations (C findings with full 3-doc trace)
-- Specificity gaps (S findings with invented details highlighted)
-- Naming drift table (N findings)
-- Internal issues (D, E, M findings)
+- Conflict details (with full context from all involved documents)
+- Coverage Gap details (tagged by which document is missing coverage)
+- Scope Addition details (tagged by which document adds scope)
+- Cascade Violation details (with full 3-doc trace)
+- Specificity Gap details (with invented details highlighted)
+- Naming Drift table
+- Internal issues (PRD Internal, UX Internal, Mock Internal findings)
 - Recommendations by severity
 
 All data comes from the already-generated `reconciliation-data.json`. Do not re-analyze — just format the JSON data into markdown.
@@ -798,21 +800,39 @@ The template is a static shell with:
 - All CSS styles (fixed size, never grows with data)
 - All JS rendering logic (reads JSON, creates DOM elements)
 - Empty containers that JS populates at runtime
-- Complete legend with all 9 finding categories, severities, statuses, and doc pair tags
+- Complete legend with all 9 finding categories (full names, no abbreviations), severities, statuses, and doc pair tags
 
 The HTML file size is constant (~25-30KB) regardless of whether the audit has 5 findings or 500. This prevents token exhaustion.
 
 Interactive features (all driven by JSON data at runtime):
-- **Tab switching** between Matrix view and Heatmap view
+- **Tab switching** between Matrix view, Heatmap view, and **Document Health** view
 - **Coverage heatmap** — rows are requirements, columns are documents, cells are color-coded
 - **Side-by-side matrix** — adapts to 2 or 3 columns based on `meta.mode`
 - **Status reason** — each requirement row displays its `reason` text explaining why it has its current status. Shown inline below the requirement title or in an expandable detail panel.
 - **Finding badges** inline with expandable details
-- **Filter by**: status, severity, category, document pair
+- **Filter by**: status, severity, category (full names), document pair
 - **Search by**: FR ID, keyword, component name
 - **Per-document coverage gauges**
 - **Alignment gauge** with overall score
 - **Keyboard navigation** (/, Esc, [, ], Enter, L, H)
+
+#### Document Health Tab
+
+Third tab in the dashboard. Shows internal consistency issues per document — findings that indicate a document contradicts itself.
+
+**Layout:** One column per provided document (PRD, UX, Mock). Each column shows:
+
+1. **Document health score** in the header — percentage of internal checks that passed. Stored in `scores.health.prd`, `scores.health.ux`, `scores.health.mock`.
+2. **Issue count badge** — total internal findings for that document.
+3. **Expandable finding cards** — each internal finding (PRD Internal Issue, UX Internal Issue, Mock Internal Issue) with:
+   - Category name (full, no abbreviation)
+   - Severity badge (Blocker / Major / Minor)
+   - Description
+   - Exact quote from the document showing the contradiction/ambiguity
+   - Recommendation
+4. **Filter by severity** — Blocker / Major / Minor toggle filters across all columns.
+
+**Data source:** Filters `findings[]` where `categoryKey` is `prd-internal`, `ux-internal`, or `mock-internal`. Health scores from `scores.health`.
 
 ### Phase 9B — Generate verification-map.html — SKIP if `visualVerification` is false
 
@@ -915,18 +935,18 @@ Treemap showing findings distribution:
 4. Finding descriptions are verbatim identical between MD and JSON
 5. Severity consistent across MD and JSON
 6. Counts in executive summary match `stats` object in JSON
-7. Every V finding references specific text from all involved documents
-8. Every W finding cites the PRD requirement and identifies which document has the gap
-9. Every Q finding cites the element and identifies which document added scope
-10. Every C finding traces through all three documents with quotes
-11. Every S finding identifies the invented detail and its source
+7. Every Conflict finding references specific text from all involved documents
+8. Every Coverage Gap finding cites the PRD requirement and identifies which document has the gap
+9. Every Scope Addition finding cites the element and identifies which document added scope
+10. Every Cascade Violation finding traces through all three documents with quotes
+11. Every Specificity Gap finding identifies the invented detail and its source
 12. Document pair tags (`[PRD<>UX]`, etc.) are present on every finding
 13. No orphan findings (every finding maps to a requirement, component, or screen)
 14. Conditional inventories and checks only ran when source data existed
 15. Excalidraw files (if generated) are valid JSON matching the Excalidraw v2 schema
 16. All diagrams (if generated) include complete legends
 17. **Output completeness check**: Verify all expected files exist in the output directory before declaring done. If diagrams were opted out, do not flag their absence. If visual verification was opted out, do not flag its absence. If any expected file is missing, regenerate it from `reconciliation-data.json`.
-18. **Visual verification consistency** (if Phase 3B ran): Every W finding for `[PRD<>Mock]` that has Puppeteer evidence must include the Puppeteer result in the finding description. The `visualVerification` section in `reconciliation-data.json` must match the `verification-results.json` file.
+18. **Visual verification consistency** (if Phase 3B ran): Every Coverage Gap finding for `[PRD<>Mock]` that has Puppeteer evidence must include the Puppeteer result in the finding description. The `visualVerification` section in `reconciliation-data.json` must match the `verification-results.json` file.
 19. **Cross-pair coverage check (trilateral only):** For every PRD requirement that has a W or V finding tagged `[PRD<>UX]`, verify that Phase 4C independently evaluated the same requirement against Mock. If Mock also has a gap or conflict, a separate finding with `[PRD<>Mock]` must exist. Conversely, for every `[PRD<>Mock]` finding, verify Phase 4A independently evaluated against UX. Flag any requirement that has a finding in one direction but was never evaluated in the other.
 20. **Verification map consistency** (if Phase 3B ran): `verification-map.html` exists in `visual-verification/`. Every checklist item with `status: "found"` must have a non-null `boundingBox` in `reconciliation-data.json`. The `uxComponentMatch` field must be populated for found items when UX document is provided (Phase 3B.5 ran).
 21. **Bounding box validity** (if Phase 3B ran): Every `boundingBox` must have positive `width` and `height`. Coordinates `x` and `y` must be non-negative. If any bounding box is invalid, log a warning but do not fail.
@@ -1013,9 +1033,9 @@ Also add `delta` section to `reconciliation-data.json`:
     "reAnalyzed": 7,
     "newRequirements": ["FR-51", "FR-52"],
     "removedRequirements": ["FR-10"],
-    "newFindings": ["V-031", "W-045"],
-    "resolvedFindings": ["V-012", "W-020"],
-    "changedFindings": ["V-005"],
+    "newFindings": ["conflict-31", "coverage-gap-45"],
+    "resolvedFindings": ["conflict-12", "coverage-gap-20"],
+    "changedFindings": ["conflict-5"],
     "persistentFindingCount": 22
   }
 }

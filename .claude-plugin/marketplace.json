@@ -26,19 +26,14 @@
       "source": "./plugins/deel-api"
     },
     {
-      "name": "prd-mock-audit",
-      "description": "Audit UX HTML mocks against a PRD. Bi-directional gap analysis (PRD→Mock + Mock→PRD), mock self-validation, PRD internal consistency, component consistency checks, and functional UI inventory. Generates structured markdown report, annotated HTML with 8-category highlights, and interactive coverage heatmap. Supports delta mode and build readiness.",
-      "source": "./plugins/prd-mock-audit"
-    },
-    {
       "name": "docs-audit",
-      "description": "Multi-document reconciliation engine. Cross-references PRD against UX Design System and/or Mock documents. Detects conflicts, coverage gaps, scope additions, naming drift, cascade violations, and specificity gaps. Supports bilateral (PRD+UX, PRD+Mock) and trilateral (PRD+UX+Mock) modes. Generates markdown report, interactive HTML dashboard with coverage heatmap, and editable Excalidraw diagrams (Venn overlap, traceability flow, gap treemap).",
+      "description": "Multi-document reconciliation engine. Cross-references PRD against UX Design System and/or Mock documents. Detects conflicts, coverage gaps, scope additions, naming drift, cascade violations, specificity gaps, and per-document internal consistency issues. Uses descriptive category names. Generates markdown report, interactive HTML dashboard with Matrix, Heatmap, and Document Health tabs, optional Excalidraw diagrams, and Puppeteer verification map.",
       "source": "./plugins/docs-audit"
     },
     {
-      "name": "ux-mock-audit",
-      "description": "Bi-directional audit of UX Design System documents against HTML mock implementations. Captures screenshots via Puppeteer at multiple breakpoints, performs visual comparison, and generates markdown analysis report, annotated HTML with 11-category highlights, interactive coverage heatmap, and screenshot gallery. Supports project-specific rules for framework compliance and delta mode for regression tracking.",
-      "source": "./plugins/ux-mock-audit"
+      "name": "wireframe-audit",
+      "description": "Audit HTML wireframes against PRD and/or UX Design System. Three modes: PRD-only, UX-only, Full (PRD+UX). Detects contradictions, gaps, design decisions, token drift, component fidelity issues, layout deviations, and more using Puppeteer DOM inspection. Generates JSON data, markdown report, interactive dashboard with findings explorer and coverage matrix, and screenshot gallery with SVG overlay markers. Supports incremental delta mode.",
+      "source": "./plugins/wireframe-audit"
     }
   ]
 }
