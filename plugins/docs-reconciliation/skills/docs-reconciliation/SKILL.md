@@ -1,6 +1,6 @@
 ---
 name: docs-reconciliation
-description: "Multi-document reconciliation engine. Cross-references PRD, UX Design System, and Mock documents to detect conflicts, coverage gaps, self-additions, naming drift, cascade violations, and specificity gaps. Generates a markdown report, interactive HTML dashboard, and editable Excalidraw diagrams."
+description: "Multi-document reconciliation engine. Cross-references PRD, UX Design System, and Mock documents to detect conflicts, coverage gaps, self-additions, naming drift, cascade violations, and specificity gaps. Generates a markdown report, interactive HTML dashboard, and optionally editable Excalidraw diagrams."
 ---
 
 # Multi-Document Reconciliation Audit
@@ -59,7 +59,7 @@ docs/audit/docs-reconciliation/{analysis_name}/
 ├── reconciliation.md                # Main markdown report
 ├── reconciliation-data.json         # Structured data (single source of truth for all visual outputs)
 ├── reconciliation-matrix.html       # Interactive HTML dashboard (loads reconciliation-data.json)
-├── diagrams/
+├── diagrams/                        # Only if user opts in to diagram generation
 │   ├── coverage-heatmap.excalidraw  # Requirement x Document coverage grid
 │   ├── venn-overlap.excalidraw      # 2 or 3 circle document overlap
 │   ├── traceability-flow.excalidraw # Requirement flow: PRD -> UX -> Mock
@@ -85,14 +85,14 @@ Outputs must be generated in this exact order to prevent token exhaustion:
 1. **reconciliation-data.json** — First. All analysis data in one compact file.
 2. **reconciliation.md** — Second. Reads from the analysis data already computed.
 3. **reconciliation-matrix.html** — Third. Static template only — no finding data inlined. Copy the template from [reference.md](reference.md) verbatim.
-4. **Excalidraw diagrams** — Last. One file at a time, each reading from JSON data.
+4. **Excalidraw diagrams** — Last. Only if user opted in. One file at a time, each reading from JSON data.
 
 ### Token Budget Rules
 
 - **Never inline finding data into HTML**. The HTML template uses `fetch('./reconciliation-data.json')` to load data at runtime.
 - **Never duplicate data** across outputs. If it's in the JSON, reference it — don't rewrite it.
 - **Generate Excalidraw files sequentially**, not all at once. Each one is a separate write operation.
-- **If token budget is running low**, prioritize in this order: (1) JSON data, (2) MD report, (3) HTML template, (4) Excalidraw diagrams. The JSON + MD pair is the minimum viable output.
+- **If token budget is running low**, prioritize in this order: (1) JSON data, (2) MD report, (3) HTML template, (4) Excalidraw diagrams (if opted in). The JSON + MD pair is the minimum viable output.
 
 ### Context Window Management (anti-context-exhaustion strategy)
 
@@ -134,8 +134,9 @@ When the user asks to resume or generate outputs from an existing JSON:
 
 1. Read `reconciliation-data.json` — do NOT read the original documents
 2. Check which output files already exist in the output directory
-3. Generate only the missing files
-4. Run Phase 11 validation on all outputs
+3. **Ask the user** if they want Excalidraw diagrams (same prompt as Phase 0 step 6), unless diagrams already exist in the output directory
+4. Generate only the missing files (respecting diagram opt-in choice)
+5. Run Phase 11 validation on all outputs
 
 ---
 
@@ -200,6 +201,7 @@ When the user asks to resume or generate outputs from an existing JSON:
 3. Create output directory `docs/audit/docs-reconciliation/{analysis_name}/`
 4. If previous reconciliation folder provided, load it for delta comparison
 5. **Estimate context pressure**: Count total lines across all input documents. If >5000 lines total, warn the user that the workflow may need to split across sessions, and that `reconciliation-data.json` will be the checkpoint
+6. **Ask the user**: "Would you like to generate Excalidraw diagrams (coverage heatmap, Venn overlap, traceability flow, gap treemap)? These are optional and can be generated later from the JSON data." Record the user's choice as `generateDiagrams` (boolean). If the user declines, skip Phase 10 entirely.
 
 ### Phase 1 — PRD Extraction
 
@@ -655,7 +657,9 @@ Interactive features (all driven by JSON data at runtime):
 - **Alignment gauge** with overall score
 - **Keyboard navigation** (/, Esc, [, ], Enter, L, H)
 
-### Phase 10 — Generate Excalidraw Diagrams (one at a time)
+### Phase 10 — Generate Excalidraw Diagrams (one at a time) — SKIP if `generateDiagrams` is false
+
+Only run this phase if the user opted in during Phase 0 step 6. If skipped, proceed directly to Phase 11.
 
 See [excalidraw-templates.md](excalidraw-templates.md) for the JSON structure templates.
 
@@ -722,9 +726,9 @@ Treemap showing findings distribution:
 12. Document pair tags (`[PRD<>UX]`, etc.) are present on every finding
 13. No orphan findings (every finding maps to a requirement, component, or screen)
 14. Conditional inventories and checks only ran when source data existed
-15. Excalidraw files are valid JSON matching the Excalidraw v2 schema
-16. All diagrams include complete legends
-17. **Output completeness check**: Verify all files exist in the output directory before declaring done. If any file is missing, regenerate it from `reconciliation-data.json`.
+15. Excalidraw files (if generated) are valid JSON matching the Excalidraw v2 schema
+16. All diagrams (if generated) include complete legends
+17. **Output completeness check**: Verify all expected files exist in the output directory before declaring done. If diagrams were opted out, do not flag their absence. If any expected file is missing, regenerate it from `reconciliation-data.json`.
 18. **Cross-pair coverage check (trilateral only):** For every PRD requirement that has a W or V finding tagged `[PRD<>UX]`, verify that Phase 4C independently evaluated the same requirement against Mock. If Mock also has a gap or conflict, a separate finding with `[PRD<>Mock]` must exist. Conversely, for every `[PRD<>Mock]` finding, verify Phase 4A independently evaluated against UX. Flag any requirement that has a finding in one direction but was never evaluated in the other.
 
 ### Phase 12 — Delta Mode (optional)
@@ -757,7 +761,7 @@ If a previous reconciliation folder is provided:
 9. **Data consistency** — The MD report, HTML dashboard, and Excalidraw diagrams must all reflect exactly the same findings. Never rewrite or summarize differently between outputs.
 10. **Self-describing outputs** — Every shorthand code, color, or label must have a visible legend or glossary in the same output. No unexplained abbreviations.
 11. **Data-first generation** — Always generate `reconciliation-data.json` before any visual output. The HTML template is static and loads data at runtime via `fetch()`. Never inline finding data into HTML. This prevents output token exhaustion on large audits.
-12. **Sequential output generation** — Generate files in order: JSON -> MD -> HTML -> Excalidraw (one diagram at a time). If token budget runs low, stop after HTML — the JSON + MD pair is the minimum viable output.
+12. **Sequential output generation** — Generate files in order: JSON -> MD -> HTML -> Excalidraw (one diagram at a time, only if user opted in). If token budget runs low, stop after HTML — the JSON + MD pair is the minimum viable output.
 13. **Output completeness verification** — After all files are generated, verify every expected file exists. If any is missing, regenerate it from `reconciliation-data.json` (not from scratch).
 14. **Session-safe checkpointing** — `reconciliation-data.json` is the checkpoint. Once written, all analysis is persisted. If context runs out, the user starts a new session pointing to the JSON and only missing outputs are generated. Never re-read original documents in a resume session.
 15. **Proactive context warnings** — At Phase 0, estimate context pressure from input document sizes. If documents total >5000 lines, warn the user upfront that the workflow will split across sessions. Do not silently run out of context and leave empty files.
