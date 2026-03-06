@@ -353,49 +353,138 @@ Sections:
 
 ### Phase 10 — Generate wireframe-dashboard.html (static template)
 
-Static HTML shell that loads `wireframe-data.json` via `fetch()`. Two tabs:
+Static HTML shell that loads `wireframe-data.json` via `fetch()`.
 
-#### Findings Tab
+**CRITICAL: Must match the docs-audit reconciliation-matrix.html look & feel.** Same design system, same dark hero, same component patterns. The wireframe dashboard is visually a sibling of the docs-audit dashboard — users should recognize them as part of the same tool family.
+
+#### Design System (shared with docs-audit)
+
+- **Font:** Inter, system-ui fallback
+- **Dark hero header:** `linear-gradient(135deg, #0f172a, #1e293b)` with white text
+- **Score ring:** SVG circular gauge in hero (overall coverage %)
+- **Metric cards:** Semi-transparent dark cards in hero row (total requirements, findings by severity, coverage counts)
+- **Document coverage bars:** Horizontal progress bars with colored dots (PRD = amber `#eab308`, UX = blue `#3b82f6`)
+- **View switcher:** Prominent card-style buttons below hero (not subtle tabs). Each shows title + badge count + description. Active state: blue border + blue background
+- **Filters:** Search input + pill buttons for status, severity, category, page. Same styling as docs-audit
+- **Cards:** White cards with left colored border per status/category. Expandable with chevron
+- **Naming drift table:** Violet header bar if naming drift findings exist
+- **Color tokens:** Same CSS variables as docs-audit (`--n-50` through `--n-900`, `--c-ok`, `--c-warn`, `--c-err`, `--c-info`, etc.)
+
+#### View: Findings
 
 - Filterable list of all findings
-- Group by: category, page, severity
-- Each finding expandible with: full description, severity badge, category badge, quotes from PRD/UX, link to screenshot marker
-- Filter by: category (full names), severity, wireframe page
+- Each finding as an expandable card with left border colored by category
+- Card header: finding ID (kebab-case) + category badge (colored pill with full name) + description text + severity badge right-aligned
+- Expanded detail: full description, quotes from PRD/UX (in blockquote style), recommendation, link to screenshot marker
+- Filter by: category (full names as pill buttons), severity, wireframe page (dropdown)
 - Search by: requirement ID, keyword, component name
+- Group by: category or page toggle
 
-#### Coverage Tab
+#### View: Coverage
 
-- Heatmap grid: rows = requirements/spec items, columns = wireframe pages
+- Same heatmap grid as docs-audit Coverage Map: rows = requirements/spec items, columns = wireframe pages
 - Cells color-coded: green (implemented), yellow (partial), red (contradicted), gray (missing)
-- Click cell to see linked findings and reason text
-- Filter by status
-- Sticky headers, search, keyboard navigation
+- Click cell to see linked findings and reason text in expandable detail
+- Filter by status pills
+- Sticky headers, search, keyboard navigation (/, Esc, [, ], Enter)
 
 ### Phase 11 — Generate wireframe-screenshots.html (static template)
 
-Static HTML shell that loads `wireframe-data.json` via `fetch()`. Screenshot gallery with component-level detail.
+Static HTML shell that loads `wireframe-data.json` via `fetch()`. Screenshot gallery with findings highlighted directly ON the screenshot images.
 
-**Per wireframe page:**
+**CRITICAL: Must match docs-audit visual style.** Same dark hero header, same font, same color tokens. This page is the visual evidence companion to the dashboard.
 
-- Full-page screenshot displayed as background image
-- **SVG overlay markers** positioned using bounding box data from Puppeteer element detection
-- Each marker numbered and color-coded by severity (red = blocker, orange = major, gray = minor)
-- **Components without findings** shown with subtle green marker (confirms coverage)
-- **Missing components** (in PRD/UX but not found in wireframe DOM) listed in bottom panel with "Not found in wireframe" label and selectors attempted
+#### Layout
 
-**Click on marker opens side panel showing:**
+```
++------------------------------------------------------------------+
+|  DARK HERO: Title, subtitle, legend (severity dots + labels)     |
+|  Filter pills: [All] [Blocker] [Major] [Minor] [No findings]    |
++------------------------------------------------------------------+
+|  PAGE TABS: [Login] [Directory] [Profile] [Projects] ...        |
++------------------------------------------------------------------+
+|                                                                  |
+|  +------------------------------------------------------------+ |
+|  |                                                            | |
+|  |              SCREENSHOT IMAGE (full page)                  | |
+|  |                                                            | |
+|  |    +--------+  <-- SVG rect overlay (red border,           | |
+|  |    | C      |      semi-transparent fill, finding ID       | |
+|  |    | o      |      label at top-left corner)               | |
+|  |    | m      |                                              | |
+|  |    | p      |                                              | |
+|  |    +--------+                                              | |
+|  |                                                            | |
+|  |         +----------+  <-- Green border = no findings       | |
+|  |         |          |      (implemented OK)                 | |
+|  |         +----------+                                       | |
+|  |                                                            | |
+|  +------------------------------------------------------------+ |
+|                                                                  |
+|  SIDE PANEL (slides in on click):                                |
+|  - Component identity + selector                                 |
+|  - PRD quote + UX quote                                          |
+|  - Finding cards with severity badges                            |
++------------------------------------------------------------------+
+|  BOTTOM: "Not Found" panel — components in PRD/UX but missing    |
++------------------------------------------------------------------+
+```
 
-1. **Screenshot crop** — zoomed view of the component's bounding box area
-2. **Component identity** — visible text, matched selector, class/ID
-3. **PRD reference** — what the PRD says about this component (requirement ID, title, full description)
-4. **UX reference** — what the UX spec says (component name, section, variants, states)
-5. **All findings** for this component — category (full name), severity badge, description
-6. If multiple findings on same component, all listed
+#### Screenshot with SVG Overlays
 
-**Navigation:**
-- Tabs per wireframe page at top
-- Filters by category and severity (show/hide markers)
-- Keyboard: arrow keys navigate markers, Esc closes panel, 1-9 switch pages
+The core of this page. Each wireframe page screenshot is displayed as an `<img>` inside a `position: relative` container. An absolutely-positioned `<svg>` of the same dimensions sits on top, containing:
+
+**For each detected element (from `elementDetection.checklist`):**
+
+1. **Bounding box rectangle** — `<rect>` positioned using `boundingBox.x`, `y`, `width`, `height` from the Puppeteer detection data
+   - **Has findings:** Border color by worst severity (red `#ef4444` = blocker, orange `#f97316` = major, gray `#9ca3af` = minor). Semi-transparent fill (`rgba` at 0.08 opacity). Border width: 2px.
+   - **No findings (implemented OK):** Border color green `#22c55e` at 0.4 opacity. No fill. Border width: 1px. Subtle confirmation.
+   - **Hover:** Fill opacity increases to 0.15, border brightens. Cursor pointer.
+
+2. **Finding ID label** — Small `<text>` or `<foreignObject>` at top-left corner of bounding box. Shows finding ID (e.g., "contradiction-1") in a colored pill matching the category. Font: 10px bold, white text on colored background with rounded corners.
+
+3. **Multiple findings on same element** — Stack labels vertically at the corner. Or show count badge: "3 findings" and expand on click.
+
+**Interaction:**
+- **Click on any overlay rect** opens the side detail panel for that element
+- **Hover** shows tooltip with: component name + finding count + worst severity
+
+#### Side Detail Panel
+
+Slides in from the right (400px width, dark theme `#18181b` matching docs-audit annotation panels). Contains:
+
+1. **Component Identity**
+   - Name (from detection checklist)
+   - Matched CSS selector
+   - Bounding box coordinates
+   - DOM visibility status
+
+2. **PRD Reference** (if PRD mode or Full)
+   - Requirement ID + title
+   - Full description text
+   - Status badge (Implemented / Partial / Missing / Contradicted)
+
+3. **UX Reference** (if UX mode or Full)
+   - UX component name + section reference
+   - Variant list
+   - Expected states
+
+4. **Findings** (all findings linked to this element)
+   - Each as a card with: category pill (full name, colored), severity badge, description
+   - If multiple, listed vertically
+
+#### Missing Components Panel
+
+Below the screenshot, a collapsible panel listing components from PRD/UX that Puppeteer could NOT find in the wireframe DOM:
+
+- Each row: component name, source (PRD requirement / UX component), selectors attempted (collapsed by default), severity of the resulting PRD Gap or UX Unimplemented finding
+- Red left border for blocker/major, gray for minor
+
+#### Page Navigation
+
+- **Tabs** at top for each wireframe page (styled like docs-audit view switcher)
+- **Filter pills** below hero: severity filters that show/hide overlay rects
+- **Keyboard:** Left/Right arrow switch pages, Esc closes panel, Tab cycles through overlay rects
 
 ### Phase 12 — Validation
 
