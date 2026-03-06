@@ -32,11 +32,13 @@ This skill answers:
 | 2 | **UX Design System file** | No | Markdown file with design tokens, components, layout, states, responsive behavior |
 | 3 | **Mock file or folder** | No | Markdown description of mocks, annotated screenshots, or HTML mock files |
 | 4 | **Previous reconciliation folder** | No | Enables delta mode — compares against a prior run |
+| 5 | **Generate Excalidraw diagrams** | No | If not provided by the user, **ask**: "Would you like to generate Excalidraw diagrams (coverage heatmap, Venn overlap, traceability flow, gap treemap)? These are optional and can be generated later from the JSON data." Accepts yes/no. Defaults to no if the user does not specify. |
 
 **Rules:**
 - At least **PRD + one other document** must be provided
 - All file paths must be provided explicitly by the user. Never auto-discover.
 - The skill adapts to whichever combination is provided (PRD+UX, PRD+Mock, PRD+UX+Mock)
+- If the user explicitly includes or excludes diagrams in their request, respect that choice without asking again
 
 ---
 
@@ -201,7 +203,7 @@ When the user asks to resume or generate outputs from an existing JSON:
 3. Create output directory `docs/audit/docs-reconciliation/{analysis_name}/`
 4. If previous reconciliation folder provided, load it for delta comparison
 5. **Estimate context pressure**: Count total lines across all input documents. If >5000 lines total, warn the user that the workflow may need to split across sessions, and that `reconciliation-data.json` will be the checkpoint
-6. **Ask the user**: "Would you like to generate Excalidraw diagrams (coverage heatmap, Venn overlap, traceability flow, gap treemap)? These are optional and can be generated later from the JSON data." Record the user's choice as `generateDiagrams` (boolean). If the user declines, skip Phase 10 entirely.
+6. **Resolve diagram choice**: If the user already specified input #5 (generate diagrams yes/no), use that. Otherwise, ask: "Would you like to generate Excalidraw diagrams (coverage heatmap, Venn overlap, traceability flow, gap treemap)? These are optional and can be generated later from the JSON data." Record the choice as `generateDiagrams` (boolean). If false, skip Phase 10 entirely.
 
 ### Phase 1 — PRD Extraction
 
