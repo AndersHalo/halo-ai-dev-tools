@@ -808,40 +808,36 @@ See [verification-map-template.md](verification-map-template.md) for the complet
 **CRITICAL: Same data-template separation pattern.** This is a static HTML shell that loads `reconciliation-data.json` via `fetch()`. No inline data.
 
 ```javascript
-fetch('./reconciliation-data.json')
+fetch('../reconciliation-data.json')
   .then(r => r.json())
-  .then(data => renderVerificationMap(data));
+  .then(data => init(data));
 ```
 
-The template renders:
+**Complete coverage principle**: Every requirement from `requirements[]` and every UX component from `inventories.ux.U3` must appear in the UI. Nothing is omitted. Found elements get bounding boxes on screenshots; missing elements appear in the gaps/issues panel.
 
-- **Screenshot viewer** — One tab per mock screenshot. Each screenshot displayed as a background image (`<img>`) with an SVG overlay layer for bounding box rectangles. Screenshots are loaded from the `visualVerification.screenshots` paths.
+The template renders four integrated views:
 
-- **Bounding box overlays** — For each checklist item with `status: "found"` and non-null `boundingBox`, draw a colored rectangle at `(x, y, width, height)` on the SVG overlay. Colors by requirement status:
-  - Green (`#22c55e`) = aligned requirement
-  - Amber (`#f59e0b`) = partial
-  - Red (`#ef4444`) = conflict
-  - Blue (`#3b82f6`) = gap
-  - Each box labeled with FR ID and short title (e.g., "FR2.3 Search")
+- **Screenshot view** (default) — One tab per mock screenshot with SVG bounding box overlays. Each box is color-coded by requirement status (green=aligned, amber=partial, red=conflict, blue=gap). Labels show both the FR ID and the matched UX component name for dual traceability. Clicking a box opens the detail panel.
 
-- **Side panel** — Clicking a bounding box opens a detail panel showing:
-  - FR requirement ID and full text (from `requirements[]`)
-  - UX component match: component name, UX section reference, variants (from `uxComponentMatch`)
-  - Matched CSS selector (from `selector`)
-  - Visibility status
-  - Linked finding IDs with expandable details
+- **List view** — Table of ALL requirements (not just Puppeteer-verified ones) with columns: requirement ID + title, UX component match, reconciliation status, DOM status (found/not found/---), and matched selector. Every requirement in the reconciliation appears here.
 
-- **Not-found list** — Below the screenshot viewer, a table of all `status: "not_found"` items showing:
-  - Source (P1/P2/P3), element name
-  - Mock file scanned
-  - All selectors tried (from `selectorsQueried`)
-  - Linked W finding ID (if exists) — clickable link to reconciliation-matrix.html
+- **Detail panel** — Three sections per selected element:
+  1. **PRD Requirement**: ID, title, full description, status badge, and reason text
+  2. **UX Component**: Matched component name, UX section reference, and variant list. Shows "No UX component matched" when absent.
+  3. **DOM Detection**: Found/not-found status, matched selector, visibility, bounding box coordinates, and selectors tried (for not-found items)
+  4. **Findings**: All linked findings with ID, severity badge, docsTag, and description
 
-- **Filters** — Toggle visibility by:
-  - Status: found / not_found
-  - Mock file (tab switching)
-  - UX component (dropdown)
-  - Requirement status: aligned / partial / conflict / gap
+- **Side panel tabs**:
+  1. **Detail** — Selected element detail (above)
+  2. **Requirements** — Scrollable list of ALL requirements with status dot, title, reason, and DOM tag (Found/Missing/---)
+  3. **UX Components** — Scrollable list of ALL UX components from U3 inventory, each showing match count against DOM elements
+  4. **Issues** — Focused list of ONLY conflict and gap requirements with red/blue badges, Puppeteer evidence ("N selectors tried"), and linked findings. Badge count in tab header.
+
+- **Summary header** — Pill badges showing counts: aligned, partial, conflict, gap. Plus total requirements, found count, not-found count.
+
+- **Filters** — Status (aligned/partial/conflict/gap/na), DOM status (found/not found), UX component dropdown, mock file tabs.
+
+- **Keyboard** — 1/2/3/4 switch panel tabs, Esc clears selection, arrow keys navigate.
 
 Output path: `visual-verification/verification-map.html`
 
