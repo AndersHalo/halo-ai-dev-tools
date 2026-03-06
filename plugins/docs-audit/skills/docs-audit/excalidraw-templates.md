@@ -17,7 +17,7 @@ Every `.excalidraw` file follows this base structure:
 {
   "type": "excalidraw",
   "version": 2,
-  "source": "docs-reconciliation-skill",
+  "source": "docs-audit-skill",
   "elements": [],
   "appState": {
     "gridSize": null,

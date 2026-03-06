@@ -1,5 +1,5 @@
 ---
-name: docs-reconciliation
+name: docs-audit
 description: "Multi-document reconciliation engine. Cross-references PRD, UX Design System, and Mock documents to detect conflicts, coverage gaps, self-additions, naming drift, cascade violations, and specificity gaps. Generates a markdown report, interactive HTML dashboard, and optionally editable Excalidraw diagrams."
 ---
 
@@ -21,6 +21,19 @@ This skill answers:
 - Did the PRD telephone-game through UX into Mock? (cascade violation)
 - What does each document add that others don't cover?
 - What's missing from each document?
+
+### When to use this skill vs. prd-mock-audit
+
+| Use **docs-audit** when... | Use **prd-mock-audit** when... |
+|---|---|
+| You have 2-3 documents (PRD, UX, Mock) and need to check **alignment before building** | You have HTML mocks already built and need a **detailed implementation audit** |
+| Mock is a markdown description, screenshots, OR HTML | Mock is **HTML only** — the skill reads the actual DOM |
+| You want to compare PRD vs UX (no mock at all) | You always need PRD + HTML mocks |
+| You need trilateral cascade detection (PRD -> UX -> Mock drift) | You need mock self-validation (data consistency, dead-end flows) |
+| You want Excalidraw diagrams and a verification map | You want annotated HTML copies with inline color-coded highlights |
+| Focus: document-level alignment | Focus: element-level implementation correctness + accessibility |
+
+The two skills are **complementary**: run docs-audit first to align documents, then run prd-mock-audit after HTML mocks are built to verify implementation quality.
 
 ---
 
@@ -54,10 +67,10 @@ This skill answers:
 
 ## Outputs
 
-All written to `docs/audit/docs-reconciliation/{analysis_name}/` where `{analysis_name}` is kebab-case `[prd-title]-[YYYY-MM-DD]`.
+All written to `docs/audit/docs-audit/{analysis_name}/` where `{analysis_name}` is kebab-case `[prd-title]-[YYYY-MM-DD]`.
 
 ```
-docs/audit/docs-reconciliation/{analysis_name}/
+docs/audit/docs-audit/{analysis_name}/
 ├── reconciliation.md                # Main markdown report
 ├── reconciliation-data.json         # Structured data (single source of truth for all visual outputs)
 ├── reconciliation-matrix.html       # Interactive HTML dashboard (loads reconciliation-data.json)
@@ -120,7 +133,7 @@ The workflow is split into **two independent stages** that can run in separate s
 
 1. **Write `reconciliation-data.json` as early as possible** — immediately after Phase 6 scoring completes. Do not wait until all outputs are generated.
 2. **After writing JSON, never re-read the original PRD/UX/Mock documents.** All data needed for output generation lives in the JSON. This frees context for output phases.
-3. **If context is running low after writing JSON**, stop the current session. The user can start a new session and say: "Generate outputs from `docs/audit/docs-reconciliation/{analysis_name}/reconciliation-data.json`". The skill resumes from Phase 8.
+3. **If context is running low after writing JSON**, stop the current session. The user can start a new session and say: "Generate outputs from `docs/audit/docs-audit/{analysis_name}/reconciliation-data.json`". The skill resumes from Phase 8.
 4. **Each output file is independently recoverable.** If any file is missing after a session, re-run only the missing phase by reading the JSON.
 
 #### Context Budget Estimation
@@ -206,7 +219,7 @@ When the user asks to resume or generate outputs from an existing JSON:
 
 1. Verify all provided files exist and are readable
 2. Determine input mode (bilateral or trilateral) based on which documents are provided
-3. Create output directory `docs/audit/docs-reconciliation/{analysis_name}/`
+3. Create output directory `docs/audit/docs-audit/{analysis_name}/`
 4. If previous reconciliation folder provided, load it for delta comparison
 5. **Estimate context pressure**: Count total lines across all input documents. If >5000 lines total, warn the user that the workflow may need to split across sessions, and that `reconciliation-data.json` will be the checkpoint
 6. **Resolve diagram choice**: If the user already specified input #5 (generate diagrams yes/no), use that. Otherwise, ask: "Would you like to generate Excalidraw diagrams (coverage heatmap, Venn overlap, traceability flow, gap treemap)? These are optional and can be generated later from the JSON data." Record the choice as `generateDiagrams` (boolean). If false, skip Phase 10 entirely.

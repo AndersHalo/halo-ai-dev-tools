@@ -31,9 +31,9 @@
       "source": "./plugins/prd-mock-audit"
     },
     {
-      "name": "docs-reconciliation",
+      "name": "docs-audit",
       "description": "Multi-document reconciliation engine. Cross-references PRD against UX Design System and/or Mock documents. Detects conflicts, coverage gaps, scope additions, naming drift, cascade violations, and specificity gaps. Supports bilateral (PRD+UX, PRD+Mock) and trilateral (PRD+UX+Mock) modes. Generates markdown report, interactive HTML dashboard with coverage heatmap, and editable Excalidraw diagrams (Venn overlap, traceability flow, gap treemap).",
-      "source": "./plugins/docs-reconciliation"
+      "source": "./plugins/docs-audit"
     },
     {
       "name": "ux-mock-audit",

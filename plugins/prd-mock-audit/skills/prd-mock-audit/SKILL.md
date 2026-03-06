@@ -12,6 +12,16 @@ Systematically analyze HTML UX mocks against a PRD. Produces a comprehensive aud
 - **Accessibility/WCAG** — only if PRD specifies accessibility requirements
 - If the PRD does not mention a topic, skip the corresponding section/phase entirely
 
+### When to use this skill vs. docs-audit
+
+| | **prd-mock-audit** (this skill) | **docs-audit** |
+|---|---|---|
+| **Stage** | Post-implementation — mocks already built | Pre-implementation — aligning documents before build |
+| **Inputs** | PRD + HTML mock files | PRD + UX Design System and/or Mock documents |
+| **Focus** | Quality of the built mock vs. what the PRD says | Cross-document consistency, coverage gaps, naming drift |
+| **Outputs** | Annotated HTML, gap analysis, component consistency | Reconciliation report, coverage heatmap, Excalidraw diagrams, verification map |
+| **Use when** | You have working HTML and want to verify correctness | You want to ensure PRD, UX, and Mock docs agree before coding |
+
 ---
 
 ## Inputs
