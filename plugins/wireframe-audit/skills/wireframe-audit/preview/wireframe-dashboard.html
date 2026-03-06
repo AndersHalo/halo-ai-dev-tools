@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wireframe Audit Dashboard</title>
+<style>
+  :root {
+    --n-50: #fafafa; --n-100: #f4f4f5; --n-200: #e4e4e7; --n-300: #d4d4d8;
+    --n-400: #a1a1aa; --n-500: #71717a; --n-600: #52525b; --n-700: #3f3f46;
+    --n-800: #27272a; --n-900: #18181b;
+    --c-ok: #22c55e; --c-warn: #f59e0b; --c-err: #ef4444; --c-info: #3b82f6;
+    --c-primary: #3b82f6; --c-primary-bg: rgba(59,130,246,0.1);
+    --font: 'Inter', system-ui, -apple-system, sans-serif;
+    --radius: 8px; --radius-lg: 12px;
+  }
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: var(--font); background: var(--n-100); color: var(--n-800); min-height: 100vh; }
+
+  /* Hero */
+  .hero {
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    color: white; padding: 40px 48px 32px; position: relative;
+  }
+  .hero-top { display: flex; align-items: flex-start; gap: 40px; margin-bottom: 32px; }
+  .hero-text h1 { font-size: 28px; font-weight: 700; margin-bottom: 6px; }
+  .hero-text p { font-size: 14px; color: rgba(255,255,255,0.6); }
+  .hero-text .mode-badge {
+    display: inline-block; margin-top: 8px; padding: 4px 12px;
+    background: rgba(59,130,246,0.2); border: 1px solid rgba(59,130,246,0.4);
+    border-radius: 20px; font-size: 12px; font-weight: 600; color: #93c5fd;
+  }
+
+  /* Score Ring */
+  .score-ring { flex-shrink: 0; position: relative; width: 120px; height: 120px; }
+  .score-ring svg { transform: rotate(-90deg); }
+  .score-ring .track { fill: none; stroke: rgba(255,255,255,0.1); stroke-width: 8; }
+  .score-ring .fill { fill: none; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 1s ease; }
+  .score-ring .label {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    text-align: center;
+  }
+  .score-ring .label .num { font-size: 32px; font-weight: 700; display: block; }
+  .score-ring .label .sub { font-size: 11px; color: rgba(255,255,255,0.6); }
+
+  /* Metric Cards in Hero */
+  .metric-row { display: flex; gap: 16px; flex-wrap: wrap; }
+  .metric-card {
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: var(--radius); padding: 16px 20px; min-width: 140px; flex: 1;
+  }
+  .metric-card .mc-label { font-size: 11px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .metric-card .mc-value { font-size: 24px; font-weight: 700; }
+  .metric-card .mc-sub { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+  .mc-blocker { color: #ef4444; }
+  .mc-major { color: #f97316; }
+  .mc-minor { color: #9ca3af; }
+
+  /* Document coverage bars */
+  .doc-bars { display: flex; gap: 24px; margin-top: 20px; flex-wrap: wrap; }
+  .doc-bar { flex: 1; min-width: 200px; }
+  .doc-bar .db-label { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 6px; }
+  .doc-bar .db-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .doc-bar .db-track { height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
+  .doc-bar .db-fill { height: 100%; border-radius: 3px; transition: width 1s ease; }
+  .doc-bar .db-pct { font-size: 13px; font-weight: 600; margin-left: auto; }
+
+  /* View Switcher */
+  .view-switcher {
+    display: flex; gap: 16px; padding: 24px 48px; background: white;
+    border-bottom: 1px solid var(--n-200);
+  }
+  .view-btn {
+    flex: 1; padding: 16px 20px; border: 2px solid var(--n-200); border-radius: var(--radius-lg);
+    background: white; cursor: pointer; transition: all 0.2s; text-align: left;
+  }
+  .view-btn:hover { border-color: var(--n-300); }
+  .view-btn.active { border-color: var(--c-primary); background: var(--c-primary-bg); }
+  .view-btn .vb-top { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .view-btn .vb-title { font-size: 15px; font-weight: 600; color: var(--n-800); }
+  .view-btn .vb-badge {
+    background: var(--n-200); color: var(--n-600); font-size: 12px; font-weight: 600;
+    padding: 2px 8px; border-radius: 10px;
+  }
+  .view-btn.active .vb-badge { background: var(--c-primary); color: white; }
+  .view-btn .vb-desc { font-size: 12px; color: var(--n-500); }
+
+  /* Content area */
+  .content { padding: 24px 48px; }
+
+  /* Filters */
+  .filters { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 24px; }
+  .search-input {
+    padding: 8px 14px; border: 1px solid var(--n-300); border-radius: var(--radius);
+    font-size: 13px; width: 260px; font-family: var(--font);
+  }
+  .search-input:focus { outline: none; border-color: var(--c-primary); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+  .pill {
+    padding: 6px 14px; border: 1px solid var(--n-300); border-radius: 20px;
+    font-size: 12px; font-weight: 500; cursor: pointer; background: white;
+    transition: all 0.15s; font-family: var(--font);
+  }
+  .pill:hover { background: var(--n-100); }
+  .pill.active { background: var(--n-800); color: white; border-color: var(--n-800); }
+  .pill .pill-count { margin-left: 4px; opacity: 0.6; }
+  .sep { width: 1px; height: 24px; background: var(--n-300); }
+
+  /* Finding Cards */
+  .finding-card {
+    background: white; border-radius: var(--radius); border: 1px solid var(--n-200);
+    margin-bottom: 12px; overflow: hidden; transition: box-shadow 0.2s;
+  }
+  .finding-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .finding-card .fc-header {
+    padding: 14px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer;
+  }
+  .finding-card .fc-border { width: 4px; min-height: 100%; flex-shrink: 0; border-radius: 2px; }
+  .finding-card .fc-id { font-size: 12px; font-weight: 600; color: var(--n-500); font-family: monospace; white-space: nowrap; }
+  .finding-card .fc-cat {
+    font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 12px;
+    white-space: nowrap;
+  }
+  .finding-card .fc-desc { flex: 1; font-size: 13px; color: var(--n-700); line-height: 1.5; }
+  .finding-card .fc-sev {
+    font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 12px;
+    white-space: nowrap; margin-left: auto; flex-shrink: 0;
+  }
+  .sev-blocker { background: #fef2f2; color: #dc2626; }
+  .sev-major { background: #fff7ed; color: #ea580c; }
+  .sev-minor { background: #f9fafb; color: #6b7280; }
+  .finding-card .fc-detail {
+    padding: 0 16px 16px 32px; display: none; border-top: 1px solid var(--n-100);
+  }
+  .finding-card.open .fc-detail { display: block; padding-top: 14px; }
+  .fc-quote { background: var(--n-50); border-left: 3px solid var(--n-300); padding: 10px 14px; margin: 8px 0; font-size: 12px; color: var(--n-600); border-radius: 0 var(--radius) var(--radius) 0; }
+  .fc-quote strong { color: var(--n-700); font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px; }
+  .fc-rec { background: #eff6ff; border-left: 3px solid var(--c-primary); padding: 10px 14px; margin-top: 12px; font-size: 12px; color: #1e40af; border-radius: 0 var(--radius) var(--radius) 0; }
+  .fc-meta { display: flex; gap: 16px; margin-top: 10px; font-size: 11px; color: var(--n-500); }
+
+  /* Coverage Grid */
+  .coverage-grid { display: none; }
+  .coverage-grid.active { display: block; }
+  .cov-table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--n-200); }
+  .cov-table th { background: var(--n-800); color: white; font-size: 12px; font-weight: 600; padding: 12px 16px; text-align: left; position: sticky; top: 0; }
+  .cov-table td { padding: 10px 16px; font-size: 13px; border-bottom: 1px solid var(--n-100); }
+  .cov-table tr:last-child td { border-bottom: none; }
+  .cov-cell {
+    width: 36px; height: 36px; border-radius: 6px; display: inline-flex;
+    align-items: center; justify-content: center; font-size: 10px; font-weight: 700;
+    cursor: pointer; transition: transform 0.1s;
+  }
+  .cov-cell:hover { transform: scale(1.15); }
+  .cov-ok { background: #dcfce7; color: #16a34a; }
+  .cov-partial { background: #fef9c3; color: #ca8a04; }
+  .cov-conflict { background: #fee2e2; color: #dc2626; }
+  .cov-gap { background: var(--n-100); color: var(--n-400); }
+
+  /* Findings view */
+  .findings-view { display: none; }
+  .findings-view.active { display: block; }
+
+  .chevron { transition: transform 0.2s; font-size: 12px; color: var(--n-400); margin-left: 8px; flex-shrink: 0; }
+  .finding-card.open .chevron { transform: rotate(90deg); }
+
+  /* Page badge */
+  .page-badge { font-size: 11px; background: var(--n-100); color: var(--n-600); padding: 2px 8px; border-radius: 4px; white-space: nowrap; }
+</style>
+</head>
+<body>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-top">
+    <div class="hero-text">
+      <h1 id="heroTitle">Wireframe Audit</h1>
+      <p id="heroSub">Loading...</p>
+      <span class="mode-badge" id="modeBadge">Full Mode</span>
+    </div>
+    <div class="score-ring">
+      <svg viewBox="0 0 120 120" width="120" height="120">
+        <circle class="track" cx="60" cy="60" r="52"/>
+        <circle class="fill" id="scoreArc" cx="60" cy="60" r="52"
+          stroke-dasharray="326.73" stroke-dashoffset="326.73"/>
+      </svg>
+      <div class="label">
+        <span class="num" id="scoreNum">--</span>
+        <span class="sub">coverage</span>
+      </div>
+    </div>
+  </div>
+  <div class="metric-row" id="metricRow"></div>
+  <div class="doc-bars" id="docBars"></div>
+</div>
+
+<!-- View Switcher -->
+<div class="view-switcher">
+  <button class="view-btn active" data-view="findings" onclick="switchView('findings')">
+    <div class="vb-top">
+      <span class="vb-title">Findings</span>
+      <span class="vb-badge" id="findingsBadge">--</span>
+    </div>
+    <div class="vb-desc">All audit findings by category and severity</div>
+  </button>
+  <button class="view-btn" data-view="coverage" onclick="switchView('coverage')">
+    <div class="vb-top">
+      <span class="vb-title">Coverage</span>
+      <span class="vb-badge" id="coverageBadge">--</span>
+    </div>
+    <div class="vb-desc">Requirements vs wireframe pages matrix</div>
+  </button>
+</div>
+
+<!-- Content -->
+<div class="content">
+  <!-- Findings View -->
+  <div class="findings-view active" id="findingsView">
+    <div class="filters" id="findingsFilters"></div>
+    <div id="findingsList"></div>
+  </div>
+
+  <!-- Coverage View -->
+  <div class="coverage-grid" id="coverageView">
+    <div class="filters" id="coverageFilters"></div>
+    <div id="coverageTable"></div>
+  </div>
+</div>
+
+<script>
+const CAT_COLORS = {
+  'contradiction': '#ef4444', 'prd-gap': '#3b82f6', 'design-decision': '#10b981',
+  'accessibility-gap': '#f59e0b', 'token-drift': '#f43f5e', 'typography-mismatch': '#0ea5e9',
+  'component-fidelity': '#f97316', 'layout-deviation': '#8b5cf6', 'state-gap': '#f59e0b',
+  'responsive-mismatch': '#14b8a6', 'wireframe-extra': '#84cc16', 'ux-unimplemented': '#6366f1',
+  'cross-source-conflict': '#ec4899', 'scope-creep': '#64748b', 'placeholder': '#9ca3af',
+  'cross-page-inconsistency': '#7c3aed'
+};
+
+let DATA = null;
+let activeView = 'findings';
+let activeSeverity = 'all';
+let activeCategory = 'all';
+
+async function init() {
+  try {
+    const r = await fetch('./wireframe-data.json');
+    DATA = await r.json();
+  } catch {
+    // Fallback: try inline
+    document.body.innerHTML = '<div style="padding:48px;text-align:center;color:#a1a1aa">Could not load wireframe-data.json</div>';
+    return;
+  }
+  renderHero();
+  renderFindings();
+  renderCoverage();
+}
+
+function renderHero() {
+  const d = DATA;
+  document.getElementById('heroTitle').textContent = d.meta.title;
+  document.getElementById('heroSub').textContent = `${d.meta.date} — ${d.meta.wireframeFiles.length} wireframe pages`;
+  document.getElementById('modeBadge').textContent = d.meta.mode === 'full' ? 'Full Mode (PRD + UX)' : d.meta.mode === 'prd-only' ? 'PRD-only Mode' : 'UX-only Mode';
+
+  // Score ring
+  const pct = d.scores.overallCoverage;
+  const circ = 2 * Math.PI * 52;
+  const offset = circ * (1 - pct / 100);
+  const arc = document.getElementById('scoreArc');
+  const color = pct >= 80 ? '#22c55e' : pct >= 60 ? '#f59e0b' : '#ef4444';
+  arc.style.stroke = color;
+  setTimeout(() => arc.style.strokeDashoffset = offset, 100);
+  document.getElementById('scoreNum').textContent = pct + '%';
+
+  // Metric cards
+  const s = d.stats;
+  const row = document.getElementById('metricRow');
+  row.innerHTML = `
+    <div class="metric-card"><div class="mc-label">Requirements</div><div class="mc-value">${s.totalRequirements}</div><div class="mc-sub">tracked</div></div>
+    <div class="metric-card"><div class="mc-label">Findings</div><div class="mc-value">${s.totalFindings}</div><div class="mc-sub">total issues</div></div>
+    <div class="metric-card"><div class="mc-label">Blocker</div><div class="mc-value mc-blocker">${s.bySeverity.blocker}</div><div class="mc-sub">critical</div></div>
+    <div class="metric-card"><div class="mc-label">Major</div><div class="mc-value mc-major">${s.bySeverity.major}</div><div class="mc-sub">significant</div></div>
+    <div class="metric-card"><div class="mc-label">Minor</div><div class="mc-value mc-minor">${s.bySeverity.minor}</div><div class="mc-sub">cosmetic</div></div>
+    <div class="metric-card"><div class="mc-label">Elements</div><div class="mc-value" style="color:#22c55e">${d.elementDetection.summary.found}</div><div class="mc-sub">${d.elementDetection.summary.notFound} missing</div></div>
+  `;
+
+  // Doc bars
+  const bars = document.getElementById('docBars');
+  let bh = '';
+  if (d.scores.prdCoverage != null) {
+    bh += `<div class="doc-bar"><div class="db-label"><span class="db-dot" style="background:#eab308"></span>PRD Coverage <span class="db-pct">${d.scores.prdCoverage}%</span></div><div class="db-track"><div class="db-fill" style="width:${d.scores.prdCoverage}%;background:#eab308"></div></div></div>`;
+  }
+  if (d.scores.uxCoverage != null) {
+    bh += `<div class="doc-bar"><div class="db-label"><span class="db-dot" style="background:#3b82f6"></span>UX Coverage <span class="db-pct">${d.scores.uxCoverage}%</span></div><div class="db-track"><div class="db-fill" style="width:${d.scores.uxCoverage}%;background:#3b82f6"></div></div></div>`;
+  }
+  bars.innerHTML = bh;
+}
+
+function switchView(v) {
+  activeView = v;
+  document.querySelectorAll('.view-btn').forEach(b => b.classList.toggle('active', b.dataset.view === v));
+  document.getElementById('findingsView').classList.toggle('active', v === 'findings');
+  document.getElementById('coverageView').classList.toggle('active', v === 'coverage');
+}
+
+function renderFindings() {
+  const findings = DATA.findings;
+  document.getElementById('findingsBadge').textContent = findings.length;
+
+  // Filters
+  const filtersEl = document.getElementById('findingsFilters');
+  const cats = Object.entries(DATA.stats.byCategory).filter(([,c]) => c > 0);
+  let fh = `<input class="search-input" placeholder="Search findings..." oninput="filterFindings(this.value)">`;
+  fh += `<div class="sep"></div>`;
+  fh += `<button class="pill active" onclick="setSeverity('all',this)">All <span class="pill-count">${findings.length}</span></button>`;
+  fh += `<button class="pill" onclick="setSeverity('blocker',this)">Blocker <span class="pill-count">${DATA.stats.bySeverity.blocker}</span></button>`;
+  fh += `<button class="pill" onclick="setSeverity('major',this)">Major <span class="pill-count">${DATA.stats.bySeverity.major}</span></button>`;
+  fh += `<button class="pill" onclick="setSeverity('minor',this)">Minor <span class="pill-count">${DATA.stats.bySeverity.minor}</span></button>`;
+  fh += `<div class="sep"></div>`;
+  cats.forEach(([key, count]) => {
+    const name = key.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
+    fh += `<button class="pill" onclick="setCategory('${key}',this)" style="border-color:${CAT_COLORS[key]}40"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${CAT_COLORS[key]};margin-right:4px"></span>${name} <span class="pill-count">${count}</span></button>`;
+  });
+  filtersEl.innerHTML = fh;
+
+  renderFindingCards(findings);
+}
+
+function renderFindingCards(findings) {
+  const list = document.getElementById('findingsList');
+  list.innerHTML = findings.map(f => {
+    const catName = f.categoryKey.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
+    const color = CAT_COLORS[f.categoryKey] || '#71717a';
+    let detail = '';
+    if (f.quotes?.prd) detail += `<div class="fc-quote"><strong>PRD:</strong> ${esc(f.quotes.prd)}</div>`;
+    if (f.quotes?.ux) detail += `<div class="fc-quote"><strong>UX:</strong> ${esc(f.quotes.ux)}</div>`;
+    detail += `<div class="fc-rec">${esc(f.recommendation)}</div>`;
+    detail += `<div class="fc-meta">`;
+    if (f.requirementId) detail += `<span>Requirement: ${f.requirementId}</span>`;
+    if (f.wireframePage) detail += `<span>Page: ${f.wireframePage}</span>`;
+    detail += `</div>`;
+    return `<div class="finding-card" data-sev="${f.severity}" data-cat="${f.categoryKey}" onclick="this.classList.toggle('open')">
+      <div class="fc-header">
+        <div class="fc-border" style="background:${color}"></div>
+        <span class="fc-id">${f.id}</span>
+        <span class="fc-cat" style="background:${color}18;color:${color}">${catName}</span>
+        <span class="fc-desc">${esc(f.description)}</span>
+        ${f.wireframePage ? `<span class="page-badge">${f.wireframePage}</span>` : ''}
+        <span class="fc-sev sev-${f.severity}">${f.severity}</span>
+        <span class="chevron">&#9654;</span>
+      </div>
+      <div class="fc-detail">${detail}</div>
+    </div>`;
+  }).join('');
+}
+
+function setSeverity(s, el) {
+  activeSeverity = s;
+  el.parentElement.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  applyFilters();
+}
+function setCategory(c, el) {
+  activeCategory = activeCategory === c ? 'all' : c;
+  el.parentElement.querySelectorAll('.pill').forEach(p => { if (p !== el) p.classList.remove('active'); });
+  el.classList.toggle('active');
+  applyFilters();
+}
+function filterFindings(q) {
+  window._searchQ = q.toLowerCase();
+  applyFilters();
+}
+function applyFilters() {
+  const cards = document.querySelectorAll('.finding-card');
+  const q = (window._searchQ || '').toLowerCase();
+  cards.forEach(c => {
+    const sevOk = activeSeverity === 'all' || c.dataset.sev === activeSeverity;
+    const catOk = activeCategory === 'all' || c.dataset.cat === activeCategory;
+    const qOk = !q || c.textContent.toLowerCase().includes(q);
+    c.style.display = (sevOk && catOk && qOk) ? '' : 'none';
+  });
+}
+
+function renderCoverage() {
+  const det = DATA.elementDetection;
+  const pages = DATA.meta.wireframeFiles;
+  document.getElementById('coverageBadge').textContent = `${det.summary.found}/${det.summary.total}`;
+
+  const table = document.getElementById('coverageTable');
+  let h = `<table class="cov-table"><thead><tr><th>Component</th><th>Source</th>`;
+  pages.forEach(p => h += `<th style="text-align:center">${p.replace('.html','')}</th>`);
+  h += `<th>Status</th></tr></thead><tbody>`;
+
+  det.checklist.forEach(item => {
+    h += `<tr><td style="font-weight:500">${esc(item.name)}</td><td><span class="page-badge">${item.source}</span></td>`;
+    pages.forEach(pg => {
+      if (item.wireframePage === pg) {
+        if (item.status === 'found' && item.findingIds.length === 0) {
+          h += `<td style="text-align:center"><span class="cov-cell cov-ok">OK</span></td>`;
+        } else if (item.status === 'found') {
+          const worst = getWorstSev(item.findingIds);
+          const cls = worst === 'blocker' ? 'cov-conflict' : worst === 'major' ? 'cov-partial' : 'cov-partial';
+          h += `<td style="text-align:center"><span class="cov-cell ${cls}">${item.findingIds.length}</span></td>`;
+        } else {
+          h += `<td style="text-align:center"><span class="cov-cell cov-gap">--</span></td>`;
+        }
+      } else {
+        h += `<td style="text-align:center"><span style="color:var(--n-300)">-</span></td>`;
+      }
+    });
+    const statusColor = item.status === 'found' ? (item.findingIds.length === 0 ? '#22c55e' : '#f59e0b') : '#ef4444';
+    const statusText = item.status === 'found' ? (item.findingIds.length === 0 ? 'OK' : `${item.findingIds.length} issues`) : 'Missing';
+    h += `<td><span style="color:${statusColor};font-weight:600;font-size:12px">${statusText}</span></td></tr>`;
+  });
+  h += `</tbody></table>`;
+  table.innerHTML = h;
+}
+
+function getWorstSev(ids) {
+  const sevs = ids.map(id => DATA.findings.find(f => f.id === id)?.severity).filter(Boolean);
+  if (sevs.includes('blocker')) return 'blocker';
+  if (sevs.includes('major')) return 'major';
+  return 'minor';
+}
+
+function esc(s) { return s ? s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : ''; }
+
+init();
+</script>
+</body>
+</html>
