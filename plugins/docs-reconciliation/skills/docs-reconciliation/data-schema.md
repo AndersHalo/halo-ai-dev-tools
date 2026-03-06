@@ -138,7 +138,8 @@ This file defines the JSON schema for `reconciliation-data.json` — the single 
         }
       },
       "findingIds": ["string — all finding IDs for this requirement"],
-      "keywords": "string — space-separated search terms"
+      "keywords": "string — space-separated search terms",
+      "deltaStatus": "string | null — 'carried_forward' | 'new' | 'changed' | null (null if not delta mode)"
     }
   ],
 
@@ -156,7 +157,8 @@ This file defines the JSON schema for `reconciliation-data.json` — the single 
         "ux": "string | null — exact quote from UX",
         "mock": "string | null — exact quote from Mock"
       },
-      "recommendation": "string — actionable next step"
+      "recommendation": "string — actionable next step",
+      "deltaStatus": "string | null — 'carried_forward' | 'new' | 'changed' | 'resolved' | null (null if not delta mode)"
     }
   ],
 
@@ -201,6 +203,23 @@ This file defines the JSON schema for `reconciliation-data.json` — the single 
     "totalPrd": "number — total PRD items",
     "totalUx": "number | null",
     "totalMock": "number | null"
+  },
+
+  "delta": {
+    "previousRunDate": "string | null — YYYY-MM-DD of the previous run (null if not delta mode)",
+    "currentRunDate": "string — YYYY-MM-DD of the current run",
+    "scoresTrend": {
+      "previous": "number — previous overall alignment score",
+      "current": "number — current overall alignment score"
+    },
+    "carriedForward": "number — count of requirements carried forward without re-analysis",
+    "reAnalyzed": "number — count of requirements re-analyzed",
+    "newRequirements": ["string — FR IDs added since last run"],
+    "removedRequirements": ["string — FR IDs removed since last run"],
+    "newFindings": ["string — finding IDs that are new"],
+    "resolvedFindings": ["string — finding IDs from previous run that no longer exist"],
+    "changedFindings": ["string — finding IDs where severity/status/description changed"],
+    "persistentFindingCount": "number — count of findings carried forward unchanged"
   },
 
   "inventories": {

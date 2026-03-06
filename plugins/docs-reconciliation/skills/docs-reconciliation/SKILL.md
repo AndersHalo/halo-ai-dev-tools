@@ -31,7 +31,7 @@ This skill answers:
 | 1 | **PRD file** | Yes | Markdown file with product requirements, features, pages, flows |
 | 2 | **UX Design System file** | No | Markdown file with design tokens, components, layout, states, responsive behavior |
 | 3 | **Mock file or folder** | No | Markdown description of mocks, annotated screenshots, or HTML mock files |
-| 4 | **Previous reconciliation folder** | No | Enables delta mode — compares against a prior run |
+| 4 | **Previous reconciliation folder** | No | Enables incremental delta mode — loads `reconciliation-data.json` from a prior run, carries forward unchanged requirements, and only re-analyzes new/changed ones. User specifies which requirements or sections changed. Generates a `delta-summary.md` showing new, resolved, and changed findings. |
 | 5 | **Generate Excalidraw diagrams** | No | If not provided by the user, **ask**: "Would you like to generate Excalidraw diagrams (coverage heatmap, Venn overlap, traceability flow, gap treemap)? These are optional and can be generated later from the JSON data." Accepts yes/no. Defaults to no if the user does not specify. |
 **Rules:**
 - At least **PRD + one other document** must be provided
@@ -71,7 +71,7 @@ docs/audit/docs-reconciliation/{analysis_name}/
 │   ├── venn-overlap.excalidraw      # 2 or 3 circle document overlap
 │   ├── traceability-flow.excalidraw # Requirement flow: PRD -> UX -> Mock
 │   └── gap-treemap.excalidraw       # Findings by area, sized by count
-└── delta-summary.md                 # Only in delta mode
+└── delta-summary.md                 # Only in delta mode — shows new/resolved/changed findings + score trends
 ```
 
 ### Data-Template Separation (anti-truncation strategy)
@@ -836,20 +836,99 @@ Treemap showing findings distribution:
 18. **Visual verification consistency** (if Phase 3B ran): Every W finding for `[PRD<>Mock]` that has Puppeteer evidence must include the Puppeteer result in the finding description. The `visualVerification` section in `reconciliation-data.json` must match the `verification-results.json` file.
 19. **Cross-pair coverage check (trilateral only):** For every PRD requirement that has a W or V finding tagged `[PRD<>UX]`, verify that Phase 4C independently evaluated the same requirement against Mock. If Mock also has a gap or conflict, a separate finding with `[PRD<>Mock]` must exist. Conversely, for every `[PRD<>Mock]` finding, verify Phase 4A independently evaluated against UX. Flag any requirement that has a finding in one direction but was never evaluated in the other.
 
-### Phase 12 — Delta Mode (optional)
+### Phase 12 — Delta Mode (incremental analysis)
 
-If a previous reconciliation folder is provided:
+Activated when input #4 (previous reconciliation folder) is provided. This phase enables **incremental reconciliation** — only new or changed requirements are re-analyzed, while unchanged requirements carry forward their previous results.
 
-1. Load previous `reconciliation.md`
-2. Compare findings: Resolved / Persistent / New / Regressed
-3. Generate `delta-summary.md` with:
-   - New conflicts introduced
-   - Conflicts resolved
-   - Gaps that opened or closed
-   - Additions that were formalized into PRD or removed
-   - Cascade violations resolved or introduced
-   - Alignment score trend per document
-   - Document maturity score trend
+#### 12A. Load Previous State
+
+1. Load `reconciliation-data.json` from the previous reconciliation folder (not the MD report — the JSON is the structured source of truth)
+2. Extract from the previous JSON:
+   - `previousRequirements[]` — all requirement objects with their statuses, reasons, and finding mappings
+   - `previousFindings[]` — all finding objects with IDs, codes, severities, descriptions
+   - `previousScores` — alignment scores and per-document coverage
+   - `previousMeta` — date, mode, document names
+
+#### 12B. Identify What Changed
+
+The user specifies what changed. Accept any of these formats:
+- **Requirement IDs**: "FR-12, FR-15, FR-20 are new or changed"
+- **Section reference**: "Section 3.2 of the PRD was rewritten"
+- **Document-level**: "The UX document was updated" (re-analyze all UX-facing comparisons)
+- **Full re-run**: "Everything changed" (falls back to full analysis, still generates delta summary)
+
+If the user does not specify what changed, **ask once**: "Which requirements or sections changed since the last run? (e.g., FR-12, FR-15, or 'Section 3 of the PRD'). Say 'all' for a full re-run with delta comparison."
+
+Build the **change set**:
+- `changedRequirementIds` — explicit IDs the user listed
+- `changedSections` — PRD sections that were rewritten (map to requirement IDs by reading the new PRD)
+- `newRequirementIds` — requirement IDs present in the current PRD but absent from `previousRequirements[]`
+- `removedRequirementIds` — requirement IDs present in `previousRequirements[]` but absent from current PRD
+
+#### 12C. Carry Forward Unchanged Requirements
+
+For every requirement NOT in the change set:
+1. Copy the requirement object (status, reason, per-document status) directly from `previousRequirements[]` into the current `requirements[]`
+2. Copy all findings linked to that requirement from `previousFindings[]` into the current `findings[]`
+3. Mark these as `"deltaStatus": "carried_forward"` in the JSON output
+
+**Do NOT re-read source documents or re-analyze** for carried-forward requirements. This saves significant context and tokens.
+
+#### 12D. Analyze Changed Requirements
+
+For requirements in the change set:
+1. Run Phases 1-6 **only for the changed requirements** — extract relevant inventories, compare against all documents, generate findings
+2. If a changed requirement previously had findings, those old findings are **replaced** by the new analysis
+3. Mark new findings as `"deltaStatus": "new"` or `"deltaStatus": "changed"`
+4. If a previously-existing requirement now has no findings where it had them before, the old findings are marked `"deltaStatus": "resolved"`
+
+For `newRequirementIds`: Run full analysis (Phases 1-6). Mark as `"deltaStatus": "new"`.
+For `removedRequirementIds`: Do not include in current output. Record in delta summary as removed.
+
+#### 12E. Merge Results
+
+1. Combine carried-forward + newly-analyzed requirements into a single `requirements[]` array
+2. Combine carried-forward + new findings into a single `findings[]` array
+3. Recalculate `scores` and `stats` from the merged data
+4. Update `meta.deltaMode = true`, `meta.previousRun = "<previous folder path>"`, `meta.changeSet = { changed: [...], new: [...], removed: [...] }`
+
+#### 12F. Generate Delta Summary
+
+Generate `delta-summary.md` with:
+
+1. **Run comparison header**: current date vs previous date, documents compared
+2. **Score trend**: alignment score previous -> current (with arrow indicator)
+3. **Per-document maturity trend**: previous -> current per document
+4. **New findings**: findings that did not exist in the previous run (from changed/new requirements)
+5. **Resolved findings**: findings from the previous run that no longer appear (requirement changed and finding gone, or requirement removed)
+6. **Changed findings**: findings where the same requirement still has a finding but severity, status, or description changed
+7. **Persistent findings**: findings that carried forward unchanged (count only, no detail)
+8. **New requirements added**: list of requirement IDs added since last run
+9. **Requirements removed**: list of requirement IDs no longer in PRD
+10. **Carry-forward count**: "N requirements carried forward without re-analysis"
+
+Also add `delta` section to `reconciliation-data.json`:
+```json
+{
+  "delta": {
+    "previousRunDate": "2026-02-15",
+    "currentRunDate": "2026-03-06",
+    "scoresTrend": { "previous": 72, "current": 81 },
+    "carriedForward": 38,
+    "reAnalyzed": 7,
+    "newRequirements": ["FR-51", "FR-52"],
+    "removedRequirements": ["FR-10"],
+    "newFindings": ["V-031", "W-045"],
+    "resolvedFindings": ["V-012", "W-020"],
+    "changedFindings": ["V-005"],
+    "persistentFindingCount": 22
+  }
+}
+```
+
+#### 12G. Generate Outputs
+
+After merging, proceed to Phases 7-11 as normal using the merged data. The MD report and HTML dashboard show the complete current state (not just the delta). The delta summary is an **additional** output file.
 
 ---
 
