@@ -1,0 +1,419 @@
+{
+  "meta": {
+    "title": "Resource Planner — Wireframe Audit",
+    "date": "2026-03-06",
+    "mode": "full",
+    "documents": {
+      "prd": { "name": "Resource Planner PRD v2.1", "file": "resource-planner-prd.md", "color": "#eab308", "bgColor": "#fffbeb" },
+      "ux": { "name": "Resource Planner UX Design System", "file": "resource-planner-ux.md", "color": "#3b82f6", "bgColor": "#eff6ff" }
+    },
+    "wireframeFiles": ["login.html", "dashboard.html", "project-detail.html", "team-directory.html"]
+  },
+  "scores": {
+    "overallCoverage": 72,
+    "prdCoverage": 78,
+    "uxCoverage": 66,
+    "byPage": {
+      "login.html": 90,
+      "dashboard.html": 75,
+      "project-detail.html": 62,
+      "team-directory.html": 58
+    }
+  },
+  "stats": {
+    "totalRequirements": 34,
+    "totalFindings": 23,
+    "elementsDetected": 87,
+    "elementsMissing": 12,
+    "byCategory": {
+      "contradiction": 3,
+      "prd-gap": 4,
+      "design-decision": 2,
+      "token-drift": 3,
+      "typography-mismatch": 1,
+      "component-fidelity": 2,
+      "layout-deviation": 2,
+      "state-gap": 1,
+      "responsive-mismatch": 1,
+      "wireframe-extra": 1,
+      "ux-unimplemented": 2,
+      "cross-source-conflict": 1,
+      "placeholder": 0,
+      "scope-creep": 0,
+      "cross-page-inconsistency": 0,
+      "accessibility-gap": 0
+    },
+    "bySeverity": {
+      "blocker": 4,
+      "major": 11,
+      "minor": 8
+    }
+  },
+  "findings": [
+    {
+      "id": "contradiction-1",
+      "category": "Contradiction",
+      "categoryKey": "contradiction",
+      "severity": "blocker",
+      "description": "Dashboard shows revenue chart as a pie chart, but PRD specifies a stacked bar chart for monthly revenue breakdown.",
+      "wireframePage": "dashboard.html",
+      "requirementId": "FR-7",
+      "quotes": {
+        "prd": "The revenue overview SHALL display a stacked bar chart showing monthly revenue by project category.",
+        "ux": null
+      },
+      "recommendation": "Replace pie chart component with stacked bar chart as specified in PRD FR-7.",
+      "boundingBox": { "x": 420, "y": 280, "width": 380, "height": 260 }
+    },
+    {
+      "id": "contradiction-2",
+      "category": "Contradiction",
+      "categoryKey": "contradiction",
+      "severity": "major",
+      "description": "Login form uses email-only authentication, but PRD requires SSO + email/password dual option.",
+      "wireframePage": "login.html",
+      "requirementId": "FR-1",
+      "quotes": {
+        "prd": "Users SHALL authenticate via SSO (SAML 2.0) or email/password. Both options visible on login screen.",
+        "ux": null
+      },
+      "recommendation": "Add SSO button alongside existing email/password form per FR-1.",
+      "boundingBox": { "x": 340, "y": 240, "width": 360, "height": 320 }
+    },
+    {
+      "id": "contradiction-3",
+      "category": "Contradiction",
+      "categoryKey": "contradiction",
+      "severity": "major",
+      "description": "Team directory uses card layout, but PRD specifies a sortable table with columns for Name, Role, Department, Utilization.",
+      "wireframePage": "team-directory.html",
+      "requirementId": "FR-22",
+      "quotes": {
+        "prd": "Team directory SHALL display a sortable data table with columns: Name, Role, Department, Current Project, Utilization %.",
+        "ux": null
+      },
+      "recommendation": "Replace card grid with sortable data table as defined in FR-22.",
+      "boundingBox": { "x": 240, "y": 200, "width": 960, "height": 500 }
+    },
+    {
+      "id": "prd-gap-1",
+      "category": "PRD Gap",
+      "categoryKey": "prd-gap",
+      "severity": "blocker",
+      "description": "Export to CSV button is absent from team directory wireframe. PRD FR-24 requires bulk export.",
+      "wireframePage": "team-directory.html",
+      "requirementId": "FR-24",
+      "quotes": {
+        "prd": "Users SHALL be able to export filtered team data to CSV format.",
+        "ux": null
+      },
+      "recommendation": "Add export CSV button to team directory toolbar.",
+      "boundingBox": null
+    },
+    {
+      "id": "prd-gap-2",
+      "category": "PRD Gap",
+      "categoryKey": "prd-gap",
+      "severity": "major",
+      "description": "Project detail page missing milestone timeline. PRD FR-14 defines milestone tracking with Gantt-style visualization.",
+      "wireframePage": "project-detail.html",
+      "requirementId": "FR-14",
+      "quotes": {
+        "prd": "Each project detail page SHALL include a milestone timeline showing key dates, dependencies, and completion status.",
+        "ux": null
+      },
+      "recommendation": "Add milestone timeline section to project detail page.",
+      "boundingBox": null
+    },
+    {
+      "id": "prd-gap-3",
+      "category": "PRD Gap",
+      "categoryKey": "prd-gap",
+      "severity": "major",
+      "description": "Dashboard missing notification bell icon. PRD FR-5 requires real-time notification center.",
+      "wireframePage": "dashboard.html",
+      "requirementId": "FR-5",
+      "quotes": {
+        "prd": "Dashboard header SHALL include a notification icon with unread count badge.",
+        "ux": null
+      },
+      "recommendation": "Add notification bell to dashboard header.",
+      "boundingBox": null
+    },
+    {
+      "id": "prd-gap-4",
+      "category": "PRD Gap",
+      "categoryKey": "prd-gap",
+      "severity": "minor",
+      "description": "Search bar placeholder text says 'Search' but PRD specifies 'Search projects, people, or resources...' as placeholder.",
+      "wireframePage": "dashboard.html",
+      "requirementId": "FR-3",
+      "quotes": {
+        "prd": "Global search input placeholder: 'Search projects, people, or resources...'",
+        "ux": null
+      },
+      "recommendation": "Update placeholder text to match PRD specification.",
+      "boundingBox": { "x": 320, "y": 24, "width": 400, "height": 40 }
+    },
+    {
+      "id": "design-decision-1",
+      "category": "Design Decision",
+      "categoryKey": "design-decision",
+      "severity": "minor",
+      "description": "Dashboard includes a 'Quick Actions' floating button (FAB) not defined in PRD.",
+      "wireframePage": "dashboard.html",
+      "requirementId": null,
+      "quotes": { "prd": null, "ux": null },
+      "recommendation": "Validate with product team whether Quick Actions FAB should be added to PRD.",
+      "boundingBox": { "x": 1340, "y": 760, "width": 56, "height": 56 }
+    },
+    {
+      "id": "design-decision-2",
+      "category": "Design Decision",
+      "categoryKey": "design-decision",
+      "severity": "minor",
+      "description": "Login page includes 'Remember me' checkbox not mentioned in PRD.",
+      "wireframePage": "login.html",
+      "requirementId": null,
+      "quotes": { "prd": null, "ux": null },
+      "recommendation": "Document in PRD or remove from wireframe.",
+      "boundingBox": { "x": 340, "y": 520, "width": 160, "height": 24 }
+    },
+    {
+      "id": "token-drift-1",
+      "category": "Token Drift",
+      "categoryKey": "token-drift",
+      "severity": "major",
+      "description": "Primary button uses #2563eb but UX design system defines primary color as #3b82f6.",
+      "wireframePage": "dashboard.html",
+      "requirementId": null,
+      "quotes": {
+        "prd": null,
+        "ux": "--color-primary: #3b82f6; Applied to all primary action buttons."
+      },
+      "recommendation": "Update button color from #2563eb to #3b82f6.",
+      "boundingBox": { "x": 1100, "y": 24, "width": 120, "height": 40 }
+    },
+    {
+      "id": "token-drift-2",
+      "category": "Token Drift",
+      "categoryKey": "token-drift",
+      "severity": "minor",
+      "description": "Card border-radius is 12px but UX defines --radius-card as 8px.",
+      "wireframePage": "dashboard.html",
+      "requirementId": null,
+      "quotes": {
+        "prd": null,
+        "ux": "--radius-card: 8px; Standard radius for all card containers."
+      },
+      "recommendation": "Change card border-radius from 12px to 8px.",
+      "boundingBox": { "x": 32, "y": 120, "width": 380, "height": 200 }
+    },
+    {
+      "id": "token-drift-3",
+      "category": "Token Drift",
+      "categoryKey": "token-drift",
+      "severity": "minor",
+      "description": "Sidebar background uses #1a1a2e but UX defines --color-surface-dark as #1e293b.",
+      "wireframePage": "dashboard.html",
+      "requirementId": null,
+      "quotes": {
+        "prd": null,
+        "ux": "--color-surface-dark: #1e293b; Used for sidebar and dark panels."
+      },
+      "recommendation": "Update sidebar background from #1a1a2e to #1e293b.",
+      "boundingBox": { "x": 0, "y": 0, "width": 240, "height": 900 }
+    },
+    {
+      "id": "typography-mismatch-1",
+      "category": "Typography Mismatch",
+      "categoryKey": "typography-mismatch",
+      "severity": "major",
+      "description": "Page headings use font-weight 800 but UX type scale defines heading weight as 600 (semi-bold).",
+      "wireframePage": "project-detail.html",
+      "requirementId": null,
+      "quotes": {
+        "prd": null,
+        "ux": "Heading 1: Inter, 600 weight, 32px/40px. Heading 2: Inter, 600 weight, 24px/32px."
+      },
+      "recommendation": "Reduce heading font-weight from 800 to 600.",
+      "boundingBox": { "x": 280, "y": 24, "width": 500, "height": 48 }
+    },
+    {
+      "id": "component-fidelity-1",
+      "category": "Component Fidelity",
+      "categoryKey": "component-fidelity",
+      "severity": "major",
+      "description": "DataTable component missing sortable column headers. UX spec defines sort indicators (chevron up/down) on all sortable columns.",
+      "wireframePage": "project-detail.html",
+      "requirementId": "FR-12",
+      "quotes": {
+        "prd": null,
+        "ux": "DataTable: All columns sortable by default. Sort indicator: chevron-up (ascending), chevron-down (descending), both dimmed (unsorted)."
+      },
+      "recommendation": "Add sort indicators to DataTable column headers.",
+      "boundingBox": { "x": 280, "y": 400, "width": 1120, "height": 40 }
+    },
+    {
+      "id": "component-fidelity-2",
+      "category": "Component Fidelity",
+      "categoryKey": "component-fidelity",
+      "severity": "minor",
+      "description": "Avatar component shows square shape but UX defines Avatar as circular with 2px border.",
+      "wireframePage": "team-directory.html",
+      "requirementId": null,
+      "quotes": {
+        "prd": null,
+        "ux": "Avatar: circular, border-radius: 50%, border: 2px solid --color-border-subtle."
+      },
+      "recommendation": "Change Avatar to circular shape with 2px border.",
+      "boundingBox": { "x": 260, "y": 220, "width": 48, "height": 48 }
+    },
+    {
+      "id": "layout-deviation-1",
+      "category": "Layout Deviation",
+      "categoryKey": "layout-deviation",
+      "severity": "major",
+      "description": "Dashboard uses 2-column grid but UX defines a 3-column layout for the metrics section.",
+      "wireframePage": "dashboard.html",
+      "requirementId": null,
+      "quotes": {
+        "prd": null,
+        "ux": "Dashboard metrics: 3-column grid, gap: 24px, each card min-width: 280px."
+      },
+      "recommendation": "Change metrics section from 2 columns to 3 columns.",
+      "boundingBox": { "x": 260, "y": 100, "width": 1160, "height": 220 }
+    },
+    {
+      "id": "layout-deviation-2",
+      "category": "Layout Deviation",
+      "categoryKey": "layout-deviation",
+      "severity": "minor",
+      "description": "Content area padding is 16px but UX defines 32px padding for main content region.",
+      "wireframePage": "project-detail.html",
+      "requirementId": null,
+      "quotes": {
+        "prd": null,
+        "ux": "Main content area: padding: 32px, max-width: 1280px, centered."
+      },
+      "recommendation": "Increase content padding from 16px to 32px.",
+      "boundingBox": { "x": 240, "y": 80, "width": 1200, "height": 820 }
+    },
+    {
+      "id": "state-gap-1",
+      "category": "State Gap",
+      "categoryKey": "state-gap",
+      "severity": "major",
+      "description": "Button hover state shows no visual change. UX defines hover: background darkens 10%, subtle shadow appears.",
+      "wireframePage": "dashboard.html",
+      "requirementId": null,
+      "quotes": {
+        "prd": null,
+        "ux": "Primary Button hover: background-color: darken(--color-primary, 10%), box-shadow: 0 2px 8px rgba(0,0,0,0.15), transition: all 150ms ease."
+      },
+      "recommendation": "Add hover state transition to primary buttons.",
+      "boundingBox": { "x": 1100, "y": 24, "width": 120, "height": 40 }
+    },
+    {
+      "id": "responsive-mismatch-1",
+      "category": "Responsive Mismatch",
+      "categoryKey": "responsive-mismatch",
+      "severity": "major",
+      "description": "At 768px breakpoint, sidebar does not collapse to hamburger menu as UX spec requires.",
+      "wireframePage": "dashboard.html",
+      "requirementId": null,
+      "quotes": {
+        "prd": null,
+        "ux": "Breakpoint md (768px): sidebar collapses to hamburger icon in top bar. Main content fills full width."
+      },
+      "recommendation": "Implement sidebar collapse behavior at 768px breakpoint.",
+      "boundingBox": { "x": 0, "y": 0, "width": 240, "height": 900 }
+    },
+    {
+      "id": "wireframe-extra-1",
+      "category": "Wireframe Extra",
+      "categoryKey": "wireframe-extra",
+      "severity": "minor",
+      "description": "Project detail page includes a 'Recent Activity' feed widget not defined in UX component registry or PRD.",
+      "wireframePage": "project-detail.html",
+      "requirementId": null,
+      "quotes": { "prd": null, "ux": null },
+      "recommendation": "Document this component in UX design system or remove from wireframe.",
+      "boundingBox": { "x": 280, "y": 600, "width": 400, "height": 280 }
+    },
+    {
+      "id": "ux-unimplemented-1",
+      "category": "UX Unimplemented",
+      "categoryKey": "ux-unimplemented",
+      "severity": "blocker",
+      "description": "Breadcrumb navigation defined in UX is completely absent from all wireframe pages.",
+      "wireframePage": "project-detail.html",
+      "requirementId": null,
+      "quotes": {
+        "prd": null,
+        "ux": "Breadcrumb: present on all pages except Login. Pattern: Home > Section > Current Page. Uses --color-text-secondary, '/' separator."
+      },
+      "recommendation": "Add breadcrumb navigation to all interior pages.",
+      "boundingBox": null
+    },
+    {
+      "id": "ux-unimplemented-2",
+      "category": "UX Unimplemented",
+      "categoryKey": "ux-unimplemented",
+      "severity": "blocker",
+      "description": "Empty state illustrations defined in UX for DataTable and project list are missing. Wireframe shows blank space.",
+      "wireframePage": "dashboard.html",
+      "requirementId": null,
+      "quotes": {
+        "prd": null,
+        "ux": "EmptyState component: centered illustration (from asset library), heading, description text, primary action button. Applied to: DataTable (no rows), ProjectList (no projects)."
+      },
+      "recommendation": "Implement EmptyState component for all data-dependent areas.",
+      "boundingBox": null
+    },
+    {
+      "id": "cross-source-conflict-1",
+      "category": "Cross-Source Conflict",
+      "categoryKey": "cross-source-conflict",
+      "severity": "major",
+      "description": "PRD says project status uses 4 values (Active, Paused, Completed, Archived) but UX defines 5 status variants (adds 'Draft').",
+      "wireframePage": "project-detail.html",
+      "requirementId": "FR-10",
+      "quotes": {
+        "prd": "Project status: Active | Paused | Completed | Archived",
+        "ux": "StatusBadge variants: Draft (gray), Active (green), Paused (amber), Completed (blue), Archived (slate)"
+      },
+      "recommendation": "Align PRD and UX on project status values. Wireframe currently shows 5 statuses matching UX.",
+      "boundingBox": { "x": 620, "y": 28, "width": 100, "height": 28 }
+    }
+  ],
+  "elementDetection": {
+    "checklist": [
+      { "name": "Global Search", "source": "PRD", "wireframePage": "dashboard.html", "status": "found", "selector": "input[type='search']", "visible": true, "boundingBox": { "x": 320, "y": 24, "width": 400, "height": 40 }, "findingIds": ["prd-gap-4"] },
+      { "name": "Sidebar Navigation", "source": "UX", "wireframePage": "dashboard.html", "status": "found", "selector": "nav.sidebar", "visible": true, "boundingBox": { "x": 0, "y": 0, "width": 240, "height": 900 }, "findingIds": ["token-drift-3", "responsive-mismatch-1"] },
+      { "name": "Revenue Chart", "source": "PRD", "wireframePage": "dashboard.html", "status": "found", "selector": ".revenue-chart", "visible": true, "boundingBox": { "x": 420, "y": 280, "width": 380, "height": 260 }, "findingIds": ["contradiction-1"] },
+      { "name": "Metrics Cards", "source": "UX", "wireframePage": "dashboard.html", "status": "found", "selector": ".metrics-grid", "visible": true, "boundingBox": { "x": 260, "y": 100, "width": 1160, "height": 220 }, "findingIds": ["layout-deviation-1", "token-drift-2"] },
+      { "name": "Primary Button", "source": "UX", "wireframePage": "dashboard.html", "status": "found", "selector": "button.btn-primary", "visible": true, "boundingBox": { "x": 1100, "y": 24, "width": 120, "height": 40 }, "findingIds": ["token-drift-1", "state-gap-1"] },
+      { "name": "Quick Actions FAB", "source": "Wireframe", "wireframePage": "dashboard.html", "status": "found", "selector": ".fab-button", "visible": true, "boundingBox": { "x": 1340, "y": 760, "width": 56, "height": 56 }, "findingIds": ["design-decision-1"] },
+      { "name": "Login Form", "source": "PRD", "wireframePage": "login.html", "status": "found", "selector": "form.login-form", "visible": true, "boundingBox": { "x": 340, "y": 240, "width": 360, "height": 320 }, "findingIds": ["contradiction-2"] },
+      { "name": "Remember Me", "source": "Wireframe", "wireframePage": "login.html", "status": "found", "selector": "input[type='checkbox']", "visible": true, "boundingBox": { "x": 340, "y": 520, "width": 160, "height": 24 }, "findingIds": ["design-decision-2"] },
+      { "name": "Project Header", "source": "PRD", "wireframePage": "project-detail.html", "status": "found", "selector": ".project-header", "visible": true, "boundingBox": { "x": 280, "y": 24, "width": 500, "height": 48 }, "findingIds": ["typography-mismatch-1"] },
+      { "name": "Status Badge", "source": "UX", "wireframePage": "project-detail.html", "status": "found", "selector": ".status-badge", "visible": true, "boundingBox": { "x": 620, "y": 28, "width": 100, "height": 28 }, "findingIds": ["cross-source-conflict-1"] },
+      { "name": "DataTable", "source": "UX", "wireframePage": "project-detail.html", "status": "found", "selector": "table.data-table", "visible": true, "boundingBox": { "x": 280, "y": 400, "width": 1120, "height": 40 }, "findingIds": ["component-fidelity-1"] },
+      { "name": "Content Area", "source": "UX", "wireframePage": "project-detail.html", "status": "found", "selector": "main.content", "visible": true, "boundingBox": { "x": 240, "y": 80, "width": 1200, "height": 820 }, "findingIds": ["layout-deviation-2"] },
+      { "name": "Activity Feed", "source": "Wireframe", "wireframePage": "project-detail.html", "status": "found", "selector": ".activity-feed", "visible": true, "boundingBox": { "x": 280, "y": 600, "width": 400, "height": 280 }, "findingIds": ["wireframe-extra-1"] },
+      { "name": "Team Cards", "source": "PRD", "wireframePage": "team-directory.html", "status": "found", "selector": ".team-grid", "visible": true, "boundingBox": { "x": 240, "y": 200, "width": 960, "height": 500 }, "findingIds": ["contradiction-3"] },
+      { "name": "Avatar", "source": "UX", "wireframePage": "team-directory.html", "status": "found", "selector": ".avatar", "visible": true, "boundingBox": { "x": 260, "y": 220, "width": 48, "height": 48 }, "findingIds": ["component-fidelity-2"] },
+      { "name": "Notification Bell", "source": "PRD", "wireframePage": "dashboard.html", "status": "not_found", "selector": null, "visible": null, "boundingBox": null, "findingIds": ["prd-gap-3"], "selectorsQueried": ["[aria-label*='notification']", "[class*='notification']", "[class*='bell']", "text:notification"] },
+      { "name": "Milestone Timeline", "source": "PRD", "wireframePage": "project-detail.html", "status": "not_found", "selector": null, "visible": null, "boundingBox": null, "findingIds": ["prd-gap-2"], "selectorsQueried": ["[class*='milestone']", "[class*='timeline']", "[class*='gantt']", "text:milestone"] },
+      { "name": "Export CSV Button", "source": "PRD", "wireframePage": "team-directory.html", "status": "not_found", "selector": null, "visible": null, "boundingBox": null, "findingIds": ["prd-gap-1"], "selectorsQueried": ["[class*='export']", "button:has-text('export')", "[aria-label*='export']", "text:export"] },
+      { "name": "Breadcrumb", "source": "UX", "wireframePage": "project-detail.html", "status": "not_found", "selector": null, "visible": null, "boundingBox": null, "findingIds": ["ux-unimplemented-1"], "selectorsQueried": ["nav[aria-label*='breadcrumb']", "[class*='breadcrumb']", "text:breadcrumb"] },
+      { "name": "Empty State", "source": "UX", "wireframePage": "dashboard.html", "status": "not_found", "selector": null, "visible": null, "boundingBox": null, "findingIds": ["ux-unimplemented-2"], "selectorsQueried": ["[class*='empty-state']", "[class*='no-data']", "text:no results"] }
+    ],
+    "summary": {
+      "total": 20,
+      "found": 15,
+      "notFound": 5
+    }
+  }
+}
