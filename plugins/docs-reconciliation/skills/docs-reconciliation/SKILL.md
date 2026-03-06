@@ -657,7 +657,7 @@ For each requirement that appears in all three documents, trace the interpretati
 
 ### Phase 6 — Reconciliation Scoring
 
-Build a requirement-level scorecard:
+Build a requirement-level scorecard. For each requirement, assign a status **and a reason** explaining why it received that status:
 
 | Status | Meaning |
 |--------|---------|
@@ -666,6 +666,18 @@ Build a requirement-level scorecard:
 | **Conflict** | Two or more documents contradict on this requirement |
 | **Gap** | Missing from one or more target documents |
 | **N/A** | Requirement doesn't need definition in target documents (backend, infrastructure) |
+
+**Status reason** (mandatory for every requirement): A concise, human-readable explanation of why this requirement received its status. The reason must reference the specific documents and findings involved. Examples:
+
+| Status | Example reason |
+|--------|---------------|
+| Aligned | "Defined in PRD (FR-3), UX (SearchInput component with variants), and Mock (visible on Dashboard screen)" |
+| Partial | "PRD defines date range filter (FR-7); UX has DatePicker component but Mock does not show it on any screen (W4)" |
+| Conflict | "PRD says max 50 results per page (FR-12); UX specifies infinite scroll with no pagination (V2)" |
+| Gap | "PRD requires export to CSV (FR-15); not defined in UX or Mock (W8, W9)" |
+| N/A | "Backend authentication requirement — no UI representation needed" |
+
+The reason is stored in `requirements[].reason` in the JSON and displayed in the matrix and MD report.
 
 Calculate per-document and overall scores:
 
@@ -688,7 +700,7 @@ The JSON must include:
 - `meta` — mode, date, document names, file paths
 - `scores` — overall alignment, per-document coverage, per-document maturity
 - `stats` — finding counts by category and severity
-- `requirements` — array of all PRD requirements with per-document status
+- `requirements` — array of all PRD requirements with per-document status and a `reason` string explaining why each requirement has its status
 - `findings` — array of all findings with ID, code, severity, docs tag, descriptions, quotes
 - `inventories` — extracted inventories from each document (P1-P7, U1-U11, K1-K7)
 - `namingDrift` — array of N findings with terms per document
@@ -705,7 +717,7 @@ See [report-template.md](report-template.md) for the complete structure.
 Key sections:
 - Executive summary with alignment scores and finding counts
 - Document maturity assessment per document
-- Requirement-by-requirement reconciliation table (showing status per document)
+- Requirement-by-requirement reconciliation table (showing status per document and the reason for each status)
 - Conflict details (V findings with full context from all involved documents)
 - Gap details (W findings, tagged by which document is missing coverage)
 - Addition details (Q findings, tagged by which document adds scope)
@@ -741,6 +753,7 @@ Interactive features (all driven by JSON data at runtime):
 - **Tab switching** between Matrix view and Heatmap view
 - **Coverage heatmap** — rows are requirements, columns are documents, cells are color-coded
 - **Side-by-side matrix** — adapts to 2 or 3 columns based on `meta.mode`
+- **Status reason** — each requirement row displays its `reason` text explaining why it has its current status. Shown inline below the requirement title or in an expandable detail panel.
 - **Finding badges** inline with expandable details
 - **Filter by**: status, severity, category, document pair
 - **Search by**: FR ID, keyword, component name

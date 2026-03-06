@@ -120,6 +120,7 @@ This file defines the JSON schema for `reconciliation-data.json` — the single 
       "group": "string — group ID from groups[]",
       "priority": "string | null — must-have / should-have / nice-to-have",
       "overallStatus": "string — aligned | partial | conflict | gap | na",
+      "reason": "string — human-readable explanation of why this requirement has its status. References specific documents and finding IDs. E.g., 'Defined in PRD (FR-3), UX (SearchInput component), and Mock (Dashboard screen)' for aligned, or 'PRD requires export to CSV (FR-15); not defined in UX or Mock (W8, W9)' for gap.",
       "perDocument": {
         "prd": {
           "status": "source",
