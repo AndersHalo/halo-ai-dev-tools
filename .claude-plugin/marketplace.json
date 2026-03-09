@@ -11,11 +11,6 @@
       "source": "./plugins/plan-refinement"
     },
     {
-      "name": "jira-tools",
-      "description": "Interact with Jira using Atlassian CLI: create, list, view, comment, and update tickets. Supports configurable default project.",
-      "source": "./plugins/jira-tools"
-    },
-    {
       "name": "jira-mcp-setup",
       "description": "Install and configure the Jira MCP server (mcp-atlassian) for Claude Code. Adds Jira integration via Model Context Protocol.",
       "source": "./plugins/jira-mcp-setup"
@@ -29,6 +24,16 @@
       "name": "deel-api",
       "description": "Deel REST API integration reference. Use when building features that sync data from Deel (people, organizations, teams, departments, time-off, contracts, lookups).",
       "source": "./plugins/deel-api"
+    },
+    {
+      "name": "reconciliation-audit",
+      "description": "Multi-document reconciliation engine. Cross-references PRD against UX Design System and/or Mock documents. Detects conflicts, coverage gaps, scope additions, naming drift, cascade violations, specificity gaps, and per-document internal consistency issues. Uses descriptive category names. Generates markdown report, interactive HTML dashboard with Matrix, Heatmap, and Document Health tabs, optional Excalidraw diagrams, and Puppeteer verification map.",
+      "source": "./plugins/reconciliation-audit"
+    },
+    {
+      "name": "wireframe-audit",
+      "description": "Audit HTML wireframes against PRD and/or UX Design System. Three modes: PRD-only, UX-only, Full (PRD+UX). Detects contradictions, gaps, design decisions, token drift, component fidelity issues, layout deviations, and more using Puppeteer DOM inspection. Generates JSON data, markdown report, interactive dashboard with findings explorer and coverage matrix, and screenshot gallery with SVG overlay markers. Supports incremental delta mode.",
+      "source": "./plugins/wireframe-audit"
     }
   ]
 }

@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wireframe Audit — Screenshots</title>
+<style>
+  :root {
+    --n-50: #fafafa; --n-100: #f4f4f5; --n-200: #e4e4e7; --n-300: #d4d4d8;
+    --n-400: #a1a1aa; --n-500: #71717a; --n-600: #52525b; --n-700: #3f3f46;
+    --n-800: #27272a; --n-900: #18181b;
+    --c-ok: #22c55e; --c-warn: #f59e0b; --c-err: #ef4444; --c-info: #3b82f6;
+    --font: 'Inter', system-ui, -apple-system, sans-serif;
+    --radius: 8px; --radius-lg: 12px;
+    --panel-width: 400px;
+  }
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: var(--font); background: var(--n-100); color: var(--n-800); min-height: 100vh; }
+
+  /* Hero (same as dashboard) */
+  .hero { background: linear-gradient(135deg, #0f172a, #1e293b); color: white; padding: 32px 48px 24px; }
+  .hero h1 { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+  .hero p { font-size: 13px; color: rgba(255,255,255,0.5); margin-bottom: 16px; }
+
+  /* Legend */
+  .legend { display: flex; gap: 20px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: rgba(255,255,255,0.7); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+
+  /* Filter pills in hero */
+  .hero-filters { display: flex; gap: 8px; margin-top: 16px; }
+  .hf-pill {
+    padding: 5px 14px; border: 1px solid rgba(255,255,255,0.2); border-radius: 20px;
+    font-size: 12px; font-weight: 500; cursor: pointer; background: transparent;
+    color: rgba(255,255,255,0.7); transition: all 0.15s; font-family: var(--font);
+  }
+  .hf-pill:hover { background: rgba(255,255,255,0.08); }
+  .hf-pill.active { background: rgba(255,255,255,0.15); color: white; border-color: rgba(255,255,255,0.4); }
+
+  /* Page Tabs */
+  .page-tabs {
+    display: flex; gap: 0; background: white; border-bottom: 1px solid var(--n-200);
+    padding: 0 48px; overflow-x: auto;
+  }
+  .page-tab {
+    padding: 14px 24px; font-size: 13px; font-weight: 500; cursor: pointer;
+    border-bottom: 3px solid transparent; color: var(--n-500); transition: all 0.15s;
+    white-space: nowrap; background: none; border-left: none; border-right: none; border-top: none;
+    font-family: var(--font);
+  }
+  .page-tab:hover { color: var(--n-700); }
+  .page-tab.active { color: var(--c-info); border-bottom-color: var(--c-info); font-weight: 600; }
+  .page-tab .pt-badge {
+    margin-left: 6px; font-size: 10px; padding: 2px 6px; border-radius: 10px;
+    background: var(--n-100); color: var(--n-600); font-weight: 600;
+  }
+  .page-tab.active .pt-badge { background: rgba(59,130,246,0.1); color: var(--c-info); }
+
+  /* Main layout */
+  .main-layout { display: flex; position: relative; }
+  .screenshot-area { flex: 1; padding: 32px 48px; transition: margin-right 0.3s; }
+  .screenshot-area.panel-open { margin-right: var(--panel-width); }
+
+  /* Screenshot container */
+  .screenshot-container {
+    position: relative; display: inline-block; border-radius: var(--radius-lg);
+    overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.12); background: white;
+  }
+  .screenshot-container img { display: block; max-width: 100%; height: auto; }
+  .screenshot-container svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+  .screenshot-container svg rect { pointer-events: all; cursor: pointer; transition: fill-opacity 0.15s; }
+  .screenshot-container svg rect:hover { fill-opacity: 0.15 !important; }
+
+  /* Finding label on overlay */
+  .overlay-label {
+    font-size: 10px; font-weight: 700; fill: white; pointer-events: none;
+  }
+  .overlay-label-bg { rx: 4; ry: 4; pointer-events: none; }
+
+  /* Side Panel */
+  .side-panel {
+    position: fixed; top: 0; right: -420px; width: var(--panel-width); height: 100vh;
+    background: var(--n-900); color: white; overflow-y: auto; z-index: 100;
+    transition: right 0.3s ease; box-shadow: -4px 0 24px rgba(0,0,0,0.3);
+  }
+  .side-panel.open { right: 0; }
+  .sp-header {
+    padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .sp-header h3 { font-size: 16px; font-weight: 600; }
+  .sp-close { background: none; border: none; color: var(--n-400); cursor: pointer; font-size: 20px; padding: 4px 8px; }
+  .sp-close:hover { color: white; }
+  .sp-section { padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .sp-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--n-500); margin-bottom: 6px; }
+  .sp-value { font-size: 13px; color: var(--n-200); line-height: 1.5; }
+  .sp-selector { font-family: monospace; font-size: 12px; color: #93c5fd; background: rgba(59,130,246,0.1); padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 4px; }
+  .sp-bbox { font-size: 11px; color: var(--n-500); margin-top: 4px; }
+  .sp-finding-card {
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: var(--radius); padding: 12px; margin-top: 8px;
+  }
+  .sp-finding-card .spf-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .sp-finding-card .spf-cat { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px; }
+  .sp-finding-card .spf-sev { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 10px; margin-left: auto; }
+  .sp-finding-card .spf-desc { font-size: 12px; color: var(--n-300); line-height: 1.5; }
+  .sp-quote { background: rgba(255,255,255,0.04); border-left: 2px solid var(--n-600); padding: 8px 10px; margin-top: 8px; font-size: 11px; color: var(--n-400); }
+  .sp-quote strong { color: var(--n-300); }
+
+  /* Missing panel */
+  .missing-panel {
+    background: white; border-radius: var(--radius-lg); margin-top: 24px;
+    border: 1px solid var(--n-200); overflow: hidden;
+  }
+  .missing-header {
+    padding: 14px 20px; background: var(--n-800); color: white;
+    font-size: 14px; font-weight: 600; cursor: pointer; display: flex;
+    align-items: center; justify-content: space-between;
+  }
+  .missing-header .mh-count { font-size: 12px; background: #ef4444; padding: 2px 10px; border-radius: 10px; }
+  .missing-list { padding: 0; }
+  .missing-item {
+    padding: 12px 20px; border-bottom: 1px solid var(--n-100);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .missing-item:last-child { border-bottom: none; }
+  .missing-item .mi-border { width: 4px; height: 40px; border-radius: 2px; background: #ef4444; flex-shrink: 0; }
+  .missing-item .mi-name { font-size: 13px; font-weight: 600; }
+  .missing-item .mi-src { font-size: 11px; color: var(--n-500); }
+  .missing-item .mi-finding { font-size: 11px; color: var(--n-500); margin-left: auto; font-family: monospace; }
+
+  /* Simulated screenshot (since we don't have real images) */
+  .sim-screenshot {
+    width: 1440px; max-width: 100%; aspect-ratio: 1440/900;
+    background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+    position: relative;
+  }
+  .sim-screenshot .sim-sidebar { position: absolute; left: 0; top: 0; width: 240px; height: 100%; background: #1e293b; }
+  .sim-screenshot .sim-header { position: absolute; left: 240px; top: 0; right: 0; height: 64px; background: white; border-bottom: 1px solid #e2e8f0; }
+  .sim-screenshot .sim-content { position: absolute; left: 260px; top: 84px; right: 20px; bottom: 20px; }
+  .sim-card { position: absolute; background: white; border-radius: 8px; border: 1px solid #e2e8f0; }
+  .sim-chart { position: absolute; background: white; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 14px; }
+  .sim-search { position: absolute; background: #f1f5f9; border-radius: 8px; height: 40px; }
+  .sim-btn { position: absolute; background: #3b82f6; border-radius: 8px; }
+  .sim-fab { position: absolute; width: 56px; height: 56px; background: #3b82f6; border-radius: 50%; }
+  .sim-text { position: absolute; background: #e2e8f0; border-radius: 4px; height: 12px; }
+
+  .page-content { display: none; }
+  .page-content.active { display: block; }
+</style>
+</head>
+<body>
+
+<!-- Hero -->
+<div class="hero">
+  <h1 id="heroTitle">Wireframe Audit — Visual Evidence</h1>
+  <p id="heroSub">Loading...</p>
+  <div class="legend" id="legend"></div>
+  <div class="hero-filters" id="heroFilters"></div>
+</div>
+
+<!-- Page Tabs -->
+<div class="page-tabs" id="pageTabs"></div>
+
+<!-- Main -->
+<div class="main-layout">
+  <div class="screenshot-area" id="screenshotArea"></div>
+  <div class="side-panel" id="sidePanel">
+    <div class="sp-header">
+      <h3 id="spTitle">Component</h3>
+      <button class="sp-close" onclick="closePanel()">&times;</button>
+    </div>
+    <div id="spContent"></div>
+  </div>
+</div>
+
+<script>
+const CAT_COLORS = {
+  'contradiction': '#ef4444', 'prd-gap': '#3b82f6', 'design-decision': '#10b981',
+  'accessibility-gap': '#f59e0b', 'token-drift': '#f43f5e', 'typography-mismatch': '#0ea5e9',
+  'component-fidelity': '#f97316', 'layout-deviation': '#8b5cf6', 'state-gap': '#f59e0b',
+  'responsive-mismatch': '#14b8a6', 'wireframe-extra': '#84cc16', 'ux-unimplemented': '#6366f1',
+  'cross-source-conflict': '#ec4899', 'scope-creep': '#64748b', 'placeholder': '#9ca3af',
+  'cross-page-inconsistency': '#7c3aed'
+};
+const SEV_COLORS = { blocker: '#ef4444', major: '#f97316', minor: '#9ca3af' };
+
+let DATA = null;
+let activePage = null;
+let activeSevFilter = 'all';
+
+async function init() {
+  try {
+    const r = await fetch('./wireframe-data.json');
+    DATA = await r.json();
+  } catch {
+    document.body.innerHTML = '<div style="padding:48px;text-align:center;color:#a1a1aa">Could not load wireframe-data.json</div>';
+    return;
+  }
+  renderHero();
+  renderTabs();
+  activePage = DATA.meta.wireframeFiles[0];
+  renderPage(activePage);
+}
+
+function renderHero() {
+  document.getElementById('heroTitle').textContent = DATA.meta.title + ' — Visual Evidence';
+  document.getElementById('heroSub').textContent = `${DATA.meta.date} — ${DATA.elementDetection.summary.found} elements found, ${DATA.elementDetection.summary.notFound} missing`;
+
+  // Legend
+  const legend = document.getElementById('legend');
+  legend.innerHTML = `
+    <div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div>Blocker</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f97316"></div>Major</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#9ca3af"></div>Minor</div>
+    <div class="legend-item"><div class="legend-dot" style="background:rgba(34,197,94,0.4);border:1px solid #22c55e"></div>No findings</div>
+    <div class="legend-item"><div class="legend-dot" style="background:transparent;border:2px dashed #ef4444"></div>Missing</div>
+  `;
+
+  // Filters
+  const filters = document.getElementById('heroFilters');
+  filters.innerHTML = `
+    <button class="hf-pill active" onclick="setSevFilter('all',this)">All</button>
+    <button class="hf-pill" onclick="setSevFilter('blocker',this)">Blocker</button>
+    <button class="hf-pill" onclick="setSevFilter('major',this)">Major</button>
+    <button class="hf-pill" onclick="setSevFilter('minor',this)">Minor</button>
+    <button class="hf-pill" onclick="setSevFilter('none',this)">No findings</button>
+  `;
+}
+
+function renderTabs() {
+  const tabs = document.getElementById('pageTabs');
+  tabs.innerHTML = DATA.meta.wireframeFiles.map(pg => {
+    const items = DATA.elementDetection.checklist.filter(c => c.wireframePage === pg);
+    const issues = items.filter(c => c.findingIds.length > 0).length;
+    return `<button class="page-tab${pg === DATA.meta.wireframeFiles[0] ? ' active' : ''}" data-page="${pg}" onclick="switchPage('${pg}',this)">
+      ${pg.replace('.html','')}
+      ${issues > 0 ? `<span class="pt-badge">${issues} issues</span>` : '<span class="pt-badge" style="background:#dcfce7;color:#16a34a">OK</span>'}
+    </button>`;
+  }).join('');
+}
+
+function switchPage(pg, el) {
+  activePage = pg;
+  document.querySelectorAll('.page-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderPage(pg);
+  closePanel();
+}
+
+function setSevFilter(s, el) {
+  activeSevFilter = s;
+  document.querySelectorAll('.hf-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  renderPage(activePage);
+}
+
+function renderPage(pg) {
+  const area = document.getElementById('screenshotArea');
+  const items = DATA.elementDetection.checklist.filter(c => c.wireframePage === pg);
+  const found = items.filter(c => c.status === 'found');
+  const missing = items.filter(c => c.status === 'not_found');
+
+  // Build simulated screenshot with SVG overlays
+  // In real usage, the img would be screenshots/{page-name}.png
+  // For preview, we render a simulated wireframe appearance
+  const W = 1440, H = 900;
+
+  let svgContent = '';
+  found.forEach(item => {
+    if (!item.boundingBox) return;
+    const b = item.boundingBox;
+    const hasFinding = item.findingIds.length > 0;
+    const worstSev = hasFinding ? getWorstSev(item.findingIds) : null;
+
+    // Filter
+    if (activeSevFilter === 'none' && hasFinding) return;
+    if (activeSevFilter !== 'all' && activeSevFilter !== 'none' && worstSev !== activeSevFilter) return;
+
+    const strokeColor = hasFinding ? SEV_COLORS[worstSev] : '#22c55e';
+    const strokeOpacity = hasFinding ? 1 : 0.4;
+    const fillOpacity = hasFinding ? 0.08 : 0;
+    const strokeWidth = hasFinding ? 2 : 1;
+    const itemId = encodeURIComponent(item.name);
+
+    svgContent += `<rect x="${b.x}" y="${b.y}" width="${b.width}" height="${b.height}"
+      fill="${strokeColor}" fill-opacity="${fillOpacity}"
+      stroke="${strokeColor}" stroke-opacity="${strokeOpacity}" stroke-width="${strokeWidth}"
+      rx="4" ry="4"
+      onclick="openPanel('${itemId}')"
+      onmouseenter="showTooltip(event,'${esc(item.name)}',${item.findingIds.length},'${worstSev || 'ok'}')"
+      onmouseleave="hideTooltip()"/>`;
+
+    // Label
+    if (hasFinding) {
+      const label = item.findingIds[0];
+      const labelW = label.length * 6.5 + 12;
+      const catKey = DATA.findings.find(f => f.id === label)?.categoryKey || 'contradiction';
+      const labelColor = CAT_COLORS[catKey] || strokeColor;
+      svgContent += `<rect class="overlay-label-bg" x="${b.x}" y="${b.y - 18}" width="${labelW}" height="16" fill="${labelColor}"/>`;
+      svgContent += `<text class="overlay-label" x="${b.x + 6}" y="${b.y - 6}" font-size="10" font-weight="700" fill="white">${label}</text>`;
+      if (item.findingIds.length > 1) {
+        svgContent += `<rect class="overlay-label-bg" x="${b.x + labelW + 4}" y="${b.y - 18}" width="42" height="16" fill="${labelColor}" opacity="0.8"/>`;
+        svgContent += `<text class="overlay-label" x="${b.x + labelW + 10}" y="${b.y - 6}" font-size="9" fill="white">+${item.findingIds.length - 1} more</text>`;
+      }
+    }
+  });
+
+  // Render simulated screenshot + overlays
+  let simElements = '';
+  if (pg === 'dashboard.html') {
+    simElements = `
+      <div class="sim-sidebar"></div>
+      <div class="sim-header"></div>
+      <div class="sim-search" style="left:320px;top:16px;width:400px"></div>
+      <div class="sim-btn" style="left:1100px;top:16px;width:120px;height:40px"></div>
+      <div class="sim-card" style="left:260px;top:100px;width:370px;height:200px"></div>
+      <div class="sim-card" style="left:650px;top:100px;width:370px;height:200px"></div>
+      <div class="sim-card" style="left:1040px;top:100px;width:370px;height:200px"></div>
+      <div class="sim-chart" style="left:420px;top:280px;width:380px;height:260px">Revenue Chart</div>
+      <div class="sim-card" style="left:840px;top:280px;width:570px;height:260px"></div>
+      <div class="sim-fab" style="left:1340px;top:760px"></div>
+    `;
+  } else if (pg === 'login.html') {
+    simElements = `
+      <div style="position:absolute;left:0;top:0;right:0;bottom:0;background:linear-gradient(135deg,#1e293b,#334155);display:flex;align-items:center;justify-content:center">
+        <div style="width:360px;height:320px;background:white;border-radius:12px;position:absolute;left:340px;top:240px"></div>
+      </div>
+    `;
+  } else if (pg === 'project-detail.html') {
+    simElements = `
+      <div class="sim-sidebar"></div>
+      <div class="sim-header"></div>
+      <div class="sim-text" style="left:280px;top:28px;width:500px;height:24px"></div>
+      <div style="position:absolute;left:620px;top:28px;width:100px;height:28px;background:#dcfce7;border-radius:14px"></div>
+      <div class="sim-card" style="left:280px;top:100px;width:1120px;height:280px"></div>
+      <div style="position:absolute;left:280px;top:400px;right:40px;height:40px;background:#f1f5f9;border-radius:8px 8px 0 0"></div>
+      <div class="sim-card" style="left:280px;top:440px;width:1120px;height:140px"></div>
+      <div class="sim-card" style="left:280px;top:600px;width:400px;height:280px"></div>
+    `;
+  } else if (pg === 'team-directory.html') {
+    simElements = `
+      <div class="sim-sidebar"></div>
+      <div class="sim-header"></div>
+      <div class="sim-text" style="left:280px;top:100px;width:300px;height:20px"></div>
+      <div style="position:absolute;left:240px;top:200px;width:960px;height:500px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:20px">
+        <div class="sim-card" style="position:relative;width:100%;height:150px"></div>
+        <div class="sim-card" style="position:relative;width:100%;height:150px"></div>
+        <div class="sim-card" style="position:relative;width:100%;height:150px"></div>
+        <div class="sim-card" style="position:relative;width:100%;height:150px"></div>
+        <div class="sim-card" style="position:relative;width:100%;height:150px"></div>
+        <div class="sim-card" style="position:relative;width:100%;height:150px"></div>
+      </div>
+    `;
+  }
+
+  area.innerHTML = `
+    <div class="screenshot-container" style="width:100%;max-width:${W}px">
+      <div class="sim-screenshot" style="width:${W}px;max-width:100%;height:${H}px">
+        ${simElements}
+      </div>
+      <svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="position:absolute;top:0;left:0;width:100%;height:100%">
+        ${svgContent}
+      </svg>
+    </div>
+    ${missing.length > 0 ? `
+    <div class="missing-panel">
+      <div class="missing-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+        Not Found in Wireframe
+        <span class="mh-count">${missing.length}</span>
+      </div>
+      <div class="missing-list">
+        ${missing.map(m => `
+          <div class="missing-item">
+            <div class="mi-border" style="background:${getWorstSevColor(m.findingIds)}"></div>
+            <div>
+              <div class="mi-name">${esc(m.name)}</div>
+              <div class="mi-src">Source: ${m.source} — ${(m.selectorsQueried||[]).length} selectors tried</div>
+            </div>
+            <div class="mi-finding">${m.findingIds.join(', ')}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>` : ''}
+  `;
+}
+
+function openPanel(nameEncoded) {
+  const name = decodeURIComponent(nameEncoded);
+  const item = DATA.elementDetection.checklist.find(c => c.name === name && c.wireframePage === activePage);
+  if (!item) return;
+
+  const panel = document.getElementById('sidePanel');
+  const title = document.getElementById('spTitle');
+  const content = document.getElementById('spContent');
+
+  title.textContent = item.name;
+
+  let h = '';
+
+  // Identity
+  h += `<div class="sp-section">
+    <div class="sp-label">Component Identity</div>
+    <div class="sp-value">${esc(item.name)}</div>
+    ${item.selector ? `<div class="sp-selector">${esc(item.selector)}</div>` : ''}
+    ${item.boundingBox ? `<div class="sp-bbox">Position: ${item.boundingBox.x}, ${item.boundingBox.y} — Size: ${item.boundingBox.width} x ${item.boundingBox.height}</div>` : ''}
+    <div class="sp-bbox">Status: ${item.status === 'found' ? '<span style="color:#22c55e">Visible</span>' : '<span style="color:#ef4444">Not Found</span>'} — Source: ${item.source}</div>
+  </div>`;
+
+  // Findings
+  if (item.findingIds.length > 0) {
+    h += `<div class="sp-section"><div class="sp-label">Findings (${item.findingIds.length})</div>`;
+    item.findingIds.forEach(fid => {
+      const f = DATA.findings.find(x => x.id === fid);
+      if (!f) return;
+      const catName = f.categoryKey.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
+      const color = CAT_COLORS[f.categoryKey] || '#71717a';
+      h += `<div class="sp-finding-card">
+        <div class="spf-top">
+          <span class="spf-cat" style="background:${color}20;color:${color}">${catName}</span>
+          <span style="font-size:11px;color:var(--n-400);font-family:monospace">${f.id}</span>
+          <span class="spf-sev" style="background:${SEV_COLORS[f.severity]}20;color:${SEV_COLORS[f.severity]}">${f.severity}</span>
+        </div>
+        <div class="spf-desc">${esc(f.description)}</div>
+        ${f.quotes?.prd ? `<div class="sp-quote"><strong>PRD:</strong> ${esc(f.quotes.prd)}</div>` : ''}
+        ${f.quotes?.ux ? `<div class="sp-quote"><strong>UX:</strong> ${esc(f.quotes.ux)}</div>` : ''}
+      </div>`;
+    });
+    h += `</div>`;
+  } else {
+    h += `<div class="sp-section"><div class="sp-label">Status</div><div class="sp-value" style="color:#22c55e">Implemented correctly — no findings</div></div>`;
+  }
+
+  content.innerHTML = h;
+  panel.classList.add('open');
+  document.getElementById('screenshotArea').classList.add('panel-open');
+}
+
+function closePanel() {
+  document.getElementById('sidePanel').classList.remove('open');
+  document.getElementById('screenshotArea').classList.remove('panel-open');
+}
+
+function getWorstSev(ids) {
+  const sevs = ids.map(id => DATA.findings.find(f => f.id === id)?.severity).filter(Boolean);
+  if (sevs.includes('blocker')) return 'blocker';
+  if (sevs.includes('major')) return 'major';
+  return 'minor';
+}
+function getWorstSevColor(ids) {
+  const s = getWorstSev(ids);
+  return SEV_COLORS[s] || '#9ca3af';
+}
+
+// Tooltip (simple)
+let tooltip = null;
+function showTooltip(e, name, count, sev) {
+  if (!tooltip) {
+    tooltip = document.createElement('div');
+    tooltip.style.cssText = 'position:fixed;z-index:200;background:#18181b;color:white;padding:8px 12px;border-radius:6px;font-size:12px;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,0.3);max-width:240px';
+    document.body.appendChild(tooltip);
+  }
+  const sevLabel = sev === 'ok' ? '<span style="color:#22c55e">No issues</span>' : `<span style="color:${SEV_COLORS[sev]}">${count} finding${count>1?'s':''} (${sev})</span>`;
+  tooltip.innerHTML = `<strong>${name}</strong><br>${sevLabel}`;
+  tooltip.style.display = 'block';
+  tooltip.style.left = (e.clientX + 12) + 'px';
+  tooltip.style.top = (e.clientY + 12) + 'px';
+}
+function hideTooltip() { if (tooltip) tooltip.style.display = 'none'; }
+document.addEventListener('mousemove', e => { if (tooltip && tooltip.style.display !== 'none') { tooltip.style.left = (e.clientX + 12) + 'px'; tooltip.style.top = (e.clientY + 12) + 'px'; }});
+
+// Keyboard
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closePanel();
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+    const pages = DATA.meta.wireframeFiles;
+    const idx = pages.indexOf(activePage);
+    const next = e.key === 'ArrowRight' ? (idx + 1) % pages.length : (idx - 1 + pages.length) % pages.length;
+    const tab = document.querySelectorAll('.page-tab')[next];
+    switchPage(pages[next], tab);
+  }
+});
+
+function esc(s) { return s ? s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,'\\\'') : ''; }
+
+init();
+</script>
+</body>
+</html>

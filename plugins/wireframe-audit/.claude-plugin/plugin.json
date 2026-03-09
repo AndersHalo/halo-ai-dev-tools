@@ -1,0 +1,30 @@
+{
+  "name": "wireframe-audit",
+  "version": "1.2.0",
+  "description": "Audit HTML wireframes against PRD and/or UX Design System documents. Supports three modes: PRD-only, UX-only, and Full (PRD+UX). Detects contradictions, coverage gaps, design decisions, token drift, component fidelity issues, layout deviations, and more. Generates: (1) structured JSON data file, (2) markdown analysis report, (3) interactive dashboard with findings explorer and coverage matrix, (4) screenshot gallery with SVG overlay markers and component-level finding detail. Uses Puppeteer throughout for DOM inspection, computed style extraction, and visual evidence capture. Follows data-template separation pattern and incremental delta mode.",
+  "author": {
+    "name": "anderson.monroy@halopowered.com"
+  },
+  "keywords": [
+    "wireframe",
+    "audit",
+    "prd",
+    "ux",
+    "design-system",
+    "html",
+    "mock",
+    "gap-analysis",
+    "contradictions",
+    "coverage",
+    "traceability",
+    "puppeteer",
+    "screenshots",
+    "heatmap",
+    "dashboard",
+    "delta",
+    "incremental",
+    "component-fidelity",
+    "token-drift",
+    "visual-inspection"
+  ]
+}
