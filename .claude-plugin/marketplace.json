@@ -26,9 +26,9 @@
       "source": "./plugins/deel-api"
     },
     {
-      "name": "docs-audit",
+      "name": "reconciliation-audit",
       "description": "Multi-document reconciliation engine. Cross-references PRD against UX Design System and/or Mock documents. Detects conflicts, coverage gaps, scope additions, naming drift, cascade violations, specificity gaps, and per-document internal consistency issues. Uses descriptive category names. Generates markdown report, interactive HTML dashboard with Matrix, Heatmap, and Document Health tabs, optional Excalidraw diagrams, and Puppeteer verification map.",
-      "source": "./plugins/docs-audit"
+      "source": "./plugins/reconciliation-audit"
     },
     {
       "name": "wireframe-audit",
