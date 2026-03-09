@@ -1,5 +1,5 @@
 ---
-name: docs-audit
+name: reconciliation-audit
 description: "Multi-document reconciliation engine. Cross-references PRD, UX Design System, and Mock documents to detect conflicts, coverage gaps, self-additions, naming drift, cascade violations, and specificity gaps. Generates a markdown report, interactive HTML dashboard, and optionally editable Excalidraw diagrams."
 ---
 
@@ -24,7 +24,7 @@ This skill answers:
 
 ### When to use this skill vs. wireframe-audit
 
-| Use **docs-audit** when... | Use **wireframe-audit** when... |
+| Use **reconciliation-audit** when... | Use **wireframe-audit** when... |
 |---|---|
 | You have 2-3 documents (PRD, UX, Mock) and need to check **alignment before building** | You have HTML wireframes and need a **detailed implementation audit** |
 | Mock is a markdown description, screenshots, OR HTML | Wireframe is **HTML only** — the skill reads the actual DOM with Puppeteer |
@@ -33,7 +33,7 @@ This skill answers:
 | You want Excalidraw diagrams and a verification map | You want a dashboard with findings explorer + coverage heatmap + screenshot gallery |
 | Focus: document-level alignment + internal consistency | Focus: implementation correctness of built wireframes |
 
-The two skills are **complementary**: run docs-audit first to align documents, then wireframe-audit after HTML wireframes are built to verify implementation quality.
+The two skills are **complementary**: run reconciliation-audit first to align documents, then wireframe-audit after HTML wireframes are built to verify implementation quality.
 
 ---
 

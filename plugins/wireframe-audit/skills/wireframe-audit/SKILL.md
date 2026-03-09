@@ -15,16 +15,16 @@ Audit HTML wireframe implementations against their source documents (PRD, UX Des
 - What do the documents define that the wireframe is missing?
 - Do PRD and UX contradict each other? (Full mode)
 
-### When to use this skill vs. docs-audit
+### When to use this skill vs. reconciliation-audit
 
-| Use **wireframe-audit** when... | Use **docs-audit** when... |
+| Use **wireframe-audit** when... | Use **reconciliation-audit** when... |
 |---|---|
 | You have HTML wireframes and want to verify they match PRD and/or UX specs | You have 2-3 documents (PRD, UX, Mock descriptions) and need alignment before building |
 | You want Puppeteer-powered visual evidence (screenshots, computed styles, DOM inspection) | Mock is markdown descriptions or screenshots, not HTML |
 | You want to see exactly which component on-screen has an issue | You want document-level reconciliation with Excalidraw diagrams |
 | Focus: implementation correctness of built wireframes | Focus: document alignment before implementation |
 
-The two skills are **complementary**: run docs-audit first to align documents, then wireframe-audit after HTML wireframes are built.
+The two skills are **complementary**: run reconciliation-audit first to align documents, then wireframe-audit after HTML wireframes are built.
 
 ---
 
@@ -72,7 +72,7 @@ docs/audit/wireframe/{analysis_name}/
 
 ### Data-Template Separation
 
-Same pattern as docs-audit. All visual outputs load `wireframe-data.json` via `fetch()`. HTML files are static templates that never grow with finding count.
+Same pattern as reconciliation-audit. All visual outputs load `wireframe-data.json` via `fetch()`. HTML files are static templates that never grow with finding count.
 
 ### Generation Order (mandatory)
 
@@ -155,7 +155,7 @@ No single-letter codes. The finding ID itself tells you the category.
 2. Create output directory structure.
 3. **Capture full-page screenshots** of each wireframe HTML:
    - Default viewport: 1440 x 900
-   - Single screenshot per page (like docs-audit)
+   - Single screenshot per page (like reconciliation-audit)
    - Only capture additional breakpoints if UX defines responsive breakpoints AND the single screenshot is insufficient
    - Save to `screenshots/{page-name}.png`
 4. If previous audit folder provided, load `wireframe-data.json` for delta mode (Phase 10).
@@ -355,9 +355,9 @@ Sections:
 
 Static HTML shell that loads `wireframe-data.json` via `fetch()`.
 
-**CRITICAL: Must match the docs-audit reconciliation-matrix.html look & feel.** Same design system, same dark hero, same component patterns. The wireframe dashboard is visually a sibling of the docs-audit dashboard — users should recognize them as part of the same tool family.
+**CRITICAL: Must match the reconciliation-audit reconciliation-matrix.html look & feel.** Same design system, same dark hero, same component patterns. The wireframe dashboard is visually a sibling of the reconciliation-audit dashboard — users should recognize them as part of the same tool family.
 
-#### Design System (shared with docs-audit)
+#### Design System (shared with reconciliation-audit)
 
 - **Font:** Inter, system-ui fallback
 - **Dark hero header:** `linear-gradient(135deg, #0f172a, #1e293b)` with white text
@@ -365,10 +365,10 @@ Static HTML shell that loads `wireframe-data.json` via `fetch()`.
 - **Metric cards:** Semi-transparent dark cards in hero row (total requirements, findings by severity, coverage counts)
 - **Document coverage bars:** Horizontal progress bars with colored dots (PRD = amber `#eab308`, UX = blue `#3b82f6`)
 - **View switcher:** Prominent card-style buttons below hero (not subtle tabs). Each shows title + badge count + description. Active state: blue border + blue background
-- **Filters:** Search input + pill buttons for status, severity, category, page. Same styling as docs-audit
+- **Filters:** Search input + pill buttons for status, severity, category, page. Same styling as reconciliation-audit
 - **Cards:** White cards with left colored border per status/category. Expandable with chevron
 - **Naming drift table:** Violet header bar if naming drift findings exist
-- **Color tokens:** Same CSS variables as docs-audit (`--n-50` through `--n-900`, `--c-ok`, `--c-warn`, `--c-err`, `--c-info`, etc.)
+- **Color tokens:** Same CSS variables as reconciliation-audit (`--n-50` through `--n-900`, `--c-ok`, `--c-warn`, `--c-err`, `--c-info`, etc.)
 
 #### View: Findings
 
@@ -382,7 +382,7 @@ Static HTML shell that loads `wireframe-data.json` via `fetch()`.
 
 #### View: Coverage
 
-- Same heatmap grid as docs-audit Coverage Map: rows = requirements/spec items, columns = wireframe pages
+- Same heatmap grid as reconciliation-audit Coverage Map: rows = requirements/spec items, columns = wireframe pages
 - Cells color-coded: green (implemented), yellow (partial), red (contradicted), gray (missing)
 - Click cell to see linked findings and reason text in expandable detail
 - Filter by status pills
@@ -392,7 +392,7 @@ Static HTML shell that loads `wireframe-data.json` via `fetch()`.
 
 Static HTML shell that loads `wireframe-data.json` via `fetch()`. Screenshot gallery with findings highlighted directly ON the screenshot images.
 
-**CRITICAL: Must match docs-audit visual style.** Same dark hero header, same font, same color tokens. This page is the visual evidence companion to the dashboard.
+**CRITICAL: Must match reconciliation-audit visual style.** Same dark hero header, same font, same color tokens. This page is the visual evidence companion to the dashboard.
 
 #### Layout
 
@@ -451,7 +451,7 @@ The core of this page. Each wireframe page screenshot is displayed as an `<img>`
 
 #### Side Detail Panel
 
-Slides in from the right (400px width, dark theme `#18181b` matching docs-audit annotation panels). Contains:
+Slides in from the right (400px width, dark theme `#18181b` matching reconciliation-audit annotation panels). Contains:
 
 1. **Component Identity**
    - Name (from detection checklist)
@@ -482,7 +482,7 @@ Below the screenshot, a collapsible panel listing components from PRD/UX that Pu
 
 #### Page Navigation
 
-- **Tabs** at top for each wireframe page (styled like docs-audit view switcher)
+- **Tabs** at top for each wireframe page (styled like reconciliation-audit view switcher)
 - **Filter pills** below hero: severity filters that show/hide overlay rects
 - **Keyboard:** Left/Right arrow switch pages, Esc closes panel, Tab cycles through overlay rects
 
@@ -501,7 +501,7 @@ Below the screenshot, a collapsible panel listing components from PRD/UX that Pu
 
 ### Phase 13 — Delta Mode (optional, incremental)
 
-Same pattern as docs-audit. Activated when input #4 (previous audit folder) is provided.
+Same pattern as reconciliation-audit. Activated when input #4 (previous audit folder) is provided.
 
 #### 13A. Load Previous State
 

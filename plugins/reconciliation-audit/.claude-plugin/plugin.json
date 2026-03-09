@@ -1,6 +1,6 @@
 {
-  "name": "docs-audit",
-  "version": "4.3.0",
+  "name": "reconciliation-audit",
+  "version": "4.4.0",
   "description": "Multi-document reconciliation engine. Cross-references PRD against UX Design System and/or Mock documents to detect conflicts, coverage gaps, scope additions, naming drift, cascade violations, specificity gaps, and per-document internal consistency issues. Uses descriptive category names (no code abbreviations). Supports bilateral and trilateral modes. Generates: (1) markdown report, (2) interactive HTML dashboard with Matrix, Heatmap, and Document Health tabs, (3) optional Excalidraw diagrams, (4) Puppeteer element detection with verification map, (5) UX component matching, (6) incremental delta mode. Document Health tab surfaces internal contradictions per document with per-document health scores.",
   "author": {
     "name": "anderson.monroy@halopowered.com"
